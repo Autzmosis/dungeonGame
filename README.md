@@ -11,18 +11,18 @@ Since this is a text adventure we will need to make methods that recognize typed
 'look' or 'walk'. Bare minimum features are listed below:
 
 * Text recognition
-* 3 Character classes(rogue, warrior, mage)
-* 3 Different enemies
-* 3 Pets
-* 1 Boss
+* 3 Character classes (Rogue, Warrior, Mage)
+* 3 Different enemies per dungeon
+* Party Members
+* Multipule Bosses
 * 10 Dungeons
 * Plot
 * Sprites and backgrounds
 
-####Special Abilities for the character classes are as follows (all are random):
-* Rogue - Double attack
-* Warrior - Recoil damage from sheild
-* Mage - Syphon SP
+####Special Abilities for the character classes are as follows:
+* Rogue - Swift Hands: Hits target twice with regular attack.
+* Warrior - Beserk: Increased damage and lower defense at a low health.
+* Mage - Drain: Syphon SP on psychial attack.
 
 ###Basic attributes for character classes:
 <table border=3px>
@@ -48,18 +48,15 @@ Since this is a text adventure we will need to make methods that recognize typed
 <td> Md  </td><td> med   </td><td> low   </td><td> high   </td>
 </tr>
 <tr>
-<td> Crt  </td><td> high   </td><td> low   </td><td> low   </td>
-</tr>
-<tr>
-<td> Acc  </td><td> high   </td><td> med   </td><td> med   </td>
-</tr>
-<tr>
-<td> Eva  </td><td> high   </td><td> low   </td><td> med   </td>
+<td> Lck  </td><td> high   </td><td> low   </td><td> med   </td>
 </tr>
 <tr>
 <td> Spe  </td><td> high   </td><td> low   </td><td> med   </td>
 </tr>
 </table>
+
+The 'high', 'med', and 'low' provided in the table are basic stats, they will be replaced
+by numbers later.
 
 ####Abbreviations are defined as follows:
 * Hp - Health
@@ -69,10 +66,6 @@ Since this is a text adventure we will need to make methods that recognize typed
 * Ma - Magical attack strength
 * Md - Magical defence
 * Lck - Luck
-* Acc - Accuracy
 * Spe - Speed
-
-The 'high', 'med', and 'low' provided in the table are basic stats, they will be replaced
-by numbers later.
 
 ##Deadline for this project varries.
