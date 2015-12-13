@@ -10,19 +10,19 @@ made into an app later. For the basic story line, there will be about ten differ
 Since this is a text adventure we will need to make methods that recognize typed words, like
 'look' or 'walk'. Bare minimum features are listed below:
 
-* text recognition
-* 3 character classes(rogue, warrior, mage)
-* 3 different enemies
-* 3 pets
-* 1 boss
-* 10 dungeons
-* storyline
-* sprites and backgrounds
+* Text recognition
+* 3 Character classes(rogue, warrior, mage)
+* 3 Different enemies
+* 3 Pets
+* 1 Boss
+* 10 Dungeons
+* Plot
+* Sprites and backgrounds
 
 ####Special Abilities for the character classes are as follows (all are random):
 * Rogue - Double attack
-* Warrior - recoil damage from sheild
-* Mage - Syphon health
+* Warrior - Recoil damage from sheild
+* Mage - Syphon SP
 
 ###Basic attributes for character classes:
 <table border=3px>
@@ -63,17 +63,16 @@ Since this is a text adventure we will need to make methods that recognize typed
 
 ####Abbreviations are defined as follows:
 * Hp - Health
-* Mp - Magic
+* Sp - Spill Points
 * Atk - Attack Strength
 * Def - Defence
 * Ma - Magical attack strength
 * Md - Magical defence
-* Crt - Critical hit
+* Lck - Luck
 * Acc - Accuracy
-* Eva - Evasion
 * Spe - Speed
 
 The 'high', 'med', and 'low' provided in the table are basic stats, they will be replaced
 by numbers later.
 
-##Deadline for this project is set for mid March 
+##Deadline for this project varries.
