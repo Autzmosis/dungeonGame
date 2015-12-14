@@ -16,7 +16,7 @@ Since this is a text adventure we will need to make methods that recognize typed
 * Party Members
 * Multipule Bosses
 * 10 Dungeons
-* Plot
+* Storyline
 * Sprites and backgrounds
 
 ####Special Abilities for the character classes are as follows:
@@ -61,9 +61,9 @@ by numbers later.
 ####Abbreviations are defined as follows:
 * Hp - Health
 * Sp - Spill Points
-* Atk - Attack Strength
+* Atk - Attack
 * Def - Defence
-* Ma - Magical attack strength
+* Ma - Magical attack
 * Md - Magical defence
 * Lck - Luck
 * Spe - Speed
