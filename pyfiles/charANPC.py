@@ -1,9 +1,10 @@
-#! /usr/bin/python3.4
+#! /usr/bin/python2
+#coding=utf-8
 
 """
 Yet to be named dungeonGame
-by Daemonic
-coded by Richard Watson
+by EncodedPixel
+coded by タダノデーモン(tadanodaemon)
 
 This program contains the Character class for the Rogue, Mage, and Warrior
 classes and contains the Active Non-Player Character class for any teammates
@@ -16,6 +17,9 @@ class Character(object):
         pass
 
     def statModifier(self, stat, mod):
+        pass
+
+    def levelUp(self, stat, adder, level):
         pass
 
 class ANPC(object):

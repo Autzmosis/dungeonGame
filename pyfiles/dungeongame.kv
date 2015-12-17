@@ -1,4 +1,12 @@
 #:kivy 1.9.1
+#coding=utf-8 
+
+#Yet to be named dungeonGame
+#by EncodedPixel
+#coded by タダノデーモン(tadanodaemon)
+
+#This file holds all of the static GUI information(positioning, etc).
+#If you want to see the functional, dynamic information, see main.py
 
 <SplashScreen>:
 	size_hint_y: None
@@ -22,14 +30,6 @@
 		source: '../media/mylogowhite.png'
 		pos_hint: {'center_x': .5, 'center_y': .4}
 
-
-<DummyScreen>:
-	size_hint_y: None
-	size_hint_x: None
-	height: 480
-	width: 640
-	pos_hint: {'center_x': .5, 'center_y': .5}
-		
 <TitleScreen>:
 	usr: usr
 	size_hint_y: None
@@ -73,6 +73,9 @@
 
 <ChooseClass>:
 	usr: usr
+	mage: magel
+	rogue: roguel
+	warrior: warriorl
 	size_hint_y: None
 	size_hint_x: None
 	height: 480
@@ -96,6 +99,7 @@
 		pos_hint:{'center_x': .5, 'center_y': .5}
 		spacing: 20
 		BoxLayout:
+			id: roguel
 			orientation: 'vertical'
 			size_hint_y: None
 			size_hint_x: None
@@ -130,9 +134,8 @@
 				size_hint: .7, .7
 				pos_hint: {'center_x':.5, 'y':0}
 				color: 0, 0, 0, 0
-		#Widget:
-		#	width: 20
 		BoxLayout:
+			id: warriorl
 			orientation: 'vertical'
 			size_hint_y: None
 			size_hint_x: None
@@ -168,9 +171,8 @@
 				size_hint: .7, .7
 				pos_hint: {'center_x':.5, 'y':0}
 				color: 0, 0, 0, 0
-		#Widget:
-		#	width: 20
 		BoxLayout:
+			id: magel
 			orientation: 'vertical'
 			size_hint_y: None
 			size_hint_x: None

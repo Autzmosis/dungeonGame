@@ -1,9 +1,10 @@
-#! /usr/bin/python3.4
+#! /usr/bin/python2
+#coding=utf-8
 
 """
 Yet to be named dungeonGame
-by Daemonic
-coded by Richard Watson
+by EncodedPixel
+coded by タダノデーモン(tadanodaemon)
 
 This program contains the three basic enemies for the game
 """
