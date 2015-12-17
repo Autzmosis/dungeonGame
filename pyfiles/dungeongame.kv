@@ -1,0 +1,386 @@
+#:kivy 1.9.1
+
+<SplashScreen>:
+	size_hint_y: None
+	size_hint_x: None
+	height: 480
+	width: 640
+	pos_hint: {'center_x': .5, 'center_y': .5}
+	AsyncImage:
+		source: '../media/ssbackground.png'
+		pos_hint: {'center_x': .5, 'center_y': .5}
+	Label:
+		text: 'Created by EncodedPixel\nand\ncoded by'
+		font_name: 'Pixel'
+		font_size: 40
+		halign: 'center'
+		markup: True
+		pos_hint: {'center_x': .5, 'center_y': .7}
+	AsyncImage:
+		width: 600
+		height: 500/3
+		source: '../media/mylogowhite.png'
+		pos_hint: {'center_x': .5, 'center_y': .4}
+
+
+<DummyScreen>:
+	size_hint_y: None
+	size_hint_x: None
+	height: 480
+	width: 640
+	pos_hint: {'center_x': .5, 'center_y': .5}
+		
+<TitleScreen>:
+	usr: usr
+	size_hint_y: None
+	size_hint_x: None
+	height: 480
+	width: 640
+	pos_hint: {'center_x': .5, 'center_y': .5}
+	AsyncImage:
+		source: '../media/ssbackground.png'
+		pos: 0, 0
+	Label:
+		text: '[b]Dungeons and Towns[/b]'
+		markup: True
+		font_size: 40
+		pos_hint: {'center_x': .5, 'center_y': .8}
+		font_name: 'Pixel'
+	BoxLayout:
+		orientation: 'vertical'
+		size_hint_y: None
+		size_hint_x: None
+		pos_hint: {'center_x': .5, 'center_y': .5}
+		width: 150
+		height: 50
+		Label:
+			id: hint
+			text: 'Type \'new game\' or \'continue\' and press enter'
+			font_size: 18
+			font_name: 'Pixel'
+		TextInput:
+			id: usr
+			multiline: False
+			size_hint_y: None
+			height: 25
+			foreground_color: 1, 1, 1, 1
+			font_name: 'Pixel'
+			background_color: 0, 0, 0, 1
+			cursor_blink: True
+			cursor_color: 1, 1, 1, 1
+			on_text_validate: root.__on_enter__(self, hint, app)
+			focus: True
+
+<ChooseClass>:
+	usr: usr
+	size_hint_y: None
+	size_hint_x: None
+	height: 480
+	width: 640
+	pos_hint: {'center_x': .5, 'center_y': .5}
+	AsyncImage:
+		source: '../media/ssbackground.png'
+		pos: 0, 0
+	Label:
+		text: '[b]Choose Class[/b]'
+		font_name: 'Pixel'
+		font_size: 30
+		markup: True
+		pos_hint:{'center_x': .5, 'center_y': .87}
+	BoxLayout:
+		orientation: 'horizontal'
+		size_hint_y: None
+		size_hint_x: None
+		height: 250
+		width: 580
+		pos_hint:{'center_x': .5, 'center_y': .5}
+		spacing: 20
+		BoxLayout:
+			orientation: 'vertical'
+			size_hint_y: None
+			size_hint_x: None
+			height: 250
+			width: 180
+			canvas.before:
+				Color:
+					rgba: 1, 1, 1, .5
+				Rectangle:
+					pos: self.pos
+					size: self.size		
+			AsyncImage:
+				id: rogue
+				source: '../media/rogue.png'
+				pos_hint: {'center_x':.5, 'y':0}
+				size_hint: .5, .5 
+			Label:
+				text: '[b]Rogue[/b]'
+				font_name: 'Pixel'
+				font_size: 20
+				markup: True
+				halign: 'center'
+				color: 0, 0, 0, 0 
+				pos_hint: {'center_x':.5, 'y':0}
+				size_hint: .1, .1
+			Label:
+				text: '\nBorn with\nnothing and\nskilled in the\nart of deciet,\nseeks nothing,\nbut wealth.'
+				font_name: 'Pixel'
+				font_size: 18
+				markup: True
+				halign: 'center' 
+				size_hint: .7, .7
+				pos_hint: {'center_x':.5, 'y':0}
+				color: 0, 0, 0, 0
+		#Widget:
+		#	width: 20
+		BoxLayout:
+			orientation: 'vertical'
+			size_hint_y: None
+			size_hint_x: None
+			height: 250
+			width: 180
+			padding: 40, 0
+			canvas.before:
+				Color:
+					rgba: 1, 1, 1, .5
+				Rectangle:
+					pos: self.pos
+					size: self.size			
+			AsyncImage:
+				id: warrior
+				source: '../media/warrior.png'
+				pos_hint: {'center_x':.5, 'y':0}
+				size_hint: .5, .5 
+			Label:
+				text: '[b]Warrior[/b]'
+				font_name: 'Pixel'
+				font_size: 20
+				markup: True
+				color: 0, 0, 0, 0
+				halign: 'center' 
+				size_hint: .1, .1
+				pos_hint: {'center_x':.5, 'y':0}
+			Label:
+				text: '\nChild of a king\nand bored of\nthe royal\nlife, journeys\nto seek glory\nin battle.'
+				font_name: 'Pixel'
+				font_size: 18
+				markup: True
+				halign: 'center' 
+				size_hint: .7, .7
+				pos_hint: {'center_x':.5, 'y':0}
+				color: 0, 0, 0, 0
+		#Widget:
+		#	width: 20
+		BoxLayout:
+			orientation: 'vertical'
+			size_hint_y: None
+			size_hint_x: None
+			height: 250
+			width: 180
+			canvas.before:
+				Color:
+					rgba: 1, 1, 1, .5
+				Rectangle:
+					pos: self.pos
+					size: self.size			
+			AsyncImage:
+				id: mage
+				source: '../media/mage.png'
+				pos_hint: {'center_x':.5, 'y':0}
+				size_hint: .5, .5 
+			Label:
+				text: '[b]Mage[/b]'
+				font_name: 'Pixel'
+				font_size: 20
+				markup: True
+				color: 0, 0, 0, 0
+				halign: 'center' 
+				size_hint: .1, .1
+				pos_hint: {'center_x':.5, 'y':0}
+			Label:
+				text: '\nChild prodigy,\nfeared by the\nignorant,\njourneys\nin search of \npurpose in life.'
+				font_name: 'Pixel'
+				font_size: 18
+				markup: True
+				halign: 'center' 
+				size_hint: .7, .7
+				pos_hint: {'center_x':.5, 'y':0}
+				color: 0, 0, 0, 0
+	Label:
+		id: hint
+		text: 'Type name of class and press enter'
+		font_name: 'Pixel'
+		font_size: 18
+		markup: True
+		pos_hint:{'center_x': .5, 'center_y': .15}
+	TextInput:
+		id: usr
+		multiline: False
+		size_hint_y: None
+		size_hint_x: None
+		height: 25
+		width: 150
+		pos_hint:{'center_x': .5, 'center_y': .10}
+		background_color: 0,0,0,1
+		on_text_validate: root.__on_enter__(self, app, hint, image=(rogue, warrior, mage))
+		foreground_color: 1, 1, 1, 1
+		cursor_blink: True
+		cursor_color: 1, 1, 1, 1
+		font_name: 'Pixel'
+		focus: True
+
+<GameScreen>:
+	label: label
+	image: image
+	textinput: textinput
+	usr: usr
+	size_hint_y: None
+	size_hint_x: None
+	height: 480
+	width: 640
+	pos_hint: {'center_x': .5, 'center_y': .5}
+	BoxLayout:
+		orientation: 'vertical'
+		size: root.size
+		pos_hint: {'center_x': .5, 'center_y': .5}
+		BoxLayout:
+			orientation: 'horizontal'
+			size_hint_y: None
+			height: 200
+			BoxLayout:
+				orientation: 'vertical'
+				BoxLayout:
+					orientation: 'horizontal'
+					AsyncImage:
+						id: image
+						source: '../media/rogue.png' 
+						size_hint: .3, 1
+					Label:
+						id: label
+						text: ':\nHP: -/-  SP: -/-\nEXP: -/-' 
+						halign: 'center'
+						font_name: 'Pixel'
+						font_size: 13
+						size_hint: .7, 1
+				BoxLayout:
+					size_hint_x: None
+					width: 178
+					size_hint_y: None
+					height: 1
+					pos_hint: {'center_x': .5}
+					canvas.before:
+						Color:
+							rgba: 1, 1, 1, 1
+						Rectangle:
+							size: self.size
+							pos: self.pos
+				BoxLayout:
+					orientation: 'horizontal'
+					AsyncImage:
+						source: '../media/cat.png'
+						size_hint: .3, 1
+					Label:
+						text: 'Abilities for\npet Will be\nwritten here.'
+						halign: 'center'
+						font_name: 'Pixel'
+						font_size: 13
+						size_hint: .7, 1
+			AsyncImage:
+				source: '../media/flippybackground.png'
+				width: 460
+				height: 200
+				size_hint_y: None
+				size_hint_x: None
+		BoxLayout:
+			size_hint_x: None
+			width: 638
+			size_hint_y: None
+			height: 1
+			pos_hint: {'center_x': .5}
+			canvas.before:
+				Color:
+					rgba: 1, 1, 1, 1
+				Rectangle:
+					size: self.size
+					pos: self.pos
+		Label:
+			text: '>>> Welcome'
+			text_size: self.size
+			pos_hint: {'center_x': .5}
+			font_name: 'Pixel'
+			font_size: 18
+			#markup: True
+			size_hint_y: None
+			size_hint_x: None
+			height: 25
+			width: 640
+			color: 1, 1, 1, 1
+		BoxLayout:
+			size_hint_x: None
+			width: 638
+			size_hint_y: None
+			height: 1
+			pos_hint: {'center_x': .5}
+			canvas.before:
+				Color:
+					rgba: 1, 1, 1, 1
+				Rectangle:
+					size: self.size
+					pos: self.pos
+		TextInput:
+			id: textinput
+			multiline: True
+			text_size: 25
+			size_hint_y: None
+			height: 226
+			foreground_color: 1, 1, 1, 1
+			font_name: 'Pixel'
+			background_color: 0, 0, 0, 1
+			readonly: True
+		BoxLayout:
+			size_hint_x: None
+			width: 638
+			size_hint_y: None
+			height: 1
+			pos_hint: {'center_x': .5}
+			canvas.before:
+				Color:
+					rgba: 1, 1, 1, 1
+				Rectangle:
+					size: self.size
+					pos: self.pos
+		BoxLayout:
+			orientation: 'horizontal'
+			TextInput:
+				text: '>_'
+				multiline: False
+				size_hint_x: None
+				width: 30
+				foreground_color: 1, 1, 1, 1
+				font_name: 'Pixel'
+				background_color: 0, 0, 0, 1
+				readonly: True
+			TextInput:
+				id: usr
+				multiline: False
+				size_hint_x: None
+				width: 610
+				foreground_color: 1, 1, 1, 1
+				font_name: 'Pixel'
+				background_color: 0, 0, 0, 1
+				cursor_blink: True
+				cursor_color: 1, 1, 1, 1
+				on_text_validate: root.__on_enter__(app)
+				focus: True
+		BoxLayout:
+			size_hint_x: None
+			width: 638
+			size_hint_y: None
+			height: 1
+			pos_hint: {'center_x': .5}
+			canvas.before:
+				Color:
+					rgba: 1, 1, 1, 1
+				Rectangle:
+					size: self.size
+					pos: self.pos
+	
