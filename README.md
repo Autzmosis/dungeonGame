@@ -1,8 +1,14 @@
 #Yet to be named dungeon game
 
-##**By Codex**
+##**By EncodedPixel**
 
-##Game development put on hold until current gui as been fully translated to kvlang
+###GUI has been updated to kivy, if you would like to test it out you must do the below things:
+* download repository
+* install python2 https://www.python.org/downloads/
+* install kivy http://kivy.org/docs/installation/installation.html
+* run main.py from terminal or command prompt
+
+####Visit the dropbox folder, for videos the current GUI: https://www.dropbox.com/sh/px7he1pssd3fv48/AAABccXOwlWEoe4dJcRMsF93a?dl=0
 
 The purpose of this project is simply to make an expandable dungeon game using python. It will be
 made into an app later. For the basic story line, there will be about ten different dungeons. 
