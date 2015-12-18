@@ -98,19 +98,13 @@
 		width: 580
 		pos_hint:{'center_x': .5, 'center_y': .5}
 		spacing: 20
-		BoxLayout:
+		LightUpBox:
 			id: roguel
 			orientation: 'vertical'
 			size_hint_y: None
 			size_hint_x: None
 			height: 250
 			width: 180
-			canvas.before:
-				Color:
-					rgba: 1, 1, 1, .5
-				Rectangle:
-					pos: self.pos
-					size: self.size		
 			AsyncImage:
 				id: rogue
 				source: '../media/rogue.png'
@@ -134,7 +128,7 @@
 				size_hint: .7, .7
 				pos_hint: {'center_x':.5, 'y':0}
 				color: 0, 0, 0, 0
-		BoxLayout:
+		LightUpBox:
 			id: warriorl
 			orientation: 'vertical'
 			size_hint_y: None
@@ -142,12 +136,6 @@
 			height: 250
 			width: 180
 			padding: 40, 0
-			canvas.before:
-				Color:
-					rgba: 1, 1, 1, .5
-				Rectangle:
-					pos: self.pos
-					size: self.size			
 			AsyncImage:
 				id: warrior
 				source: '../media/warrior.png'
@@ -171,19 +159,13 @@
 				size_hint: .7, .7
 				pos_hint: {'center_x':.5, 'y':0}
 				color: 0, 0, 0, 0
-		BoxLayout:
+		LightUpBox:
 			id: magel
 			orientation: 'vertical'
 			size_hint_y: None
 			size_hint_x: None
 			height: 250
 			width: 180
-			canvas.before:
-				Color:
-					rgba: 1, 1, 1, .5
-				Rectangle:
-					pos: self.pos
-					size: self.size			
 			AsyncImage:
 				id: mage
 				source: '../media/mage.png'

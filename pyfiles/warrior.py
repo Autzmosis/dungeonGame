@@ -15,3 +15,36 @@ class Warrior(Character):
 
     def __init__(self):
         super(Warrior, self).__init__()
+        self.stats = {
+                'hp': 25,
+                'sp': 10,
+                'atk': 15,
+                'def': 15,
+                'ma': 5,
+                'md': 10,
+                'lck': 5,
+                'spe': 10,
+                'eup': 0
+                }
+        self.atkList = {
+                'check': self.atkListCheck,
+                'regular attack': self.regAtk,
+                'attack one': self.attackOne,
+                'attack two': self.attackTwo,
+                'attack Three': self.attackThree
+                }
+
+    def attackOne(self):
+        base = 5
+        string = ' used atkone'
+        return base, string
+            
+    def attackTwo(self):
+        base = 5
+        string = ' used atkTwo'
+        return base, string
+            
+    def attackThree(self):
+        base = 5
+        string = ' used atkThree'
+        return base, string

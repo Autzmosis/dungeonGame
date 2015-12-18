@@ -16,19 +16,23 @@ made into an app later. For the basic story line, there will be about ten differ
 Since this is a text adventure we will need to make methods that recognize typed words, like
 'look' or 'walk'. Bare minimum features are listed below:
 
+Player starts in a dream and learns about their world as they progress (Kinda of like Dark Souls, way of storytelling)
+Upgrade points will be used to up stats
+
 * Text recognition
 * 3 Character classes (Rogue, Warrior, Mage)
 * 3 Different enemies per dungeon
-* Party Members
+* Helper Characters
+* pet that grows up with character
 * Multipule Bosses
 * 10 Dungeons
 * Storyline
 * Sprites and backgrounds
 
 ####Special Abilities for the character classes are as follows:
-* Rogue - Swift Hands: Hits target twice with regular attack.
+* Rogue - Dual Blitz: Hits target twice with regular attack.
 * Warrior - Beserk: Increased damage and lower defense at a low health.
-* Mage - Drain: Syphon SP on psychial attack.
+* Mage - Drain: Siphon SP on physical attack.
 
 ###Basic attributes for character classes:
 <table border=3px>
@@ -39,7 +43,7 @@ Since this is a text adventure we will need to make methods that recognize typed
 <td> Hp  </td><td> med   </td><td> high   </td><td> low   </td>
 </tr>
 <tr>
-<td> Mp  </td><td> med   </td><td> low   </td><td> high   </td>
+<td> Sp  </td><td> med   </td><td> low   </td><td> high   </td>
 </tr>
 <tr>
 <td> Atk  </td><td> low   </td><td> high   </td><td> low   </td>

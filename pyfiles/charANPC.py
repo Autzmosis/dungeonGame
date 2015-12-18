@@ -14,7 +14,8 @@ and enemies for the game
 class Character(object):
 
     def __init__(self):
-        pass
+        self.stats = {}
+        self.atkList = {}
 
     def statModifier(self, stat, mod):
         pass
@@ -22,9 +23,19 @@ class Character(object):
     def levelUp(self, stat, adder, level):
         pass
 
+    def regAtk(self):
+        base = 5
+        string = ' used regatk'
+        return base, string
+
+    def atkListCheck(self, string):
+        if string not in self.atkList:
+             return 'Invalid command'
+
+
 class ANPC(object):
 
-    def __init(self):
+    def __init__(self):
         pass
 
     def computerFunction(self, atkDict):

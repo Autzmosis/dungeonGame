@@ -25,11 +25,9 @@ Config.set('graphics','resizable', 0)
 
 #import necessary modules
 from kivy.app import App
-#from kivy.uix.label import Label
-#from kivy.uix.boxlayout import BoxLayout
+from kivy.uix.boxlayout import BoxLayout
 #from kivy.uix.floatlayout import FloatLayout
 #from kivy.uix.relativelayout import RelativeLayout
-#from kivy.uix.textinput import TextInput
 from kivy.core.text import LabelBase
 from kivy.uix.image import AsyncImage
 from kivy.properties import ObjectProperty
@@ -151,6 +149,28 @@ class TitleScreen(Screen):
         trigfade = Clock.create_trigger(self.fade)
         trigfade()
 
+class LightUpBox(BoxLayout):
+
+    def __init__(self, **kwargs):
+        super(LightUpBox, self).__init__(**kwargs)
+        with self.canvas:
+            self.color = Color(1,1,1,.5)
+            self.rec = Rectangle(size = self.size, pos = self.pos)
+            self.trigger = Clock.create_trigger(self.updaterec)
+        self.trigger()
+
+    def updaterec(self,dt):
+        self.rec.pos = self.pos
+        self.rec.size = self.size
+
+    def glow(self):
+        anim = Animation(b = 0, duration = .1)
+        anim.start(self.color)
+
+    def unglow(self):
+        anim = Animation(b = 1, duration = .1)
+        anim.start(self.color)
+
 class ChooseClass(Screen):
     
     """
@@ -163,6 +183,7 @@ class ChooseClass(Screen):
     rogue = ObjectProperty(None)
     mage = ObjectProperty(None)
     warrior = ObjectProperty(None)
+    c = 0
 
     def __init__(self, **kwargs):
         super(ChooseClass, self).__init__(**kwargs)
@@ -182,15 +203,24 @@ class ChooseClass(Screen):
     def lightUp(self, dt):
         """
         this lights up the class box of the class
-        the user is typing. Still working on it
+        the user is typing. Very Experimental
         """
         for x in range(0, len(self.usr.text) + 1):
             if self.usr.text[x:x+5].lower() == 'rogue':
-                self.rogue.color = (1,1,0,1)
+                self.rogue.glow()
+                self.c = 1
             elif self.usr.text[x:x+7].lower() == 'warrior':
-                self.warrior.color = (1,1,0,1)
+                self.warrior.glow()
+                self.c = 2
             elif self.usr.text[x:x+4].lower() == 'mage':
-                self.mage.color = (1,1,0,1)
+                self.mage.glow()
+                self.c = 3
+            elif self.c == 1:
+                self.rogue.unglow()
+            elif self.c == 2:
+                self.warrior.unglow()
+            elif self.c == 3:
+                self.mage.unglow()
 
     def __on_enter__(self, usrinput, app, hint, image=()):
         """
@@ -244,7 +274,10 @@ class ChooseClass(Screen):
         trigger()
         trigfade = Clock.create_trigger(self.fade)
         trigfade()
-        Clock.schedule_interval(self.lightUp, 1/60)
+        self.rogue.trigger()
+        self.warrior.trigger()
+        self.mage.trigger()
+        Clock.schedule_interval(self.lightUp, .55)
 
 class GameScreen(Screen):
     """
