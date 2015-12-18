@@ -8,8 +8,8 @@
 
 #####Ezra Vizcarra
 -For the main menu where the player chooses which of the three, place the stats but instead of abbreviation place icons. 
-          For example:
-          -HP would be a heart or a cross
-          -Attk would be a sword or a hatchet
-          -Def would be a Viking shield or English shield...focus on the shape not the imagery.
-          -and so on...
+For example:
+-HP would be a heart or a cross
+-Attk would be a sword or a hatchet
+-Def would be a Viking shield or English shield...focus on the shape not the imagery.
+-and so on...
