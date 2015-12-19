@@ -14,7 +14,6 @@ from charANPC import Character
 class Mage(Character):
 
     def __init__(self):
-        super(Mage, self).__init__()
         self.stats = {
                 'hp': 19,
                 'sp': 16,
@@ -24,7 +23,9 @@ class Mage(Character):
                 'md': 15,
                 'lck': 5,
                 'spe': 10,
-                'up': 0
+                'up': 0,
+                'name': '',
+                'gold': 0
                 }
         self.atklist = {
                 'check': self.atkListCheck,

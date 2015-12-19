@@ -6,7 +6,7 @@ Yet to be named dungeonGame
 by EncodedPixel
 coded by タダノデーモン(tadanodaemon)
 
-This program is contains the Rogue class
+This program contains the Rogue class
 """
 
 from charANPC import Character
@@ -14,7 +14,6 @@ from charANPC import Character
 class Rogue(Character):
 
     def __init__(self):
-        super(Rogue, self).__init__()
         self.stats = {
                 'hp': 22,
                 'sp': 13,
@@ -24,7 +23,9 @@ class Rogue(Character):
                 'md': 5,
                 'lck': 15,
                 'spe': 15,
-                'up': 0
+                'up': 0,
+                'name': '',
+                'gold': 0
                 }
         self.atkList = {
                 'check': self.atkListCheck,

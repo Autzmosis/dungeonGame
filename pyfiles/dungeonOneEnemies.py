@@ -10,30 +10,27 @@ This program contains the three basic enemies for the game
 """
 
 from charANPC import *
-from Rogue import Rogue
-from Mage import Mage
-from Warrior import Warrior
 
-class enemyOne(Rogue, ANPC):
+class enemyOne(ANPC):
 
     def __init__(self):
-        Rogue.__init__(self)
+        pass
 
     def someAttack(self):
         pass
     
-class enemyTwo(Mage, ANPC):
+class enemyTwo(ANPC):
 
     def __init__(self):
-        Mage.__init__(self)
+        pass
 
     def someAttack(self):
         pass
     
-class enemyThree(Warrior, ANPC):
+class enemyThree(ANPC):
 
     def __init__(self):
-        Warrior.__init__(self)
+        pass
 
     def someAttack(self):
         pass

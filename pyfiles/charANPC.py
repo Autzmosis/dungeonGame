@@ -6,7 +6,7 @@ Yet to be named dungeonGame
 by EncodedPixel
 coded by タダノデーモン(tadanodaemon)
 
-This program contains the Character class for the Rogue, Mage, and Warrior
+This program contains the Character class for all fighting/active
 classes and contains the Active Non-Player Character class for any teammates
 and enemies for the game
 """
@@ -16,12 +16,13 @@ class Character(object):
     def __init__(self):
         self.stats = {}
         self.atkList = {}
-
+        self.inventory = {}
+        
     def statModifier(self, stat, mod):
-        pass
-
-    def levelUp(self, stat, adder, level):
-        pass
+        if mod > 1 or mod < 0:
+            self.stats[stat] += mod
+        elif 0 < mod < 1:
+            self.stats[stat] *= mod
 
     def regAtk(self):
         base = 5
@@ -32,11 +33,17 @@ class Character(object):
         if string not in self.atkList:
              return 'Invalid command'
 
-
-class ANPC(object):
-
-    def __init__(self):
+    def evadeRun(self):
         pass
 
-    def computerFunction(self, atkDict):
+    def critHit(self):
+        pass
+
+
+class ANPC(Character):
+
+    def __init__(self):
+        super(ANPC, self).__init__():
+
+    def computerFunction(self, atkList):
         pass
