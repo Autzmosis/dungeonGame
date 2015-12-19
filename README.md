@@ -33,40 +33,57 @@ Upgrade points will be used to up stats
 * Rogue - Dual Blitz: Hits target twice with regular attack.
 * Warrior - Beserk: Increased damage and lower defense at a low health.
 * Mage - Drain: Siphon SP on physical attack.
+* All special abilities will be randomly used
 
-###Basic attributes for character classes:
+###Proposed starter attacks for each character class:
+<table border=3px>
+<tr>
+<b>Rogue</b>  </td><td> <b>Warrior</b>  </td><td> <b>Mage</b>  </td>
+</tr>
+<tr>
+<td> shank </td><td> slash </td><td> knock </td>
+</tr>
+<tr>
+<td> smokescreen </td><td> sheild bash </td><td> cast spell </td>
+</tr>
+<tr>
+<td> backstab </td><td> parry </td><td> summon </td>
+</tr>
+<tr>
+<td> throw(item) </td><td> warcry </td><td> cure </td>
+</tr>
+</table>
+
+###Starter attributes for character classes:
 <table border=3px>
 <tr>
 <td>   </td><td> <b>Rogue</b>  </td><td> <b>Warrior</b>  </td><td> <b>Mage</b>  </td>
 </tr>
 <tr>
-<td> Hp  </td><td> med   </td><td> high   </td><td> low   </td>
+<td> Hp  </td><td> 22 </td><td> 25 </td><td> 19 </td>
 </tr>
 <tr>
-<td> Sp  </td><td> med   </td><td> low   </td><td> high   </td>
+<td> Sp  </td><td> 13 </td><td> 10 </td><td> 16 </td>
 </tr>
 <tr>
-<td> Atk  </td><td> low   </td><td> high   </td><td> low   </td>
+<td> Atk  </td><td> 10 </td><td> 15 </td><td> 5 </td>
 </tr>
 <tr>
-<td> Def  </td><td> low   </td><td> high   </td><td> med   </td>
+<td> Def  </td><td> 5 </td><td> 15 </td><td> 10 </td>
 </tr>
 <tr>
-<td> Ma  </td><td> med   </td><td> low   </td><td> high   </td>
+<td> Ma  </td><td> 10 </td><td> 5 </td><td> 15 </td>
 </tr>
 <tr>
-<td> Md  </td><td> med   </td><td> low   </td><td> high   </td>
+<td> Md  </td><td> 5 </td><td> 10 </td><td> 15 </td>
 </tr>
 <tr>
-<td> Lck  </td><td> high   </td><td> low   </td><td> med   </td>
+<td> Lck  </td><td> 15 </td><td> 5 </td><td> 5 </td>
 </tr>
 <tr>
-<td> Spe  </td><td> high   </td><td> low   </td><td> med   </td>
+<td> Spe  </td><td> 15 </td><td> 10 </td><td> 10 </td>
 </tr>
 </table>
-
-The 'high', 'med', and 'low' provided in the table are basic stats, they will be replaced
-by numbers later.
 
 ####Abbreviations are defined as follows:
 * Hp - Health
