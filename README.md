@@ -38,7 +38,7 @@ Upgrade points will be used to up stats
 ###Proposed starter attacks for each character class:
 <table border=3px>
 <tr>
-<b>Rogue</b>  </td><td> <b>Warrior</b>  </td><td> <b>Mage</b>  </td>
+<td> <b>Rogue</b>  </td><td> <b>Warrior</b>  </td><td> <b>Mage</b>  </td>
 </tr>
 <tr>
 <td> shank </td><td> slash </td><td> knock </td>
