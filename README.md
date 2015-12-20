@@ -7,7 +7,7 @@
 * Install kivy http://kivy.org/docs/installation/installation.html
 * Run main.py from terminal or command prompt
 
-####Visit the dropbox folder, for videos the current GUI: https://www.dropbox.com/sh/px7he1pssd3fv48/AAABccXOwlWEoe4dJcRMsF93a?dl=0
+#####Visit the dropbox folder, for videos the current GUI: https://www.dropbox.com/sh/px7he1pssd3fv48/AAABccXOwlWEoe4dJcRMsF93a?dl=0
 
 The purpose of this project is simply to make an expandable dungeon game using python. It will be
 made into an app later. For the basic story line, there will be about ten different dungeons. 
