@@ -32,10 +32,10 @@ Since this is a text adventure we will need to make methods that recognize typed
 * Sprites and backgrounds
 
 ####Special Abilities for the character classes are as follows:
-* Rogue - Dual Blitz: Hits target twice with regular attack. (Based on Luck)
+* Rogue - Dual Blitz: Hits target twice with regular attack.
 * Warrior - Beserk: Increased damage and lower defense at a low health.
-* Mage - Drain: Siphon SP on physical attack. (Scales with. . .)
-* All special abilities will be randomly used (?)
+* Mage - Drain: Siphon SP on physical attack. (Scales with atk stat?)
+* All special abilities will be randomly used (the player will not choose when to use this, this will be decided by Luck)
 
 ###Proposed starter attacks for each character class:
 <table border=3px>
@@ -46,7 +46,7 @@ Since this is a text adventure we will need to make methods that recognize typed
 <td> Shank </td><td> Slash </td><td> Knock </td>
 </tr>
 <tr>
-<td> Smokescreen </td><td> Sheild Bash </td><td> Cast Spell </td>
+<td> Smokescreen </td><td> Sheild Bash </td><td> magic blast </td>
 </tr>
 <tr>
 <td> Backstab </td><td> Parry </td><td> Summon </td>
