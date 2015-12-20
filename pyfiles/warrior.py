@@ -13,7 +13,8 @@ from charANPC import Character
 
 class Warrior(Character):
 
-    def __init__(self):
+    def __init__(self, data):
+        super(Warrior, self).__init__(data)
         self.stats = {
                 'hp': 25,
                 'sp': 10,
@@ -24,28 +25,33 @@ class Warrior(Character):
                 'lck': 5,
                 'spe': 10,
                 'up': 0,
-                'name': '',
                 'gold': 0
                 }
-        self.atkList = {
+        self.atkList = [
+                'slash',
+                'shield bash',
+                'parry',
+                'warcry'
+                ]
+        self.atkDict = {
                 'check': self.atkListCheck,
-                'regular attack': self.regAtk,
-                'attack one': self.attackOne,
-                'attack two': self.attackTwo,
-                'attack Three': self.attackThree
+                'slash': self.regAtk,
+                'shield bash': self.shieldBash,
+                'parry': self.parry,
+                'warcry': self.warcry
                 }
 
-    def attackOne(self):
+    def shieldBash(self):
         base = 5
         string = ' used atkone'
         return base, string
             
-    def attackTwo(self):
+    def parry(self):
         base = 5
         string = ' used atkTwo'
         return base, string
             
-    def attackThree(self):
+    def warcry(self):
         base = 5
         string = ' used atkThree'
         return base, string

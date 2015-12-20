@@ -37,6 +37,11 @@ from time import sleep
 from kivy.uix.screenmanager import ScreenManager, Screen
 from kivy.animation import Animation
 from kivy.graphics import *
+from kivy.storage.jsonstore import JsonStore
+from kivy.core.audio import SoundLoader
+from rogue import Rogue
+from mage import Mage
+from warrior import Warrior
 
 LabelBase.register(name='Pixel',
                    fn_regular='../fonts/slkscr.ttf',
@@ -119,8 +124,6 @@ class TitleScreen(Screen):
             elif usrinput.text[x:x+8].lower() == 'continue':
                 usrinput.text = ''
                 self.fadeOut('gamescreen')
-                self.parent.get_screen('gamescreen').image.source = '../media/rogue.png'
-                self.parent.get_screen('gamescreen').label.text = 'rogue' + self.parent.get_screen('gamescreen').label.text
                 break
             elif x == len(usrinput.text):
                 usrinput.text = ''
@@ -149,28 +152,6 @@ class TitleScreen(Screen):
         trigfade = Clock.create_trigger(self.fade)
         trigfade()
 
-class LightUpBox(BoxLayout):
-
-    def __init__(self, **kwargs):
-        super(LightUpBox, self).__init__(**kwargs)
-        with self.canvas:
-            self.color = Color(1,1,1,.5)
-            self.rec = Rectangle(size = self.size, pos = self.pos)
-            self.trigger = Clock.create_trigger(self.updaterec)
-        self.trigger()
-
-    def updaterec(self,dt):
-        self.rec.pos = self.pos
-        self.rec.size = self.size
-
-    def glow(self):
-        anim = Animation(b = 0, duration = .1)
-        anim.start(self.color)
-
-    def unglow(self):
-        anim = Animation(b = 1, duration = .1)
-        anim.start(self.color)
-
 class ChooseClass(Screen):
     
     """
@@ -180,14 +161,14 @@ class ChooseClass(Screen):
     transit, and refocus_text method.
     """
     usr = ObjectProperty(None)
-    rogue = ObjectProperty(None)
-    mage = ObjectProperty(None)
-    warrior = ObjectProperty(None)
     c = 0
 
     def __init__(self, **kwargs):
         super(ChooseClass, self).__init__(**kwargs)
         self.string = ''
+        self.c = 0 #used so i can ask player their name
+        self.info = {}
+        self.trigger = Clock.create_trigger(self.refocus_text)
         with self.canvas:
             self.color = Color(0,0,0,1)
             self.rect = Rectangle(size = self.size)
@@ -199,60 +180,66 @@ class ChooseClass(Screen):
         if self.color.a == 0:
             anim = Animation(a = 1, duration = 3.)
             anim.start(self.color)
-        
-    def lightUp(self, dt):
-        """
-        this lights up the class box of the class
-        the user is typing. Very Experimental
-        """
-        for x in range(0, len(self.usr.text) + 1):
-            if self.usr.text[x:x+5].lower() == 'rogue':
-                self.rogue.glow()
-                self.c = 1
-            elif self.usr.text[x:x+7].lower() == 'warrior':
-                self.warrior.glow()
-                self.c = 2
-            elif self.usr.text[x:x+4].lower() == 'mage':
-                self.mage.glow()
-                self.c = 3
-            elif self.c == 1:
-                self.rogue.unglow()
-            elif self.c == 2:
-                self.warrior.unglow()
-            elif self.c == 3:
-                self.mage.unglow()
 
-    def __on_enter__(self, usrinput, app, hint, image=()):
+    def __on_enter__(self, usrinput, hint, image=()):
         """
         this function is used for text recognition features
         """
-        for x in range(0, len(usrinput.text) + 1):
-            if usrinput.text[x:x+5].lower() == 'rogue':
-                self.parent.get_screen('gamescreen').image.source = image[0].source
-                self.parent.get_screen('gamescreen').label.text = 'rogue' + self.parent.get_screen('gamescreen').label.text
-                usrinput.text = ''
-                Clock.unschedule(self.lightUp)
-                self.fadeOut('gamescreen')
-                break
-            elif usrinput.text[x:x+7].lower() == 'warrior':
-                self.parent.get_screen('gamescreen').image.source = image[1].source
-                self.parent.get_screen('gamescreen').label.text = 'warrior' + self.parent.get_screen('gamescreen').label.text
-                usrinput.text = ''
-                Clock.unschedule(self.lightUp)
-                self.fadeOut('gamescreen')
-                break
-            elif usrinput.text[x:x+4].lower() == 'mage':
-                self.parent.get_screen('gamescreen').image.source = image[2].source
-                self.parent.get_screen('gamescreen').label.text = 'mage' + self.parent.get_screen('gamescreen').label.text
-                usrinput.text = ''
-                Clock.unschedule(self.lightUp)
-                self.fadeOut('gamescreen')
-                break
-            elif x == len(usrinput.text):
-                usrinput.text = ''
-                hint.text = 'Please choose one of the classes above'
-                trigger = Clock.create_trigger(self.refocus_text)
-                trigger()
+        if self.c == 0:
+            for x in range(0, len(usrinput.text) + 1):
+                if usrinput.text[x:x+5].lower() == 'rogue':
+                    self.info['class'] = 'rogue'
+                    self.info['image'] = image[0].source
+                    usrinput.text = ''
+                    hint.text = 'By the way, what might your name be?'
+                    self.c = 1
+                    self.trigger()
+                    break
+                elif usrinput.text[x:x+7].lower() == 'warrior':
+                    self.info['class'] = 'warrior'
+                    self.info['image'] = image[1].source
+                    usrinput.text = ''
+                    hint.text = 'By the way, what might your name be?'
+                    self.c = 1
+                    self.trigger()
+                    break
+                elif usrinput.text[x:x+4].lower() == 'mage':
+                    self.info['class'] = 'mage'
+                    self.info['image'] = image[2].source
+                    usrinput.text = ''
+                    hint.text = 'By the way, what might your name be?'
+                    self.c = 1
+                    self.trigger()
+                    break
+                elif x == len(usrinput.text):
+                    usrinput.text = ''
+                    hint.text = 'Please choose one of the classes above.'
+                    self.trigger()
+        else:
+            self.getName(usrinput, hint)
+
+    def getName(self, usrinput, hint):
+        if usrinput.text != '':
+            self.info['name'] = usrinput.text
+            usrinput.text = ''
+            hint.text = 'Type name of class and press enter'
+            self.setupPlayer()
+            self.fadeOut('gamescreen')
+            self.c = 0
+            self.trigger()
+        else:
+            hint.text = 'Unresponsive, are we? Well it takes two to tango!'
+            self.trigger()
+
+    def setupPlayer(self):
+        if self.info['class'] == 'rogue':
+            player = Rogue(data)
+        elif self.info['class'] == 'warrior':
+            player = Warrior(data)
+        elif self.info['class'] == 'mage':
+            player = Mage(data)
+        player.info = self.info
+        player.updateBase()
 
     def fadeOut(self, screen):
         self.string = screen
@@ -274,10 +261,6 @@ class ChooseClass(Screen):
         trigger()
         trigfade = Clock.create_trigger(self.fade)
         trigfade()
-        self.rogue.trigger()
-        self.warrior.trigger()
-        self.mage.trigger()
-        Clock.schedule_interval(self.lightUp, .55)
 
 class GameScreen(Screen):
     """
@@ -290,13 +273,13 @@ class GameScreen(Screen):
     usr = ObjectProperty(None)
     image = ObjectProperty(None)
     label = ObjectProperty(None)
+    atkList = ObjectProperty(None)
+    inventory = ObjectProperty(None)
     box = []
     c = 0
 
     def __init__(self, **kwargs):
         super(GameScreen, self).__init__(**kwargs)
-        self.original = self.label.text #used to remember what was there before
-        self.originalsource = self.image.source #back to screen was typed
         with self.canvas:
             self.color = Color(0,0,0,1)
             self.rect = Rectangle(size = self.size)
@@ -314,8 +297,15 @@ class GameScreen(Screen):
         trigfade = Clock.create_trigger(self.fade)
         trigfade()
         Clock.schedule_once(self.welcome, 2)
+        self.image.source = data.get('player')['info']['image']
+        self.updateSmallStats(
+                            data.get('player')['stats']['hp'],
+                            data.get('player')['stats']['sp']
+                            )
+        self.updateAtkList()
+        self.updateInventory()
 
-    def __on_enter__(self, app):
+    def __on_enter__(self):
         """
         this method validates text and sends to prompt
         """
@@ -326,8 +316,6 @@ class GameScreen(Screen):
             self.usr.text = ''
             self.textinput.text = ''
             self.usr.readonly = False
-            self.label.text = self.original
-            self.image.source = self.originalsource
             self.fadeOut('title')
         elif self.usr.text != '':
             self.textinput.text += '\n>_ ' + self.usr.text
@@ -396,6 +384,27 @@ class GameScreen(Screen):
             self.c = 0
             return False
 
+    def updateSmallStats(self, newHP, newSP):
+        hp = data.get('player')['stats']['hp']
+        sp = data.get('player')['stats']['sp']
+        name = data.get('player')['info']['name']
+        self.label.text = '[b] %s[/b]:\nhp: %d/%d\nsp: %d/%d' %(name, newHP, hp, newSP, sp)
+
+    def updateAtkList(self):
+        for x in data.get('player')['atkList']:
+            self.atkList.text = self.atkList.text + x + '\n'
+
+    def updateInventory(self):
+        inv = data.get('player')['inventory']
+        if inv != {}:
+            for x in inv:
+                self.inventory.text = self.inventory.text + x + '\n'
+        else:
+            self.inventory.text = self.inventory.text + 'None'
+
+    def updateObjective(self):
+        pass
+
 class DungeonGame(App):
     """
     this is the actual instance of the app, doesn't do much
@@ -414,4 +423,9 @@ class DungeonGame(App):
         sm.add_widget(GameScreen(name = 'gamescreen'))
         return sm
 
-if __name__ == '__main__': DungeonGame().run()
+if __name__ == '__main__':
+    player = None
+    data = JsonStore('data.json')
+    audio = SoundLoader()
+    app = DungeonGame()
+    app.run()

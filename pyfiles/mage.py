@@ -13,7 +13,8 @@ from charANPC import Character
 
 class Mage(Character):
 
-    def __init__(self):
+    def __init__(self, data):
+        super(Mage, self).__init__(data)
         self.stats = {
                 'hp': 19,
                 'sp': 16,
@@ -24,28 +25,33 @@ class Mage(Character):
                 'lck': 5,
                 'spe': 10,
                 'up': 0,
-                'name': '',
                 'gold': 0
                 }
-        self.atklist = {
+        self.atkList = [
+                'knock',
+                'magic blast',
+                'summon',
+                'cure'
+                ]
+        self.atkDict = {
                 'check': self.atkListCheck,
-                'regular attack': self.regAtk,
-                'attack one': self.attackOne,
-                'attack two': self.attackTwo,
-                'attack Three': self.attackThree
+                'knock': self.regAtk,
+                'magic blast': self.magicBlast,
+                'summon': self.summon,
+                'cure': self.cure
                 }
 
-    def attackOne(self):
+    def magicBlast(self):
         base = 5
         string = ' used atkone'
         return base, string
             
-    def attackTwo(self):
+    def summon(self):
         base = 5
         string = ' used atkTwo'
         return base, string
             
-    def attackThree(self):
+    def cure(self):
         base = 5
         string = ' used atkThree'
         return base, string
