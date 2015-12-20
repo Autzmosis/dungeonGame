@@ -14,16 +14,16 @@ The purpose of this project is simply to make an expandable dungeon game using p
 made into an app later. For the basic story line, there will be about ten different dungeons. 
 
 Since this is a text adventure we will need to make methods that recognize typed words, like
-'look' or 'walk'. Bare minimum features are listed below:
+'look' or 'walk'. _unquie_ and basic features are listed below:
 
 * Text recognition
-* Player starts in a dream that contains the tutorial
+* _Player starts in a dream that contains the tutorial_
 * Player learns about their world as they progress (Dark Souls like storytelling)
 * 3 Character classes (Rogue, Warrior, Mage)
 * 3 Different enemies per dungeon
-* Temporary companions
-* Upgrade Points as stats currency
-* Pet that grows with up points
+* _Temporary companions_
+* _Upgrade Points as stats currency_
+* _Pet that grows with up points_
 * Multipule Bosses
 * 10(?) Dungeons
 * Storyline
