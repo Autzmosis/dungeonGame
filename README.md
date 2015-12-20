@@ -44,16 +44,16 @@ Since this is a text adventure we will need to make methods that recognize typed
 <td> <b>Rogue</b>  </td><td> <b>Warrior</b>  </td><td> <b>Mage</b>  </td>
 </tr>
 <tr>
-<td> shank </td><td> slash </td><td> knock </td>
+<td> Shank </td><td> Slash </td><td> Knock </td>
 </tr>
 <tr>
-<td> smokescreen </td><td> sheild bash </td><td> cast spell </td>
+<td> Smokescreen </td><td> Sheild Bash </td><td> Cast Spell </td>
 </tr>
 <tr>
-<td> backstab </td><td> parry </td><td> summon </td>
+<td> Backstab </td><td> Parry </td><td> Summon </td>
 </tr>
 <tr>
-<td> throw(item) </td><td> warcry </td><td> cure </td>
+<td> Throw(item) </td><td> Warcry </td><td> Cure </td>
 </tr>
 </table>
 
@@ -98,4 +98,4 @@ Since this is a text adventure we will need to make methods that recognize typed
 * Lck - Luck
 * Spe - Speed
 
-##Deadline for this project varries.
+###Deadline for this project varries.
