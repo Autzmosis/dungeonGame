@@ -1,12 +1,11 @@
-#Yet to be named dungeon game
+##Yet to be named dungeon game
+###**By EncodedPixel**
 
-##**By EncodedPixel**
-
-###GUI has been updated to kivy, if you would like to test it out you must do the below things:
-* download repository
-* install python2 https://www.python.org/downloads/
-* install kivy http://kivy.org/docs/installation/installation.html
-* run main.py from terminal or command prompt
+####GUI has been updated to kivy, if you would like to test it out you must do the below things:
+* Download repository
+* Install python2 https://www.python.org/downloads/
+* Install kivy http://kivy.org/docs/installation/installation.html
+* Run main.py from terminal or command prompt
 
 ####Visit the dropbox folder, for videos the current GUI: https://www.dropbox.com/sh/px7he1pssd3fv48/AAABccXOwlWEoe4dJcRMsF93a?dl=0
 
@@ -53,7 +52,7 @@ Since this is a text adventure we will need to make methods that recognize typed
 <td> Backstab </td><td> Parry </td><td> Summon </td>
 </tr>
 <tr>
-<td> Throw(item) </td><td> Warcry </td><td> Cure </td>
+<td> Throw (item) </td><td> Warcry </td><td> Cure </td>
 </tr>
 </table>
 
