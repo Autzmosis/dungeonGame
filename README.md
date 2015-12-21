@@ -46,7 +46,7 @@ Since this is a text adventure we will need to make methods that recognize typed
 <td> Shank </td><td> Slash </td><td> Knock </td>
 </tr>
 <tr>
-<td> Smokescreen </td><td> Sheild Bash </td><td> magic blast </td>
+<td> Smokescreen </td><td> Sheild Bash </td><td> Magic Blast </td>
 </tr>
 <tr>
 <td> Backstab </td><td> Parry </td><td> Summon </td>
