@@ -1,5 +1,5 @@
 #####Jonathon Thach
-- Check out the [Top 30 Text Adventure Games!] (http://www.gamingenthusiast.net/best-text-adventures-best-interactive-fiction-games/)
+- ~~Check out the [Top 30 Text Adventure Games!] (http://www.gamingenthusiast.net/best-text-adventures-best-interactive-fiction-games/)~~
 
 #####Tadanodaemon (Richard Watson)
 - [x] We should have pets that grow along side the player, but also have temporary NPC teammates that help the player in quests or battles.
