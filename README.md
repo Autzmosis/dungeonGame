@@ -1,5 +1,6 @@
 ##Yet to be named dungeon game
-###**By EncodedPixel**
+###**By Autzmosis**
+####**Coded by タダノデーモン (tadanodaemon)**
 
 ####GUI has been updated to kivy, if you would like to test it out you must do the below things:
 * Download repository
