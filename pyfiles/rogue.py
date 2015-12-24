@@ -24,8 +24,8 @@ class Rogue(Character):
             'md': 5,
             'lck': 15,
             'spe': 15,
-            'up': 0,
-            'gold': 0
+            'exp': 0,
+            'gol': 0
             }
         self.atkList = [
                 'shank',
@@ -42,16 +42,25 @@ class Rogue(Character):
                 }
 
     def smokescreen(self):
-        base = 5
-        string = ' used smokescreen'
-        return base, string
+        baseAtk = 0
+        baseAcc = 90
+        mod = {'acc': .7}
+        modString = 'accuracy lowered.'
+        string = self.info['name'] + ' used smokescreen'
+        return [baseAtk, baseAcc, string, mod, modString]
             
     def backstab(self):
-        base = 5
-        string = ' used backstab'
-        return base, string
+        baseAtk = 7
+        baseAcc = 90
+        mod = {'def': .7}
+        modString = 'defense lowered'
+        string = self.info['name'] + ' used backstab'
+        return [baseAtk, baseAcc, string, mod, modString, False]
             
     def throw(self):
-        base = 5
-        string = ' used throw'
-        return base, string
+        baseAtk = 5
+        baseAcc = 90
+        mod = {}
+        modString = ''
+        string = self.info['name'] + ' used throw'
+        return [baseAtk, baseAcc, string, mod, modString, False]

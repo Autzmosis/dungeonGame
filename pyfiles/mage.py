@@ -24,8 +24,8 @@ class Mage(Character):
                 'md': 15,
                 'lck': 5,
                 'spe': 10,
-                'up': 0,
-                'gold': 0
+                'exp': 0,
+                'gol': 0
                 }
         self.atkList = [
                 'knock',
@@ -42,16 +42,26 @@ class Mage(Character):
                 }
 
     def magicBlast(self):
-        base = 5
-        string = ' used atkone'
-        return base, string
+        baseAtk = 7
+        baseAcc = 90
+        string = self.info['name'] + ' used magic blast'
+        mod = {}
+        modString = ''
+        return [baseAtk, baseAcc, string, mod, modString, True]
             
     def summon(self):
-        base = 5
-        string = ' used atkTwo'
-        return base, string
+        baseAtk = 5
+        baseAcc = 90
+        string = self.info['name'] + ' used summon'
+        mod = {}
+        modString = ''
+        magAtk = True
+        return [baseAtk, baseAcc, string, mod, modString, magAtk]
             
     def cure(self):
-        base = 5
-        string = ' used atkThree'
-        return base, string
+        baseAtk = 5
+        baseAcc = 90
+        string = self.info['name'] + ' used cure'
+        mod = {}
+        modString = ''
+        return [baseAtk, baseAcc, string, mod, modString, False]

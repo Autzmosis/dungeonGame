@@ -14,7 +14,10 @@ from charANPC import *
 class enemyOne(ANPC):
 
     def __init__(self):
-        pass
+        super(enemyOne, self).__init__()
+        self.aliance = 'enemy'
+        self.info = {'name': 'bat'}
+        self.inventory = ['potion']
 
     def someAttack(self):
         pass
@@ -22,7 +25,10 @@ class enemyOne(ANPC):
 class enemyTwo(ANPC):
 
     def __init__(self):
-        pass
+        super(enemyTwo, self).__init__()
+        self.aliance = 'enemy'
+        self.info = {'name': 'rat'}
+        self.inventory = ['potion']
 
     def someAttack(self):
         pass
@@ -30,7 +36,10 @@ class enemyTwo(ANPC):
 class enemyThree(ANPC):
 
     def __init__(self):
-        pass
+        super(enemyThree, self).__init__()
+        self.aliance = 'enemy'
+        self.info = {'name': 'goblin'}
+        self.inventory = ['potion']
 
     def someAttack(self):
         pass

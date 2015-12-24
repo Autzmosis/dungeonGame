@@ -24,8 +24,8 @@ class Warrior(Character):
                 'md': 10,
                 'lck': 5,
                 'spe': 10,
-                'up': 0,
-                'gold': 0
+                'exp': 0,
+                'gol': 0
                 }
         self.atkList = [
                 'slash',
@@ -42,16 +42,25 @@ class Warrior(Character):
                 }
 
     def shieldBash(self):
-        base = 5
-        string = ' used atkone'
-        return base, string
+        baseAtk = 7
+        baseAcc = 90
+        string = self.info['name'] + ' used shield bash'
+        mod = {'atk': .9}
+        modString = ''
+        return [baseAtk, baseAcc, string, mod, modString, False]
             
     def parry(self):
-        base = 5
-        string = ' used atkTwo'
-        return base, string
+        baseAtk = 5
+        baseAcc = 90
+        string = self.info['name'] + ' used parry'
+        mod = {}
+        modString = ''
+        return [baseAtk, baseAcc, string, mod, modString, False]
             
     def warcry(self):
-        base = 5
-        string = ' used atkThree'
-        return base, string
+        baseAtk = 5
+        baseAcc = 90
+        string = self.info['name'] + ' used warcry'
+        mod = {}
+        modString = ''
+        return [baseAtk, baseAcc, string, mod, modString, False]
