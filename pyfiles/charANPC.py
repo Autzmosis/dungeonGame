@@ -12,25 +12,31 @@ and enemies for the game
 """
 
 from random import *
+from kivy.clock import Clock
+from threading import Thread
 
 class Character(object):
 
-    def __init__(self, data):
+    def __init__(self, gui):
+        self.gui = gui
         self.inventory = {}
         self.equipment = {}
         self.battleStats = {'eva': 100, 'acc': 100}
-        self.info = {'name': 'bill'}
-        self.data = data
+        self.c = 0
+        self.caught = None
+        self.enemyNames = None
+        self.responce = None
+        self.arenaInstance = None
         
     def updateSelf(self):
-        self.stats = self.data.get('player')['stats']
-        self.atkList = self.data.get('player')['atkList']
-        self.inventory = self.data.get('player')['inventory']
-        self.equipment = self.data.get('player')['equipment']
-        self.info = self.data.get('player')['info']
+        self.stats = self.gui.data.get('player')['stats']
+        self.atkList = self.gui.data.get('player')['atkList']
+        self.inventory = self.gui.data.get('player')['inventory']
+        self.equipment = self.gui.data.get('player')['equipment']
+        self.info = self.gui.data.get('player')['info']
 
     def updateBase(self):
-        self.data.put('player',
+        self.gui.data.put('player',
                 stats = self.stats,
                 atkList = self.atkList,
                 inventory = self.inventory,
@@ -51,6 +57,8 @@ class Character(object):
                 self.battleStats[stat] *= mod
         if self.stats['hp'] < 0:
             self.stats['hp'] = 0
+        if self.info['name'] == self.gui.data.get('player')['info']['name']:
+            self.gui.updateSmallStats()
 
     def isDead(self):
         if self.stats['hp'] == 0:
@@ -80,52 +88,66 @@ class Character(object):
             else:
                 return 1
 
-    def askQuestion(self, question):
-        return raw_input(question).lower()
-
+    def askQuestion(self, question = None):
+        if self.c == 0:
+            self.gui.usr.bind(on_text_validate = self.askQuestion)
+            self.arenaInstance.report(question)
+            self.c = 1
+        elif self.gui.usr.text != '' and self.c == 1:
+            text = self.gui.usr.text
+            self.c = 0
+            self.responce = text
+            self.gui.usr.text = ''
+            if self.targetTwo():
+                self.arenaInstance.contMainLoop()
+        self.gui.trigger()
 
     def target(self, enemyNames, arenaInstance):
+        self.enemyNames = enemyNames
+        self.arenaInstance = arenaInstance
         newX = 0
         arenaInstance.report('Remaining enemies:')
         for x in enemyNames:
             arenaInstance.report(x)
-        arenaInstance.report('')
-        arenaInstance.report('Available attacks:')
-        for x in self.atkList:
-            arenaInstance.report(x)
-        arenaInstance.report('')
-        responce = self.askQuestion('What do you want to do? ')
+        arenaInstance.report('\n')
+        self.askQuestion(question = 'What do you want to do?')
+
+    def targetTwo(self):
         returnedValue = None
-        for x in range(len(responce) - 1):
-            if responce[x:x+3] == 'run':
+        for x in range(len(self.responce) - 1):
+            if self.responce[x:x+3] == 'run':
                 returnedValue = 'run'
-                return returnedValue
+                self.arenaInstance.playerTarget = returnedValue
+                return 1
             else:
                 for y in self.atkList:
-                    if responce[x:x+len(y)] == y:
+                    if self.responce[x:x+len(y)] == y:
                         newX = x +len(y) + 1
-                        if responce[newX:newX+2] == 'at':
+                        if self.responce[newX:newX+2] == 'at':
                             newX += 3
-                            for e in enemyNames:
-                                if responce[newX:newX+len(e)] == e:
+                            for e in self.enemyNames:
+                                if self.responce[newX:newX+len(e)] == e:
                                     returnedValue = [e, self.atkListCheck(y)]
-                                    return returnedValue
-                            arenaInstance.report('Unknown enemy, please try again')
-                            returnedValue = self.target(enemyNames)
-                            return returnedValue
+                                    self.arenaInstance.playerTarget = returnedValue
+                                    return 1
+                            self.arenaInstance.report('Unknown enemy, please try again\n')
+                            self.target(self.enemyNames, self.arenaInstance)
+                            return 0
                         else:
-                            arenaInstance.report('Choosing random enemy...\n')
-                            rand = randint(0, len(enemyNames) - 1)
-                            returnedValue = [enemyNames[rand], self.atkListCheck(y)]
-                            return returnedValue
-                arenaInstance.report('Invalid attack, try again')
-                returnedValue = self.target(enemyNames, arenaInstance)
-                return returnedValue
+                            self.arenaInstance.report('Choosing random enemy...\n')
+                            rand = randint(0, len(self.enemyNames) - 1)
+                            returnedValue = [self.enemyNames[rand], self.atkListCheck(y)]
+                            self.arenaInstance.playerTarget = returnedValue
+                            return 1
+                self.arenaInstance.report('Invalid attack, try again\n')
+                self.target(self.enemyNames, self.arenaInstance)
+                return 0
 
 
 class ANPC(Character):
 
-    def __init__(self):
+    def __init__(self, gui):
+        self.gui = gui
         self.stats = {
                 'hp': 10,
                 'sp': 10,

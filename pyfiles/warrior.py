@@ -13,11 +13,13 @@ from charANPC import Character
 
 class Warrior(Character):
 
-    def __init__(self, data):
-        super(Warrior, self).__init__(data)
+    def __init__(self, gui):
+        super(Warrior, self).__init__(gui)
         self.stats = {
                 'hp': 25,
                 'sp': 10,
+                'fullHP': 25,
+                'fullSP': 10,
                 'atk': 15,
                 'def': 15,
                 'ma': 5,
@@ -46,7 +48,7 @@ class Warrior(Character):
         baseAcc = 90
         string = self.info['name'] + ' used shield bash'
         mod = {'atk': .9}
-        modString = ''
+        modString = 'attack lowered'
         return [baseAtk, baseAcc, string, mod, modString, False]
             
     def parry(self):

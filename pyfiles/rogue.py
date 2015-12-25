@@ -13,11 +13,13 @@ from charANPC import Character
 
 class Rogue(Character):
     
-    def __init__(self, data):
-        super(Rogue, self).__init__(data)
+    def __init__(self, gui):
+        super(Rogue, self).__init__(gui)
         self.stats = {
             'hp': 22,
             'sp': 13,
+            'fullHP': 22,
+            'fullSP': 13,
             'atk': 10,
             'def': 5,
             'ma': 10,

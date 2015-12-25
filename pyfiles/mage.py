@@ -10,14 +10,17 @@ This program conatins the Mage class
 """
 
 from charANPC import Character
+from random import *
 
 class Mage(Character):
 
-    def __init__(self, data):
-        super(Mage, self).__init__(data)
+    def __init__(self, gui):
+        super(Mage, self).__init__(gui)
         self.stats = {
                 'hp': 19,
                 'sp': 16,
+                'fullHP': 19,
+                'fullSP': 16,
                 'atk': 5,
                 'def': 10,
                 'ma': 15,
@@ -50,13 +53,33 @@ class Mage(Character):
         return [baseAtk, baseAcc, string, mod, modString, True]
             
     def summon(self):
-        baseAtk = 5
-        baseAcc = 90
-        string = self.info['name'] + ' used summon'
-        mod = {}
-        modString = ''
-        magAtk = True
-        return [baseAtk, baseAcc, string, mod, modString, magAtk]
+        pug = [
+                0,
+                100,
+                self.info['name'] + ' summoned a pug!\n--> Pug used Look Ugly',
+                {'def': .7},
+                'defense lowered.',
+                False
+                ]
+        daMonkey = [
+                5,
+                85,
+                self.info['name'] + ' summoned Da Monkey!\n--> Da Monkey come into da village and throw barrels',
+                {'spe': .7},
+                'speed lowered.',
+                False
+                ]
+        bahamut = [
+                10,
+                50,
+                self.info['name'] + ' summoned Bahamut!\n--> Bahamut used Fire Breath',
+                {},
+                '',
+                True
+                ]
+        summons = [pug, daMonkey, bahamut]
+        y = randint(0, len(summons) -1)
+        return summons[y]
             
     def cure(self):
         baseAtk = 5

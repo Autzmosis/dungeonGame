@@ -13,11 +13,10 @@ from charANPC import *
 
 class Pet(ANPC):
 
-    def __init__(self, data):
-        super(Pet, self).__init__()
+    def __init__(self, gui):
+        super(Pet, self).__init__(gui)
         self.aliance = 'player'
         self.info = {'name': 'pet'}
-        pass
 
     def grow(self):
         pass

@@ -42,6 +42,7 @@ from kivy.core.audio import SoundLoader
 from rogue import Rogue
 from mage import Mage
 from warrior import Warrior
+from arena import *
 
 LabelBase.register(name='Pixel',
                    fn_regular='../fonts/slkscr.ttf',
@@ -233,11 +234,11 @@ class ChooseClass(Screen):
 
     def setupPlayer(self):
         if self.info['class'] == 'rogue':
-            player = Rogue(data)
+            player = Rogue(self.manager.get_screen('gamescreen'))
         elif self.info['class'] == 'warrior':
-            player = Warrior(data)
+            player = Warrior(self.manager.get_screen('gamescreen'))
         elif self.info['class'] == 'mage':
-            player = Mage(data)
+            player = Mage(self.manager.get_screen('gamescreen'))
         player.info = self.info
         player.updateBase()
 
@@ -284,6 +285,9 @@ class GameScreen(Screen):
             self.color = Color(0,0,0,1)
             self.rect = Rectangle(size = self.size)
         self.string = ''
+        self.trigger = Clock.create_trigger(self.refocus_text)
+        self.data = data
+        self.original = [self.atkList.text, self.inventory.text]
 
     def fade(self, dt):
         if self.color.a == 1:
@@ -292,20 +296,29 @@ class GameScreen(Screen):
             self.color.a == 0
         
     def on_enter(self):
-        trigger = Clock.create_trigger(self.refocus_text)
-        trigger()
+        global player
+        self.trigger()
         trigfade = Clock.create_trigger(self.fade)
         trigfade()
         Clock.schedule_once(self.welcome, 2)
-        self.image.source = data.get('player')['info']['image']
-        self.updateSmallStats(
-                            data.get('player')['stats']['hp'],
-                            data.get('player')['stats']['sp']
-                            )
+        if player is None:
+            self.setupPlayer()
+        self.image.source = player.info['image']
+        self.updateSmallStats()
         self.updateAtkList()
         self.updateInventory()
 
-    def __on_enter__(self):
+    def setupPlayer(self):
+        global player
+        if data.get('player')['info']['class'] == 'rogue':
+            player = Rogue(self)
+        elif data.get('player')['info']['class'] == 'mage':
+            player = Mage(self)
+        elif data.get('player')['info']['class'] == 'warrior':
+            player = Warrior(self)
+        player.updateSelf()
+
+    def __on_enter__(self, *largs, **kwargs):
         """
         this method validates text and sends to prompt
         """
@@ -316,8 +329,14 @@ class GameScreen(Screen):
             self.usr.text = ''
             self.textinput.text = ''
             self.usr.readonly = False
+            self.atkList.text = self.original[0]
+            self.inventory.text = self.original[1]
             self.fadeOut('title')
-        elif self.usr.text != '':
+        elif self.usr.text.lower() == 'battle':
+            self.usr.text = ''
+            self.trigger()
+            main(player, self)
+        elif self.usr.text.lower() != '':
             self.textinput.text += '\n>_ ' + self.usr.text
             self.usr.text = ''
             sleep(.25)
@@ -326,11 +345,9 @@ class GameScreen(Screen):
             thread.daemon = True
             thread.start()
             self.usr.readonly = False
-            trigger = Clock.create_trigger(self.refocus_text)
-            trigger()
+            self.trigger()
         else:
-            trigger = Clock.create_trigger(self.refocus_text)
-            trigger()
+            self.trigger()
             self.usr.readonly = False
             return False
 
@@ -358,6 +375,7 @@ class GameScreen(Screen):
 
     def refocus_text(self, dt):
         self.usr.focus = True
+        self.usr.readonly = False
     
     def prompt(self, string, **kwargs):
         """
@@ -369,29 +387,38 @@ class GameScreen(Screen):
            self.box.append(x) 
         if self.textinput.text == '':
             self.textinput.text += '>>> '
-            Clock.schedule_interval(self.prompt_send, 1/10)
+            #Clock.schedule_interval(self.prompt_send, 1/10)
+            self.prompt_send('dt')
+        elif string  == '\n':
+            self.textinput.text += '\n'
         else:
             self.textinput.text += '\n>>> '
-            Clock.schedule_interval(self.prompt_send, 1/10)
+            #Clock.schedule_interval(self.prompt_send, 1/10)
+            self.prompt_send('dt')
             
     def prompt_send(self, dt):
         """
         this ships each given letter to the screen
         """
+        sleep(.03)
         self.textinput.text += self.box[self.c]
         self.c += 1
         if self.c == len(self.box):
             self.c = 0
             return False
+        else:
+            self.prompt_send('dt')
 
-    def updateSmallStats(self, newHP, newSP):
-        hp = data.get('player')['stats']['hp']
-        sp = data.get('player')['stats']['sp']
-        name = data.get('player')['info']['name']
-        self.label.text = '[b] %s[/b]:\nhp: %d/%d\nsp: %d/%d' %(name, newHP, hp, newSP, sp)
+    def updateSmallStats(self):
+        newHP = player.stats['hp']
+        newSP = player.stats['sp']
+        hp = player.stats['fullHP']
+        sp = player.stats['fullSP']
+        name = player.info['name']
+        self.label.text = '[b]%s[/b]:\nhp: %d/%d\nsp: %d/%d' %(name, newHP, hp, newSP, sp)
 
     def updateAtkList(self):
-        for x in data.get('player')['atkList']:
+        for x in player.atkList:
             self.atkList.text = self.atkList.text + x + '\n'
 
     def updateInventory(self):
