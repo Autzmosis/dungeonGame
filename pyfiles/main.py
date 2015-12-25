@@ -336,6 +336,34 @@ class GameScreen(Screen):
             self.usr.text = ''
             self.trigger()
             main(player, self)
+        elif self.usr.text.lower() == 'sammy is a fag':
+            self.textinput.text += '\n>_ ' + self.usr.text
+            self.usr.text = ''
+            sleep(.25)
+            self.prompt('I know right!')
+            self.usr.readonly = False
+            self.trigger()
+        elif self.usr.text.lower() == 'but richard is cool right':
+            self.textinput.text += '\n>_ ' + self.usr.text
+            self.usr.text = ''
+            sleep(.25)
+            self.prompt('no, he is a fag too.')
+            self.usr.readonly = False
+            self.trigger()
+        elif self.usr.text.lower() == 'what':
+            self.textinput.text += '\n>_ ' + self.usr.text
+            self.usr.text = ''
+            sleep(.25)
+            self.prompt('i meant what i said!')
+            self.usr.readonly = False
+            self.trigger()
+        elif self.usr.text.lower() == 'what about paul':
+            self.textinput.text += '\n>_ ' + self.usr.text
+            self.usr.text = ''
+            sleep(.25)
+            self.prompt('he\'s even worse!')
+            self.usr.readonly = False
+            self.trigger()
         elif self.usr.text.lower() != '':
             self.textinput.text += '\n>_ ' + self.usr.text
             self.usr.text = ''
