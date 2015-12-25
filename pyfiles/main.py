@@ -325,13 +325,6 @@ class GameScreen(Screen):
         self.usr.readonly = True
         if self.usr.text.lower() == 'exit':
             app.get_running_app().stop()
-        elif self.usr.text.lower() == 'back to start':
-            self.usr.text = ''
-            self.textinput.text = ''
-            self.usr.readonly = False
-            self.atkList.text = self.original[0]
-            self.inventory.text = self.original[1]
-            self.fadeOut('title')
         elif self.usr.text.lower() == 'battle':
             self.usr.text = ''
             self.trigger()

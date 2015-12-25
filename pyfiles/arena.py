@@ -205,7 +205,8 @@ class Arena(object):
                         self.report('U died')
                         return True
                     elif self.didWin():
-                        self.report('You win')
+                        self.report('%s died\n' %(contender.info['name']))
+                        self.report('You win\n')
                         return True
                     else:
                         self.report('%s died\n' %(contender.info['name']))
