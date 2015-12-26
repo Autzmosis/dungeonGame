@@ -23,8 +23,10 @@ class Character(object):
         self.equipment = {}
         self.battleStats = {'eva': 100, 'acc': 100}
         self.c = 0
-        self.caught = None
+        self.dc = 0
+        self.atk = None
         self.enemyNames = None
+        self.charNames = None
         self.responce = None
         self.arenaInstance = None
         
@@ -88,61 +90,90 @@ class Character(object):
             else:
                 return 1
 
-    def askQuestion(self, question = None):
+    def askQuestion(self, question, enemyNames = [], charNames = [], arenaInstance = None):
         if self.c == 0:
-            self.gui.usr.bind(on_text_validate = self.askQuestion)
+            if enemyNames != []:
+                self.enemyNames = enemyNames
+                self.charNames = charNames
+                self.arenaInstance = arenaInstance
+            if self.dc == 0:
+                self.arenaInstance.report('Remaining enemies:')
+                for x in self.enemyNames:
+                    self.arenaInstance.report(x)
+                self.arenaInstance.report('\n')
             self.arenaInstance.report(question)
             self.c = 1
-        elif self.gui.usr.text != '' and self.c == 1:
-            text = self.gui.usr.text
-            self.c = 0
-            self.responce = text
+            if self.dc == 1:
+                self.c = 2
+        elif self.c == 1:
+            text = self.gui.usr.text.lower()
             self.gui.usr.text = ''
-            if self.targetTwo():
-                self.arenaInstance.contMainLoop()
+            self.c = 2
+            self.checkEm(text, True)
+        elif self.c == 2:
+            text = self.gui.usr.text.lower()
+            self.gui.usr.text = ''
+            self.c = 0
+            self.checkEm(text, False)
         self.gui.trigger()
 
-    def target(self, enemyNames, arenaInstance):
-        self.enemyNames = enemyNames
-        self.arenaInstance = arenaInstance
-        newX = 0
-        arenaInstance.report('Remaining enemies:')
-        for x in enemyNames:
-            arenaInstance.report(x)
-        arenaInstance.report('\n')
-        self.askQuestion(question = 'What do you want to do?')
-
-    def targetTwo(self):
-        returnedValue = None
-        for x in range(len(self.responce) - 1):
-            if self.responce[x:x+3] == 'run':
-                returnedValue = 'run'
-                self.arenaInstance.playerTarget = returnedValue
-                return 1
+    def checkEm(self, text, tF):
+        if tF:
+            array = self.atkList
+            invalid = 'Invalid attack, try again.'
+            question = 'Who do you want to attack?'
+            invQuestion = 'What do you want to do?'
+            invc = (0, 0)
+        else:
+            array = self.enemyNames
+            invalid = 'Unknown enemy, try again.'
+            invQuestion = 'Who do you want to attack?'
+            invc = (0, 1)
+        if text in range(0,5):
+            if text in range(0, len(array)):
+                if array == self.atkList:
+                    self.atk = self.atkListCheck(array[text])
+                    self.arenaInstance.report('>_' + str(array[text]))
+                    self.gui.usr.tF = False
+                    self.c = 0
+                    self.dc = 1
+                    self.askQuestion(question)
+                else:
+                    self.arenaInstance.playerTarget = [array[text], self.atk]
+                    self.arenaInstance.report('>_' + str(array[text]))
+                    self.gui.usr.tF = True
+                    self.c = 0
+                    self.dc = 0
+                    self.arenaInstance.mainLoop()
             else:
-                for y in self.atkList:
-                    if self.responce[x:x+len(y)] == y:
-                        newX = x +len(y) + 1
-                        if self.responce[newX:newX+2] == 'at':
-                            newX += 3
-                            for e in self.enemyNames:
-                                if self.responce[newX:newX+len(e)] == e:
-                                    returnedValue = [e, self.atkListCheck(y)]
-                                    self.arenaInstance.playerTarget = returnedValue
-                                    return 1
-                            self.arenaInstance.report('Unknown enemy, please try again\n')
-                            self.target(self.enemyNames, self.arenaInstance)
-                            return 0
-                        else:
-                            self.arenaInstance.report('Choosing random enemy...\n')
-                            rand = randint(0, len(self.enemyNames) - 1)
-                            returnedValue = [self.enemyNames[rand], self.atkListCheck(y)]
-                            self.arenaInstance.playerTarget = returnedValue
-                            return 1
-                self.arenaInstance.report('Invalid attack, try again\n')
-                self.target(self.enemyNames, self.arenaInstance)
-                return 0
-
+                self.arenaInstance.report(invalid)
+                self.c, self.d = invc
+                self.askQuestion(invQuestion)
+        else:
+            if array == self.atkList:
+                if text in array:
+                    self.atk = self.atkListCheck(text)
+                    self.arenaInstance.report('>_' + text)
+                    self.gui.usr.tF = False
+                    self.c = 0
+                    self.dc = 1
+                    self.askQuestion(question)
+                else:
+                    self.arenaInstance.report(invalid)
+                    self.c, self.dc = invc
+                    self.askQuestion(invQuestion)
+            else:
+                if text in array:
+                    self.arenaInstance.playerTarget = [text, self.atk]
+                    self.arenaInstance.report('>_' + text)
+                    self.gui.usr.tF = True
+                    self.c = 0
+                    self.dc = 0
+                    self.arenaInstance.mainLoop()
+                else:
+                    self.arenaInstance.report(invalid)
+                    self.c, self.dc = invc
+                    self.askQuestion(invQuestion)
 
 class ANPC(Character):
 

@@ -42,22 +42,32 @@ class Arena(object):
             self.charNames.append(c.info['name'])
         for e in self.enemy:
             self.enemyNames.append(e.info['name'])
-        self.mainLoop()
+        self.gui.usr.bind(on_text_validate = self.player.askQuestion)
+        self.gui.usr.permission = True
+        self.start()
 
     def start(self):
         if self.didWin():
             for x in self.Reward:
                 self.report(str(x))
             self.gui.usr.bind(on_text_validate = self.gui.__on_enter__)
+            self.gui.usr.permission = False
         elif self.player.stats['hp'] == 0:
             self.report('You lose')
             self.gui.usr.bind(on_text_validate = self.gui.__on_enter__)
+            self.gui.usr.permission = False
         elif self.ran:
             self.report('You coward')
             self.gui.usr.bind(on_text_validate = self.gui.__on_enter__)
+            self.gui.usr.permission = False
         else:
             sleep(1)
-            self.mainLoop()
+            self.player.askQuestion(
+                    'What do you want to do?',
+                    enemyNames = self.enemyNames,
+                    charNames = self.charNames,
+                    arenaInstance = self
+                    )
 
     def attackFirst(self):
         speed = []
@@ -247,9 +257,6 @@ class Arena(object):
 
     def mainLoop(self):
         self.triedToRun = False
-        self.player.target(self.enemyNames, self)#this is where you let the player choose there atk and who to use it on
-        
-    def contMainLoop(self):
         if self.playerTarget == 'run' and self.run():
             self.ran = True
             self.report('Run successfull')

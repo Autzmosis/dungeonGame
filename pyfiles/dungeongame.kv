@@ -379,7 +379,7 @@
 				pos_hint: {'center_x': .5}
 				font_name: 'Pixel'
 				font_size: 18
-				#markup: True
+				markup: True
 				size_hint_y: None
 				size_hint_x: None
 				height: 25
@@ -421,6 +421,8 @@
 						pos: self.pos
 			BoxLayout:
 				orientation: 'horizontal'
+				size_hint_y: None
+				height: 25
 				TextInput:
 					text: '>_'
 					multiline: False
@@ -430,7 +432,8 @@
 					font_name: 'Pixel'
 					background_color: 0, 0, 0, 1
 					readonly: True
-				TextInput:
+				UsrInput:
+					textinput: textinput
 					id: usr
 					multiline: False
 					size_hint_x: None

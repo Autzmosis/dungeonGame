@@ -28,8 +28,9 @@ from kivy.app import App
 from kivy.uix.boxlayout import BoxLayout
 #from kivy.uix.floatlayout import FloatLayout
 #from kivy.uix.relativelayout import RelativeLayout
+from kivy.uix.textinput import TextInput
 from kivy.core.text import LabelBase
-from kivy.uix.image import AsyncImage
+#from kivy.uix.image import AsyncImage
 from kivy.properties import ObjectProperty
 from kivy.clock import Clock
 from threading import Thread
@@ -325,6 +326,13 @@ class GameScreen(Screen):
         self.usr.readonly = True
         if self.usr.text.lower() == 'exit':
             app.get_running_app().stop()
+        elif self.usr.text.lower() == 'back to start':
+            self.usr.text = ''
+            self.textinput.text = ''
+            self.usr.readonly = False
+            self.atkList.text = self.original[0]
+            self.inventory.text = self.original[1]
+            self.fadeOut('title')
         elif self.usr.text.lower() == 'battle':
             self.usr.text = ''
             self.trigger()
@@ -404,17 +412,25 @@ class GameScreen(Screen):
         for shipping to the screen :]
         """
         self.box = []
-        for x in string:
-           self.box.append(x) 
+        substring = ''
+        if string[:2] == '>_':
+            substring = string[2:]
+        if substring != '':
+            for x in substring:
+                self.box.append(x)
+        else:
+            for x in string:
+                self.box.append(x) 
         if self.textinput.text == '':
             self.textinput.text += '>>> '
-            #Clock.schedule_interval(self.prompt_send, 1/10)
             self.prompt_send('dt')
         elif string  == '\n':
             self.textinput.text += '\n'
+        elif string[:2]  == '>_':
+            self.textinput.text += '\n>_ '
+            self.prompt_send('dt')
         else:
             self.textinput.text += '\n>>> '
-            #Clock.schedule_interval(self.prompt_send, 1/10)
             self.prompt_send('dt')
             
     def prompt_send(self, dt):
@@ -452,6 +468,45 @@ class GameScreen(Screen):
 
     def updateObjective(self):
         pass
+
+class UsrInput(TextInput):
+
+    textinput = ObjectProperty(None)
+
+    def __init__(self, **kwargs):
+        super(UsrInput, self).__init__(**kwargs)
+        self.permission = False
+        self.storyMode = False
+        self.tF = True
+
+    def keyboard_on_key_down(self, window, keycode, text, modifiers):
+        global player
+        keyNum, keyStr = keycode
+        if keyStr in ('up', 'down'):
+            if keyStr == 'up':
+                self.textinput.focus = True
+                self.textinput.do_cursor_movement(
+                        'cursor_pgup',
+                        control = False,
+                        alt = False
+                        )
+                self.textinput.focus = False
+                self.focus = True
+            if keyStr == 'down':
+                self.textinput.focus = True
+                self.textinput.do_cursor_movement(
+                        'cursor_pgdown',
+                        control = False,
+                        alt = False
+                        )
+                self.textinput.focus = False
+                self.focus = True
+        elif keyStr in ('1', '2', '3', '4', '5') and self.permission:
+            player.checkEm(int(keyStr) - 1, self.tF)
+        elif keyStr == 'enter' and self.storyMode:
+            pass
+        else:
+            super(UsrInput, self).keyboard_on_key_down(window, keycode, text, modifiers)
 
 class DungeonGame(App):
     """
