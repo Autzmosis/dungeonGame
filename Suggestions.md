@@ -13,7 +13,7 @@
 - Def would be a Viking shield or English shield...focus on the shape not the imagery.
 - and so on...
 
-#####Sammy Soysauce
+#####Other
 - General Lore: There were once three dieties that ruled over Heaven, Hell, and Earth. One who guided souls to Heaven, one who guarded the Gates of Hell, and one who looked over the humans on Earth. One day, the deity who watched over Earth kills the other dieties in order to become "the one True God." In the process of doing so, Heaven is closed off from the humans and the Gates of Hell are open to Earth. This has made Earth a sort of purgatory, all that who die are reincarnated as humans (and/or demons?) and the land is overrun by foul demons. Many brave individuals have tried to kill the "one True God" in hopes of returning the universe to normal, but to avail. The player is one such individual. 
 - Upon choosing class and name, the player is thrust into a tutorial. The user awakes to find a powerful demon approaching. Suddenly, an individual mocks the player and implies that they already know who the player is(this and certain NPCs imply that the player had died before and has been reincarnated into the current one). The individual is amused and trains the user on certain basic functions, like general UI and battle. After doing so, the individual comments on whether the user will be able to fix everything.
 - The final boss, which is the individual in the tutorial and the "one True God" feels remorseful for killing all of his fellow dieties and actually wants to die (which is why he/she trains the player in the beginning). This is not told outright, but implied through certain item descriptions.
