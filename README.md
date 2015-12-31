@@ -20,7 +20,6 @@ Since this is a text adventure we will need to make methods that recognize typed
 * _Player starts in a dream that contains the tutorial_
 * _Temporary companions_
 * _Upgrade Points as stats currency_
-* _Pet that grows with up points_
 
 ######Basic
 * Text recognition
@@ -28,7 +27,7 @@ Since this is a text adventure we will need to make methods that recognize typed
 * 3 Character classes (Rogue, Warrior, Mage)
 * 3 Different enemies per dungeon
 * Multipule Bosses
-* 10(?) Dungeons
+* 10 Dungeons
 * Storyline
 * Sprites and backgrounds
 
@@ -53,7 +52,7 @@ Since this is a text adventure we will need to make methods that recognize typed
 <td> Backstab </td><td> Parry </td><td> Summon </td>
 </tr>
 <tr>
-<td> Throw (item) </td><td> Warcry </td><td> Cure </td>
+<td> Shade Thrust </td><td> Warcry </td><td> Cure </td>
 </tr>
 </table>
 
