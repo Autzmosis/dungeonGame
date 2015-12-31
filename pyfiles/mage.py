@@ -28,7 +28,8 @@ class Mage(Character):
                 'lck': 5,
                 'spe': 10,
                 'exp': 0,
-                'gol': 0
+                'gol': 0,
+                'elem': ['none']
                 }
         self.atkList = [
                 'knock',
@@ -36,55 +37,106 @@ class Mage(Character):
                 'summon',
                 'cure'
                 ]
+        self.setTarget = [
+                'cure'
+                ]
         self.atkDict = {
-                'check': self.atkListCheck,
                 'knock': self.regAtk,
                 'magic blast': self.magicBlast,
                 'summon': self.summon,
                 'cure': self.cure
                 }
 
-    def magicBlast(self):
+    def magicBlast(self, target):
         baseAtk = 7
         baseAcc = 90
-        string = self.info['name'] + ' used magic blast'
+        string = '%s used magic blast on %s' %(self.info['name'], target)
         mod = {}
         modString = ''
-        return [baseAtk, baseAcc, string, mod, modString, True]
+        magAtk = True
+        skipToFront = [0]
+        waitForHit = [0]
+        waitForNextTurn = [0]
+        multHit = [0]
+        multTarget = [None]
+        targetLoseTurn = [0]
+        element = ['none']
+        sp = 3
+        return [target, baseAtk, baseAcc, string,  mod, modString, magAtk,
+                skipToFront, waitForHit, waitForNextTurn, multHit, multTarget,
+                targetLoseTurn, element, sp]
             
-    def summon(self):
+    def summon(self, target):
         pug = [
+                target,
                 0,
                 100,
                 self.info['name'] + ' summoned a pug!\n--> Pug used Look Ugly',
                 {'def': .7},
                 'defense lowered.',
-                False
+                False,
+                [0],
+                [0],
+                [0],
+                [0],
+                [None],
+                [0],
+                ['none'],
+                2,
                 ]
         daMonkey = [
+                target,
                 5,
                 85,
-                self.info['name'] + ' summoned Da Monkey!\n--> Da Monkey come into da village and throw barrels',
+                '%s summoned Da Monkey!\n--> Da Monkey come into da village and throw barrels at %s' %(self.info['name'], target),
                 {'spe': .7},
                 'speed lowered.',
-                False
+                False,
+                [0],
+                [0],
+                [0],
+                [0],
+                [None],
+                [0],
+                ['none'],
+                3,
                 ]
         bahamut = [
+                target,
                 10,
                 50,
-                self.info['name'] + ' summoned Bahamut!\n--> Bahamut used Fire Breath',
+                self.info['name'] + ' summoned Bahamut!\n--> Bahamut used Air Slice!',
                 {},
                 '',
-                True
+                True,
+                [0],
+                [0],
+                [0],
+                [0],
+                [None],
+                [0],
+                ['air'],
+                5,
                 ]
         summons = [pug, daMonkey, bahamut]
         y = randint(0, len(summons) -1)
         return summons[y]
             
     def cure(self):
-        baseAtk = 5
-        baseAcc = 90
-        string = self.info['name'] + ' used cure'
-        mod = {}
-        modString = ''
-        return [baseAtk, baseAcc, string, mod, modString, False]
+        baseAtk = 0
+        baseAcc = 100
+        string = '%s used cure' %(self.info['name'])
+        mod = {'hp': 5}
+        modString = '%s regained some health!' %(self.info['name'])
+        magAtk = False
+        skipToFront = [0]
+        waitForHit = [0]
+        waitForNextTurn = [0]
+        multHit = [0]
+        multTarget = [None]
+        targetLoseTurn = [0]
+        element = ['none']
+        sp = 2
+        return [self.info['name'], baseAtk, baseAcc, string,  mod, modString, magAtk,
+                skipToFront, waitForHit, waitForNextTurn, multHit, multTarget,
+                targetLoseTurn, element, sp]

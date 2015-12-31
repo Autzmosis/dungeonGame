@@ -26,11 +26,8 @@ Config.set('graphics','resizable', 0)
 #import necessary modules
 from kivy.app import App
 from kivy.uix.boxlayout import BoxLayout
-#from kivy.uix.floatlayout import FloatLayout
-#from kivy.uix.relativelayout import RelativeLayout
 from kivy.uix.textinput import TextInput
 from kivy.core.text import LabelBase
-#from kivy.uix.image import AsyncImage
 from kivy.properties import ObjectProperty
 from kivy.clock import Clock
 from threading import Thread
@@ -322,6 +319,7 @@ class GameScreen(Screen):
     def __on_enter__(self, *largs, **kwargs):
         """
         this method validates text and sends to prompt
+        just for testing out crap
         """
         self.usr.readonly = True
         if self.usr.text.lower() == 'exit':
@@ -337,34 +335,6 @@ class GameScreen(Screen):
             self.usr.text = ''
             self.trigger()
             main(player, self)
-        elif self.usr.text.lower() == 'sammy is a fag':
-            self.textinput.text += '\n>_ ' + self.usr.text
-            self.usr.text = ''
-            sleep(.25)
-            self.prompt('I know right!')
-            self.usr.readonly = False
-            self.trigger()
-        elif self.usr.text.lower() == 'but richard is cool right':
-            self.textinput.text += '\n>_ ' + self.usr.text
-            self.usr.text = ''
-            sleep(.25)
-            self.prompt('no, he is a fag too.')
-            self.usr.readonly = False
-            self.trigger()
-        elif self.usr.text.lower() == 'what':
-            self.textinput.text += '\n>_ ' + self.usr.text
-            self.usr.text = ''
-            sleep(.25)
-            self.prompt('i meant what i said!')
-            self.usr.readonly = False
-            self.trigger()
-        elif self.usr.text.lower() == 'what about paul':
-            self.textinput.text += '\n>_ ' + self.usr.text
-            self.usr.text = ''
-            sleep(.25)
-            self.prompt('he\'s even worse!')
-            self.usr.readonly = False
-            self.trigger()
         elif self.usr.text.lower() != '':
             self.textinput.text += '\n>_ ' + self.usr.text
             self.usr.text = ''
@@ -409,7 +379,7 @@ class GameScreen(Screen):
     def prompt(self, string, **kwargs):
         """
         this breaks up typed string into a box and packages each letter
-        for shipping to the screen :]
+        for shipping to the screen :)
         """
         self.box = []
         substring = ''
@@ -482,6 +452,9 @@ class UsrInput(TextInput):
     def keyboard_on_key_down(self, window, keycode, text, modifiers):
         global player
         keyNum, keyStr = keycode
+        ctrl = modifiers == ['ctrl']
+        if ctrl:
+            print ctrl
         if keyStr in ('up', 'down'):
             if keyStr == 'up':
                 self.textinput.focus = True
@@ -501,8 +474,11 @@ class UsrInput(TextInput):
                         )
                 self.textinput.focus = False
                 self.focus = True
-        elif keyStr in ('1', '2', '3', '4', '5') and self.permission:
-            player.checkEm(int(keyStr) - 1, self.tF)
+        elif keyStr in ('0', '1', '2', '3', '4', '5') and self.permission:
+            if keyStr == '0':
+                player.checkEm('run', self.tF)
+            else:
+                player.checkEm(int(keyStr) - 1, self.tF)
         elif keyStr == 'enter' and self.storyMode:
             pass
         else:

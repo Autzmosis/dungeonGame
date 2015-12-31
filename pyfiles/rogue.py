@@ -10,6 +10,7 @@ This program contains the Rogue class
 """
 
 from charANPC import Character
+from random import *
 
 class Rogue(Character):
     
@@ -27,42 +28,77 @@ class Rogue(Character):
             'lck': 15,
             'spe': 15,
             'exp': 0,
-            'gol': 0
+            'gol': 0,
+            'elem': ['none']
             }
         self.atkList = [
                 'shank',
                 'smokescreen',
                 'backstab',
-                'throw'
+                'shade thrust'
+                ]
+        self.setTarget = [
                 ]
         self.atkDict = {
-                'check': self.atkListCheck,
                 'shank': self.regAtk,
                 'smokescreen': self.smokescreen,
                 'backstab': self.backstab,
-                'throw': self.throw
+                'shade thrust': self.shadeThrust
                 }
 
-    def smokescreen(self):
+    def smokescreen(self, target):
         baseAtk = 0
         baseAcc = 90
         mod = {'acc': .7}
-        modString = 'accuracy lowered.'
-        string = self.info['name'] + ' used smokescreen'
-        return [baseAtk, baseAcc, string, mod, modString]
+        modString = '%s\'s accuracy lowered.' %(target)
+        string = '%s used smokescreen!' %(self.info['name'])
+        magAtk = False
+        skipToFront = [0]
+        waitForHit = [0]
+        waitForNextTurn = [0]
+        multHit = [0]
+        multTarget = [None]
+        targetLoseTurn = [0]
+        element = ['none']
+        sp = 2
+        return [target, baseAtk, baseAcc, string,  mod, modString, magAtk,
+                skipToFront, waitForHit, waitForNextTurn, multHit, multTarget,
+                targetLoseTurn, element, sp]
             
-    def backstab(self):
+    def backstab(self, target):
         baseAtk = 7
         baseAcc = 90
         mod = {'def': .7}
-        modString = 'defense lowered'
-        string = self.info['name'] + ' used backstab'
-        return [baseAtk, baseAcc, string, mod, modString, False]
+        modString = target + ' defense lowered.'
+        string = self.info['name'] + ' used backstab!'
+        magAtk = False
+        skipToFront = [0]
+        waitForHit = [0]
+        waitForNextTurn = [0]
+        multHit = [0]
+        multTarget = [None]
+        targetLoseTurn = [0]
+        element = ['none']
+        sp = 3
+        return [target, baseAtk, baseAcc, string,  mod, modString, magAtk,
+                skipToFront, waitForHit, waitForNextTurn, multHit, multTarget,
+                targetLoseTurn, element, sp]
             
-    def throw(self):
-        baseAtk = 5
-        baseAcc = 90
+    def shadeThrust(self, target):
+        baseAtk = 7
+        baseAcc = 70
         mod = {}
         modString = ''
-        string = self.info['name'] + ' used throw'
-        return [baseAtk, baseAcc, string, mod, modString, False]
+        string = self.info['name'] + ' used shade thrust!'
+        magAtk = True
+        skipToFront = [0]
+        waitForHit = [0]
+        waitForNextTurn = [0]
+        multHit = [0]
+        multTarget = [None]
+        targetLoseTurn = [0]
+        element = ['dark']
+        sp = 5
+        return [target, baseAtk, baseAcc, string,  mod, modString, magAtk,
+                skipToFront, waitForHit, waitForNextTurn, multHit, multTarget,
+                targetLoseTurn, element, sp]

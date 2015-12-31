@@ -10,6 +10,7 @@ This program contains the Warrior class, for the game
 """
 
 from charANPC import Character
+from random import *
 
 class Warrior(Character):
 
@@ -27,7 +28,8 @@ class Warrior(Character):
                 'lck': 5,
                 'spe': 10,
                 'exp': 0,
-                'gol': 0
+                'gol': 0,
+                'elem': ['none']
                 }
         self.atkList = [
                 'slash',
@@ -35,34 +37,78 @@ class Warrior(Character):
                 'parry',
                 'warcry'
                 ]
+        self.setTarget = [
+                'parry',
+                'warcry'
+                ]
         self.atkDict = {
-                'check': self.atkListCheck,
                 'slash': self.regAtk,
                 'shield bash': self.shieldBash,
                 'parry': self.parry,
                 'warcry': self.warcry
                 }
 
-    def shieldBash(self):
+    def Berserk(self):
+        '''
+        This is the warriors speacial ability
+        '''
+        pass
+
+    def shieldBash(self, target):
         baseAtk = 7
         baseAcc = 90
-        string = self.info['name'] + ' used shield bash'
+        string = '%s used shield bash on %s' %(self.info['name'], target)
         mod = {'atk': .9}
-        modString = 'attack lowered'
-        return [baseAtk, baseAcc, string, mod, modString, False]
+        modString = '%s\'s attack lowered' %(target)
+        magAtk = False
+        skipToFront = [0]
+        waitForHit = [0]
+        waitForNextTurn = [0]
+        multHit = [0]
+        multTarget = [None]
+        targetLoseTurn = [0]
+        element = ['none']
+        sp = 3
+        return [target, baseAtk, baseAcc, string,  mod, modString, magAtk,
+                skipToFront, waitForHit, waitForNextTurn, multHit, multTarget,
+                targetLoseTurn, element, sp]
             
     def parry(self):
-        baseAtk = 5
-        baseAcc = 90
-        string = self.info['name'] + ' used parry'
+        target = self.info['name']
+        baseAtk = 0
+        baseAcc = 100
+        string = self.info['name'] + ' used parry!'
         mod = {}
         modString = ''
-        return [baseAtk, baseAcc, string, mod, modString, False]
+        magAtk = False
+        skipToFront = [0]
+        waitForHit = [1, 0, 0, '%s parried the attack!' %(self.info['name'])]
+        waitForNextTurn = [0]
+        multHit = [0]
+        multTarget = [None]
+        targetLoseTurn = [0]
+        element = ['none']
+        sp = 1
+        return [target, baseAtk, baseAcc, string,  mod, modString, magAtk,
+                skipToFront, waitForHit, waitForNextTurn, multHit, multTarget,
+                targetLoseTurn, element, sp]
             
     def warcry(self):
-        baseAtk = 5
-        baseAcc = 90
+        target = self.info['name']
+        baseAtk = 0
+        baseAcc = 95
         string = self.info['name'] + ' used warcry'
-        mod = {}
-        modString = ''
-        return [baseAtk, baseAcc, string, mod, modString, False]
+        mod = {'atk': 1.5, 'def': .75}
+        modString = '%s\'s attack rose and defense lowered!' %(self.info['name'])
+        magAtk = False
+        skipToFront = [0]
+        waitForHit = [0]
+        waitForNextTurn = [0]
+        multHit = [0]
+        multTarget = [None]
+        targetLoseTurn = [0]
+        element = ['none']
+        sp = 2
+        return [target, baseAtk, baseAcc, string,  mod, modString, magAtk,
+                skipToFront, waitForHit, waitForNextTurn, multHit, multTarget,
+                targetLoseTurn, element, sp]
