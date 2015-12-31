@@ -13,7 +13,7 @@ enter, etc). For the positioning of the GUI, see dungeongame.kv
 
 import kivy
 
-kivy.require('1.9.1')
+kivy.require('1.9.0')
 
 #set up window
 from kivy.config import Config
@@ -274,8 +274,6 @@ class GameScreen(Screen):
     label = ObjectProperty(None)
     atkList = ObjectProperty(None)
     inventory = ObjectProperty(None)
-    box = []
-    c = 0
 
     def __init__(self, **kwargs):
         super(GameScreen, self).__init__(**kwargs)
@@ -286,6 +284,8 @@ class GameScreen(Screen):
         self.trigger = Clock.create_trigger(self.refocus_text)
         self.data = data
         self.original = [self.atkList.text, self.inventory.text]
+        self.box = []
+        self.c = 0
 
     def fade(self, dt):
         if self.color.a == 1:
@@ -381,8 +381,8 @@ class GameScreen(Screen):
         this breaks up typed string into a box and packages each letter
         for shipping to the screen :)
         """
-        self.box = []
         substring = ''
+        self.box = []
         if string[:2] == '>_':
             substring = string[2:]
         if substring != '':
@@ -407,7 +407,7 @@ class GameScreen(Screen):
         """
         this ships each given letter to the screen
         """
-        sleep(.03)
+        sleep(.01)
         self.textinput.text += self.box[self.c]
         self.c += 1
         if self.c == len(self.box):
@@ -415,6 +415,9 @@ class GameScreen(Screen):
             return False
         else:
             self.prompt_send('dt')
+
+    def keepinItCool(self):
+        self.textinput.text = ''
 
     def updateSmallStats(self):
         newHP = player.stats['hp']
@@ -448,19 +451,19 @@ class UsrInput(TextInput):
         self.permission = False
         self.storyMode = False
         self.tF = True
+        self.ctrl = False
 
     def keyboard_on_key_down(self, window, keycode, text, modifiers):
         global player
         keyNum, keyStr = keycode
-        ctrl = modifiers == ['ctrl']
-        if ctrl:
-            print ctrl
+        if not self.ctrl:
+            self.ctrl = keyStr == 'ctrl'
         if keyStr in ('up', 'down'):
             if keyStr == 'up':
                 self.textinput.focus = True
                 self.textinput.do_cursor_movement(
-                        'cursor_pgup',
-                        control = False,
+                        'cursor_up',
+                        control = True,
                         alt = False
                         )
                 self.textinput.focus = False
@@ -468,20 +471,22 @@ class UsrInput(TextInput):
             if keyStr == 'down':
                 self.textinput.focus = True
                 self.textinput.do_cursor_movement(
-                        'cursor_pgdown',
-                        control = False,
+                        'cursor_down',
+                        control = True,
                         alt = False
                         )
                 self.textinput.focus = False
                 self.focus = True
-        elif keyStr in ('0', '1', '2', '3', '4', '5') and self.permission:
+        if keyStr in ('0', '1', '2', '3', '4', '5') and self.permission:
             if keyStr == '0':
                 player.checkEm('run', self.tF)
             else:
                 player.checkEm(int(keyStr) - 1, self.tF)
+            self.ctrl = False
         elif keyStr == 'enter' and self.storyMode:
             pass
-        else:
+        elif keyStr != 'ctrl':
+            self.ctrl = False
             super(UsrInput, self).keyboard_on_key_down(window, keycode, text, modifiers)
 
 class DungeonGame(App):

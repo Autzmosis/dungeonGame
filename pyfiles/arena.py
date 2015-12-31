@@ -37,6 +37,7 @@ class Arena(object):
         self.wait = {}
         self.loseTurn = {}
         self.originalStats = {}
+        self.pressEnter = False
         for x in self.allChar:
             x.battleStats['eva'] = 100
             x.battleStats['acc'] = 100
@@ -45,11 +46,10 @@ class Arena(object):
             self.originalStats[c] = c.stats
         for e in self.enemy:
             self.enemyNames.append(e.info['name'])
-        self.gui.usr.bind(on_text_validate = self.player.askQuestion)
         self.gui.usr.permission = True
         self.start()
 
-    def start(self):
+    def start(self, *args):
         if self.didWin():
             self.distributeReward()
             self.gui.usr.bind(on_text_validate = self.gui.__on_enter__)
@@ -62,8 +62,15 @@ class Arena(object):
             self.report('You coward')
             self.gui.usr.bind(on_text_validate = self.gui.__on_enter__)
             self.gui.usr.permission = False
+        elif self.pressEnter:
+            self.gui.usr.bind(on_text_validate = self.start)
+            self.report('\n')
+            self.report('Press Enter <<<')
+            self.pressEnter = False
         else:
-            sleep(1)
+            self.gui.usr.bind(on_text_validate = self.player.askQuestion)
+            sleep(.5)
+            self.pressEnter = True
             self.player.askQuestion(
                     'What do you want to do?',
                     enemyNames = self.enemyNames,

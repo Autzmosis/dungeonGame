@@ -166,7 +166,7 @@ class Character(object):
                 self.charNames = charNames
                 self.arenaInstance = arenaInstance
             if self.dc == 0:
-                self.arenaInstance.report('\n')
+                self.gui.keepinItCool()
                 self.arenaInstance.report('Remaining enemies:')
                 for x in self.enemyNames:
                     self.arenaInstance.report(x)
@@ -175,12 +175,12 @@ class Character(object):
             self.c = 1
             if self.dc == 1:
                 self.c = 2
-        elif self.c == 1:
+        elif self.c == 1 and self.gui.usr.text != '':
             text = self.gui.usr.text.lower()
             self.gui.usr.text = ''
             self.c = 2
             self.checkEm(text, True)
-        elif self.c == 2:
+        elif self.c == 2 and self.gui.usr.text != '':
             text = self.gui.usr.text.lower()
             self.gui.usr.text = ''
             self.c = 0
