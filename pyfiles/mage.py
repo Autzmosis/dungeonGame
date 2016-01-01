@@ -16,6 +16,7 @@ class Mage(Character):
 
     def __init__(self, gui):
         super(Mage, self).__init__(gui)
+        self.special = ['random', self.ciphon]
         self.stats = {
                 'hp': 19,
                 'sp': 16,
@@ -47,6 +48,15 @@ class Mage(Character):
                 'cure': self.cure
                 }
 
+    def ciphon(self, targetInfo):
+        '''
+        This is the mage's special ability
+        random
+        '''
+        targetInfo[3] += '\n-->ciphon is activated!'
+        targetInfo[13] = [1, 'sp', .5]
+        return targetInfo
+
     def magicBlast(self, target):
         baseAtk = 7
         baseAcc = 90
@@ -60,11 +70,13 @@ class Mage(Character):
         multHit = [0]
         multTarget = [None]
         targetLoseTurn = [0]
+        absorb = [0]
+        status = [0]
         element = ['none']
         sp = 3
         return [target, baseAtk, baseAcc, string,  mod, modString, magAtk,
                 skipToFront, waitForHit, waitForNextTurn, multHit, multTarget,
-                targetLoseTurn, element, sp]
+                targetLoseTurn, absorb, status, element, sp]
             
     def summon(self, target):
         pug = [
@@ -80,6 +92,8 @@ class Mage(Character):
                 [0],
                 [0],
                 [None],
+                [0],
+                [0],
                 [0],
                 ['none'],
                 2,
@@ -98,6 +112,8 @@ class Mage(Character):
                 [0],
                 [None],
                 [0],
+                [0],
+                [0],
                 ['none'],
                 3,
                 ]
@@ -114,6 +130,8 @@ class Mage(Character):
                 [0],
                 [0],
                 [None],
+                [0],
+                [0],
                 [0],
                 ['air'],
                 5,
@@ -135,8 +153,10 @@ class Mage(Character):
         multHit = [0]
         multTarget = [None]
         targetLoseTurn = [0]
+        absorb = [0]
+        status = [0]
         element = ['none']
         sp = 2
         return [self.info['name'], baseAtk, baseAcc, string,  mod, modString, magAtk,
                 skipToFront, waitForHit, waitForNextTurn, multHit, multTarget,
-                targetLoseTurn, element, sp]
+                targetLoseTurn, absorb, status, element, sp]

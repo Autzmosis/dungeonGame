@@ -16,6 +16,8 @@ class Warrior(Character):
 
     def __init__(self, gui):
         super(Warrior, self).__init__(gui)
+        self.special= ['random', self.berserk]
+        self.berserk = False
         self.stats = {
                 'hp': 25,
                 'sp': 10,
@@ -48,13 +50,18 @@ class Warrior(Character):
                 'warcry': self.warcry
                 }
 
-    def Berserk(self):
+    def berserk(self, targetInfo):
         '''
-        This is the warriors speacial ability
+        This is the warriors special ability
         '''
-        pass
+        targetInfo[3] += '\n-->%s just went berserk!' %(self.info['name'])
+        self.statModifier({'atk': 1.5, 'def': .5})
+        self.berserk = True
+        return targetInfo
 
     def shieldBash(self, target):
+        if self.berserk:
+            self.statModifier({'atk': 2/3, 'def': 2.0})
         baseAtk = 7
         baseAcc = 90
         string = '%s used shield bash on %s' %(self.info['name'], target)
@@ -67,13 +74,17 @@ class Warrior(Character):
         multHit = [0]
         multTarget = [None]
         targetLoseTurn = [0]
+        absorb = [0]
+        status = [0]
         element = ['none']
         sp = 3
         return [target, baseAtk, baseAcc, string,  mod, modString, magAtk,
                 skipToFront, waitForHit, waitForNextTurn, multHit, multTarget,
-                targetLoseTurn, element, sp]
+                targetLoseTurn, absorb, status, element, sp]
             
     def parry(self):
+        if self.berserk:
+            self.statModifier({'atk': 2/3, 'def': 2.0})
         target = self.info['name']
         baseAtk = 0
         baseAcc = 100
@@ -87,13 +98,17 @@ class Warrior(Character):
         multHit = [0]
         multTarget = [None]
         targetLoseTurn = [0]
+        absorb = [0]
+        status = [0]
         element = ['none']
         sp = 1
         return [target, baseAtk, baseAcc, string,  mod, modString, magAtk,
                 skipToFront, waitForHit, waitForNextTurn, multHit, multTarget,
-                targetLoseTurn, element, sp]
+                targetLoseTurn, absorb, status, element, sp]
             
     def warcry(self):
+        if self.berserk:
+            self.statModifier({'atk': 2/3, 'def': 2.0})
         target = self.info['name']
         baseAtk = 0
         baseAcc = 95
@@ -107,8 +122,10 @@ class Warrior(Character):
         multHit = [0]
         multTarget = [None]
         targetLoseTurn = [0]
+        absorb = [0]
+        status = [0]
         element = ['none']
         sp = 2
         return [target, baseAtk, baseAcc, string,  mod, modString, magAtk,
                 skipToFront, waitForHit, waitForNextTurn, multHit, multTarget,
-                targetLoseTurn, element, sp]
+                targetLoseTurn, absorb, status, element, sp]

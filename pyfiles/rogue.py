@@ -16,6 +16,7 @@ class Rogue(Character):
     
     def __init__(self, gui):
         super(Rogue, self).__init__(gui)
+        self.special = ['random', self.dualBlitz]
         self.stats = {
             'hp': 22,
             'sp': 13,
@@ -46,12 +47,21 @@ class Rogue(Character):
                 'shade thrust': self.shadeThrust
                 }
 
+    def dualBlitz(self, targetInfo):
+        '''
+        This is the rogue's special ability
+        '''
+        targetInfo[3] += '\n-->%s\'s dual blitz activated!' %(self.info['name'])
+        targetInfo[10] = [1, 2, 'here is the second!']
+        targetInfo[16] = 0
+        return targetInfo
+
     def smokescreen(self, target):
         baseAtk = 0
         baseAcc = 90
+        string = '%s used smokescreen!' %(self.info['name'])
         mod = {'acc': .7}
         modString = '%s\'s accuracy lowered.' %(target)
-        string = '%s used smokescreen!' %(self.info['name'])
         magAtk = False
         skipToFront = [0]
         waitForHit = [0]
@@ -59,18 +69,20 @@ class Rogue(Character):
         multHit = [0]
         multTarget = [None]
         targetLoseTurn = [0]
+        absorb = [0]
+        status = [0]
         element = ['none']
         sp = 2
         return [target, baseAtk, baseAcc, string,  mod, modString, magAtk,
                 skipToFront, waitForHit, waitForNextTurn, multHit, multTarget,
-                targetLoseTurn, element, sp]
+                targetLoseTurn, absorb, status, element, sp]
             
     def backstab(self, target):
         baseAtk = 7
         baseAcc = 90
+        string = self.info['name'] + ' used backstab!'
         mod = {'def': .7}
         modString = target + ' defense lowered.'
-        string = self.info['name'] + ' used backstab!'
         magAtk = False
         skipToFront = [0]
         waitForHit = [0]
@@ -78,18 +90,20 @@ class Rogue(Character):
         multHit = [0]
         multTarget = [None]
         targetLoseTurn = [0]
+        absorb = [0]
+        status = [0]
         element = ['none']
         sp = 3
         return [target, baseAtk, baseAcc, string,  mod, modString, magAtk,
                 skipToFront, waitForHit, waitForNextTurn, multHit, multTarget,
-                targetLoseTurn, element, sp]
+                targetLoseTurn, absorb, status, element, sp]
             
     def shadeThrust(self, target):
         baseAtk = 7
         baseAcc = 70
+        string = self.info['name'] + ' used shade thrust!'
         mod = {}
         modString = ''
-        string = self.info['name'] + ' used shade thrust!'
         magAtk = True
         skipToFront = [0]
         waitForHit = [0]
@@ -97,8 +111,10 @@ class Rogue(Character):
         multHit = [0]
         multTarget = [None]
         targetLoseTurn = [0]
+        absorb = [0]
+        status = [0]
         element = ['dark']
         sp = 5
         return [target, baseAtk, baseAcc, string,  mod, modString, magAtk,
                 skipToFront, waitForHit, waitForNextTurn, multHit, multTarget,
-                targetLoseTurn, element, sp]
+                targetLoseTurn, absorb, status, element, sp]

@@ -37,7 +37,10 @@ class Arena(object):
         self.wait = {}
         self.loseTurn = {}
         self.originalStats = {}
+        self.Reward = self.reward()
+        self.statusDict = {}
         self.pressEnter = False
+        self.cleanUp = False
         for x in self.allChar:
             x.battleStats['eva'] = 100
             x.battleStats['acc'] = 100
@@ -47,29 +50,33 @@ class Arena(object):
         for e in self.enemy:
             self.enemyNames.append(e.info['name'])
         self.gui.usr.permission = True
-        self.start()
+        self.gui.usr.bind(on_text_validate = self.player.askQuestion)
+        print self.Reward
 
     def start(self, *args):
         if self.didWin():
             self.distributeReward()
-            self.gui.usr.bind(on_text_validate = self.gui.__on_enter__)
+            self.gui.usr.unbind(on_text_validate = self.player.askQuestion)
             self.gui.usr.permission = False
         elif self.player.stats['hp'] == 0:
             self.report('You lose')
-            self.gui.usr.bind(on_text_validate = self.gui.__on_enter__)
+            self.gui.usr.unbind(on_text_validate = self.player.askQuestion)
             self.gui.usr.permission = False
         elif self.ran:
             self.report('You coward')
-            self.gui.usr.bind(on_text_validate = self.gui.__on_enter__)
+            self.gui.usr.unbind(on_text_validate = self.player.askQuestion)
             self.gui.usr.permission = False
         elif self.pressEnter:
             self.gui.usr.bind(on_text_validate = self.start)
             self.report('\n')
             self.report('Press Enter <<<')
             self.pressEnter = False
+            self.cleanUp = True
         else:
-            self.gui.usr.bind(on_text_validate = self.player.askQuestion)
             sleep(.5)
+            if self.cleanUp:
+                self.gui.usr.unbind(on_text_validate = self.start)
+                self.cleanUp = False
             self.pressEnter = True
             self.player.askQuestion(
                     'What do you want to do?',
@@ -123,10 +130,8 @@ class Arena(object):
         if chance < 1:
             return False
 
-    def spHandle(self, character, info, minus = True):
-        if minus:
-            pass
-        pass
+    def spHandle(self, character, sp):
+        character.statModifier({'sp': sp})
 
     def elementalRPS(self, atkElement, defElement):
         rps = 1
@@ -186,27 +191,11 @@ class Arena(object):
             rpsString = 'Not even a scratch!'
         return rps, rpsString
 
-    def changeStatus(self, character, info):
-        pass
-
-    def statusEffect(self, character):
-        for x in character.status:
-            if x == 'poison':
-                pass
-            elif x == 'burn':
-                pass
-            elif x in ('frozen', 'stone'):
-                pass
-            elif x == 'blind':
-                pass
-            elif x == 'silent':
-                pass
-
     def damage(self, char1, info):
         magAtk = info[6]
         baseAtk = info[1]
         char2 = info[0]
-        rps, rpsString = self.elementalRPS(info[13], char2.stats['elem'])
+        rps, rpsString = self.elementalRPS(info[15], char2.stats['elem'])
         if magAtk:
             defense = 'md'
             attack = 'ma'
@@ -262,6 +251,8 @@ class Arena(object):
         hpRatio = (ehp * 1.0) / (chp * 1.0)
         mdaRatio = (emd * 1.0) / (cma * 1.0)
         madRatio = (ema * 1.0) / (cmd * 1.0)
+        #make a max and min exp, that player will get, and divide by some number to minimize this number
+        print daRatio, adRatio, hpRatio, mdaRatio, madRatio, luck
         return int(round(exp * luck * daRatio * adRatio * hpRatio * mdaRatio * madRatio))
 
     def reward(self):
@@ -275,7 +266,7 @@ class Arena(object):
 
     def distributeReward(self): #need to do this after battle after temporary stat changes have been reversed
         numOfChar = len(self.char)
-        reward = [self.reward()[0]/numOfChar, self.reward()[1]/numOfChar, self.reward()[2]]
+        reward = [self.Reward[0]/numOfChar, self.Reward[1]/numOfChar, self.Reward[2]]
         self.report('Recieved:\n-->%d gold\n-->%d exp\n-->%s' %(reward[0], reward[1], reward[2]))
         hp = 0
         for x in self.char:
@@ -297,6 +288,37 @@ class Arena(object):
             return True
         else:
             return False
+
+    def changeStatus(self, targetInfo):
+        target = targetInfo[0]
+        status = targetInfo[14][1]
+        severity = targetInfo[14][2]
+        target.status.append(status)
+        if status in ('poison', 'burn'):
+            damage = int(round(target.stats['fullHP'] * .05 * severity * -1))
+            self.statusDict[target.info['name'] + status] = damage
+        elif status in ('frozen', 'blind', 'silent'):
+            if status == 'blind':
+                target.statModifier({'acc': .3})
+            elif status == 'silent':
+                target.statModifier({'sp': .0})
+            time = int(round(randint(2, 5) * severity))
+            self.statusDict[target.info['name'] + status] = time
+
+    def statusEffect(self, character):
+        name = character.info['name']
+        for x in character.status:
+            if x in ('poison', 'burn'):
+                damage = self.statusDict[name + x]
+                self.report('%s is %sed.' %(name, x))
+                self.report('%s took %d damage' %(name, damage * -1))
+                character.statModifier({'hp': damage})
+            elif x in ('frozen', 'blind', 'silent'):
+                self.statusDict[name + x] -= 1
+                if self.statusDict[name + x] == 0:
+                    self.report('%s is no longer %s.' %(name, x))
+                    character.status.remove(x)
+                    del self.statusDict[name + x]
 
     def checkIfDead(self, character):
         if character.isDead():
@@ -321,6 +343,8 @@ class Arena(object):
         target = targetInfo[0]
         if targetInfo[1] != 0:
             damage = self.damage(character, targetInfo)
+            if targetInfo[13][0]:
+                character.statModifier({targetInfo[13][1]: int(round(targetInfo[13][2] * damage * -1))})
             targetInfo[4]['hp'] = damage
             self.report('%d damage done' %(damage))
         if targetInfo[4] != {}:
@@ -335,9 +359,16 @@ class Arena(object):
         times = targetInfo[10][1]
         c = 0
         targetInfo[10][0] = False
+        targetInfo[10].append(1)
         while c != times:
+            if targetInfo[10][2] != None and c != 0:
+                self.report('\n')
+                self.report(targetInfo[10][2])
+            elif c != 0:
+                self.report('Hit %d time(s)' %(c))
             if self.atkHandle(character, targetInfo):
                 return True
+            c += 1
         return False
 
     def multTarget(self, character, targetInfo):
@@ -364,7 +395,7 @@ class Arena(object):
                 self.targetDictionary[x] = self.nextDic[x]
             else:
                 if x.info['name'] == self.player.info['name']:
-                    self.targetDictionary[x] = self.playerTarget
+                    self.targetDictionary[x] = x.checkSpecial(self.playerTarget)
                 else:
                     self.targetDictionary[x] = x.computerFunction(self.charNames, self.enemyNames)
         self.nextDic.clear()
@@ -417,14 +448,23 @@ class Arena(object):
                     return
         for w in self.wait:
             self.report('%s\'s attack failed' %(target.info['name']))
+        for c in self.allChar:
+            self.statusEffect(c)
         self.wait.clear()
         self.loseTurn.clear()
         self.start()
     
     def atkHandle(self, character, targetInfo):
+        if 'frozen' in character.status:
+            self.report('%s is incapable of moving due to ice.' %(character.info['name']))
+            return False
         target = targetInfo[0]
-        self.report('\n')
-        self.report(targetInfo[3])
+        try: #make it so peeps in multihit don't report their atk string again
+            targetInfo[10][3]
+        except IndexError:
+            self.report('\n')
+            self.report(targetInfo[3])
+        self.spHandle(character, targetInfo[16] * -1)
         if targetInfo[8][0]: #wait for hit
             targetInfo[8][0] = False #turn indicater off
             targetInfo[3] = targetInfo[8][3]
@@ -438,10 +478,10 @@ class Arena(object):
                 targetInfo[9][0] = False #turn indicater off
                 targetInfo[3] = targetInfo[9][4]
             self.nextDic[character] = targetInfo
-        elif targetInfo[12][0]:
+        elif targetInfo[12][0]: #lose turn
             self.loseTurn[target] = targetInfo[12][1]
         elif targetInfo[10][0]: #multHit
-            if self.multiHit(character, targetInfo):
+            if self.multHit(character, targetInfo):
                 return True
         elif targetInfo[11] in range(0,3): #mult target
             if self.multTarget(character, targetInfo):
@@ -449,7 +489,7 @@ class Arena(object):
         elif len(targetInfo[8]) == 4:
             if not targetInfo[8][2]:
                 return False
-        elif self.hit(character, targetInfo[2], target): #target hit
+        elif self.hit(character, targetInfo[2], target) or target == character: #target hit
             if target in self.wait:
                 if self.wait[target][8][1]: #allows hit
                     if self.sendMod(x, targetInfo):
@@ -473,3 +513,4 @@ def main(player, gameScreen): #this is here to test this class
     enemy2 = enemyTwo(gameScreen)
     enemy3 = enemyThree(gameScreen)
     arena = Arena(gameScreen, char = [player], enemy = [enemy1, enemy2, enemy3])
+    return arena

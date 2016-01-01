@@ -334,7 +334,8 @@ class GameScreen(Screen):
         elif self.usr.text.lower() == 'battle':
             self.usr.text = ''
             self.trigger()
-            main(player, self)
+            arena = main(player, self)
+            arena.start()
         elif self.usr.text.lower() != '':
             self.textinput.text += '\n>_ ' + self.usr.text
             self.usr.text = ''
@@ -482,7 +483,6 @@ class UsrInput(TextInput):
                 player.checkEm('run', self.tF)
             else:
                 player.checkEm(int(keyStr) - 1, self.tF)
-            self.ctrl = False
         elif keyStr == 'enter' and self.storyMode:
             pass
         elif keyStr != 'ctrl':
