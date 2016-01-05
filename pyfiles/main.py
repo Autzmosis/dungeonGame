@@ -343,6 +343,7 @@ class GameScreen(Screen):
         self.updateAtkList()
         self.updateInventory()
         self.updateEquipment()
+        self.updatePlayerInfo()
 
     def setupPlayer(self):
         global player
@@ -495,6 +496,22 @@ class GameScreen(Screen):
             curEquip.append('None')
         self.usr.equipment.equipBot.adapter.update(curEquip)
 
+    def updatePlayerInfo(self):
+        stats = player.stats
+        pic = player.info['image']
+        #make algorithm for cost for each stat
+        statName = ['Health', 'Skill Points', 'Attack', 'Defense',
+                'Magic Attack', 'Magic Defense', 'Luck', 'Speed']
+        special = player.special[2]
+        name = player.info['name']
+        self.usr.playerInfo.pic.source = pic
+        self.usr.playerInfo.info.text = name + '\n' + special
+        self.usr.playerInfo.upStats.adapter.update(statName)
+        for s in stats:
+            self.usr.playerInfo.current.text += ('\n' + s)
+        #for c in costs:
+        #    self.usr.playerInfo.current.text += ('\n' + c)
+
     def updateObjective(self, text):
         self.objective.text = ' !-> %s' %(text)
 
@@ -618,6 +635,8 @@ class UsrInput(TextInput):
                 self.selectItem(self.inventory, string = keyStr)
             elif self.mode == 'atkList':
                 self.selectItem(self.atkList, string = keyStr)
+            elif self.mode == 'playerInfo':
+                self.selectItem(self.playerInfo.upStats, string = keyStr)
             elif self.mode == 'avaEquip':
                 if self.ctrl:
                     self.ctrl = False
@@ -651,9 +670,12 @@ class UsrInput(TextInput):
         elif keyStr == 'i' and self.ctrl:
             if self.mode != 'inventory':
                 check = True
-                if self.mode in ('avaEquip', 'curEquip','atkList'):
+                if self.mode in ('avaEquip', 'curEquip','atkList', 'playerInfo'):
                     if self.mode == 'atkList':
                         self.selectItem(self.atkList)
+                    elif self.mode == 'playerInfo':
+                        self.playerInfo.fade()
+                        self.selectItem(self.playerInfo.upStats)
                     elif self.mode == 'avaEquip':
                         self.equipment.fade()
                         self.selectItem(self.equipmment.equipTop)
@@ -673,9 +695,12 @@ class UsrInput(TextInput):
         elif keyStr == 'a' and self.ctrl:
             if self.mode != 'atkList':
                 check = True
-                if self.mode in ('avaEquip', 'curEquip','inventory'):
+                if self.mode in ('avaEquip', 'curEquip','inventory', 'playerInfo'):
                     if self.mode == 'inventory':
                         self.selectItem(self.inventory)
+                    elif self.mode == 'playerInfo':
+                        self.playerInfo.fade()
+                        self.selectItem(self.playerInfo.upStats)
                     elif self.mode == 'avaEquip':
                         self.equipment.fade()
                         self.selectItem(self.equipmment.equipTop)
@@ -695,11 +720,14 @@ class UsrInput(TextInput):
         elif keyStr == 'e' and self.ctrl:
             if self.mode not in ('avaEquip', 'curEquip'):
                 check = True
-                if self.mode in ('atkList', 'inventory'):
+                if self.mode in ('atkList', 'inventory', 'playerInfo'):
                     if self.mode == 'inventory':
                         self.selectItem(self.inventory)
-                    if self.mode == 'atkList':
+                    elif self.mode == 'atkList':
                         self.selectItem(self.atkList)
+                    elif self.mode == 'playerInfo':
+                        self.playerInfo.fade()
+                        self.selectItem(self.playerInfo.upStats)
                     check = False
                 self.mode = 'avaEquip'
                 self.equipment.fade()
@@ -714,6 +742,30 @@ class UsrInput(TextInput):
                 elif self.mode == 'curEquip':
                     self.selectItem(self.equipment.equipBot)
                 self.equipment.fade()
+                self.mode = ''
+                self.text = ''
+        elif keyStr == 'u' and self.ctrl:
+            if self.mode != 'playerInfo':
+                check = True
+                if self.mode in ('avaEquip', 'curEquip','inventory', 'atkList'):
+                    if self.mode == 'inventory':
+                        self.selectItem(self.inventory)
+                    elif self.mode == 'atkList':
+                        self.selectItem(self.atkList)
+                    elif self.mode == 'avaEquip':
+                        self.equipment.fade()
+                        self.selectItem(self.equipmment.equipTop)
+                    elif self.mode == 'curEquip':
+                        self.equipment.fade()
+                        self.selectItem(self.equipmment.equipBot)
+                    check = False
+                self.mode = 'atkList'
+                self.selectItem(self.atkList, 'begin')
+                if check:
+                    self.descrip.fade()
+            else:
+                self.descrip.fade()
+                self.selectItem(self.atkList)
                 self.mode = ''
                 self.text = ''
         elif keyStr == 'enter' and self.mode != '':

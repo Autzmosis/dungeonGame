@@ -16,7 +16,7 @@ class Warrior(Character):
 
     def __init__(self, gui):
         super(Warrior, self).__init__(gui)
-        self.special= ['random', self.berserk]
+        self.special= ['random', self.berserk, 'Berserk']
         self.berserk = False
         self.stats = {
                 'hp': 25,

@@ -48,7 +48,8 @@ class Character(object):
         self.stats = self.gui.data.get('player')['stats']
         self.atkList = self.gui.data.get('player')['atkList']
         self.inventory = self.gui.data.get('player')['inventory']
-        self.equipment = self.gui.data.get('player')['equipment']
+        self.curEquip = self.gui.data.get('player')['curEquip']
+        self.avaEquip = self.gui.data.get('player')['avaEquip']
         self.info = self.gui.data.get('player')['info']
 
     def updateBase(self):
@@ -56,7 +57,8 @@ class Character(object):
                 stats = self.stats,
                 atkList = self.atkList,
                 inventory = self.inventory,
-                equipment = self.equipment,
+		curEquip = self.curEquip,
+		avaEquip = self.avaEquip,
                 info = self.info
                 )
 

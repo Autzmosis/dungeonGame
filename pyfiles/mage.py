@@ -16,7 +16,7 @@ class Mage(Character):
 
     def __init__(self, gui):
         super(Mage, self).__init__(gui)
-        self.special = ['random', self.ciphon]
+        self.special = ['random', self.ciphon, 'Ciphon']
         self.stats = {
                 'hp': 19,
                 'sp': 16,

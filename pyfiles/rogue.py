@@ -16,7 +16,7 @@ class Rogue(Character):
     
     def __init__(self, gui):
         super(Rogue, self).__init__(gui)
-        self.special = ['random', self.dualBlitz]
+        self.special = ['random', self.dualBlitz, 'Dual Blitz']
         self.stats = {
             'hp': 22,
             'sp': 13,
