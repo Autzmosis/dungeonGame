@@ -26,7 +26,11 @@ Config.set('graphics','resizable', 0)
 #import necessary modules
 from kivy.app import App
 from kivy.uix.boxlayout import BoxLayout
+from kivy.uix.gridlayout import GridLayout
+from kivy.adapters.listadapter import ListAdapter
+from kivy.uix.listview import ListItemButton, ListView
 from kivy.uix.textinput import TextInput
+from kivy.uix.label import Label
 from kivy.core.text import LabelBase
 from kivy.properties import ObjectProperty
 from kivy.clock import Clock
@@ -101,6 +105,7 @@ class TitleScreen(Screen):
     def __init__(self, **kwargs):
         super(TitleScreen, self).__init__(**kwargs)
         self.string = '' #this string is used to switch between screens
+        self.c = 0 #This is heroe to ask the user for confirmation
         with self.canvas:
             self.color = Color(0,0,0,1)
             self.rect = Rectangle(size = self.size)
@@ -110,25 +115,59 @@ class TitleScreen(Screen):
             anim = Animation(a = 0, duration = 3.)
             anim.start(self.color)
         
-    def __on_enter__(self, usrinput, hint, app):
+    def __on_enter__(self, usrinput, hint):
         """
         this function is called when player presses enter, it validates the
         text and does something, depending on what was typed.
         """
-        for x in range(0, len(usrinput.text) + 1):
-            if usrinput.text[x:x+8].lower() == 'new game':
-                usrinput.text = ''
-                self.fadeOut('chooseclass')
-                break
-            elif usrinput.text[x:x+8].lower() == 'continue':
-                usrinput.text = ''
-                self.fadeOut('gamescreen')
-                break
-            elif x == len(usrinput.text):
-                usrinput.text = ''
-                hint.text = 'Please type either \'new game\' or \'continue\'.'
-                trigger = Clock.create_trigger(self.refocus_text)
-                trigger()
+        if not self.c:
+            for x in range(0, len(usrinput.text) + 1):
+                if usrinput.text[x:x+8].lower() == 'new game':
+                    usrinput.text = ''
+                    if data.count() != 0:
+                        hint.text = 'Looks, like there you\'ve done this before. Are you sure you want to restart?'
+                        self.c = 1
+                        trigger = Clock.create_trigger(self.refocus_text)
+                        trigger()
+                    else:
+                        hint.text = 'Type \'new game\' or \'continue\' and press enter.'
+                        self.fadeOut('chooseclass')
+                    break
+                elif usrinput.text[x:x+8].lower() == 'continue':
+                    if data.count() == 0:
+                        hint.text = 'You must begin before you can continue!\nType \'new game\' and press enter.'
+                        usrinput.text = ''
+                        trigger = Clock.create_trigger(self.refocus_text)
+                        trigger()
+                    else:
+                        usrinput.text = ''
+                        hint.text = 'Type \'new game\' or \'continue\' and press enter.'
+                        self.fadeOut('gamescreen')
+                    break
+                elif x == len(usrinput.text):
+                    usrinput.text = ''
+                    hint.text = 'Please type either \'new game\' or \'continue\'.'
+                    trigger = Clock.create_trigger(self.refocus_text)
+                    trigger()
+                    break
+        else:
+            self.confirmRestart(usrinput, hint)
+            trigger = Clock.create_trigger(self.refocus_text)
+            trigger()
+
+    def confirmRestart(self, usr, hint):
+        if usr.text in ('yes', 'yeah', 'ye', 'y', 'sure'):
+            usr.text = ''
+            hint.text = 'Type \'new game\' or \'continue\' and press enter.'
+            self.c = 0
+            self.fadeOut('chooseclass')
+        elif usr.text in ('no', 'nah', 'nope'):
+            self.c = 0
+            usr.text = ''
+            hint.text = 'Type \'new game\' or \'continue\' and press enter.'
+        else:
+            hint.text = 'You mind answering my yes or no question?!'
+            usr.text = ''
 
     def fadeOut(self, screen):
         self.string = screen
@@ -271,9 +310,8 @@ class GameScreen(Screen):
     textinput = ObjectProperty(None)
     usr = ObjectProperty(None)
     image = ObjectProperty(None)
-    label = ObjectProperty(None)
-    atkList = ObjectProperty(None)
-    inventory = ObjectProperty(None)
+    objective = ObjectProperty(None)
+    playerLabel = ObjectProperty(None)
 
     def __init__(self, **kwargs):
         super(GameScreen, self).__init__(**kwargs)
@@ -283,7 +321,6 @@ class GameScreen(Screen):
         self.string = ''
         self.trigger = Clock.create_trigger(self.refocus_text)
         self.data = data
-        self.original = [self.atkList.text, self.inventory.text]
         self.box = []
         self.c = 0
 
@@ -305,6 +342,7 @@ class GameScreen(Screen):
         self.updateSmallStats()
         self.updateAtkList()
         self.updateInventory()
+        self.updateEquipment()
 
     def setupPlayer(self):
         global player
@@ -328,8 +366,6 @@ class GameScreen(Screen):
             self.usr.text = ''
             self.textinput.text = ''
             self.usr.readonly = False
-            self.atkList.text = self.original[0]
-            self.inventory.text = self.original[1]
             self.fadeOut('title')
         elif self.usr.text.lower() == 'battle':
             self.usr.text = ''
@@ -426,33 +462,151 @@ class GameScreen(Screen):
         hp = player.stats['fullHP']
         sp = player.stats['fullSP']
         name = player.info['name']
-        self.label.text = '[b]%s[/b]:\nhp: %d/%d\nsp: %d/%d' %(name, newHP, hp, newSP, sp)
+        self.playerLabel.text = '[b]%s[/b]:\nhp: %d/%d\nsp: %d/%d' %(name, newHP, hp, newSP, sp)
 
     def updateAtkList(self):
+        atkList = []
         for x in player.atkList:
-            self.atkList.text = self.atkList.text + x + '\n'
+            atkList.append(x)
+        if len(atkList) < 5:
+            for x in range(0, 5 - len(atkList)):
+                atkList.append('-----')
+        self.usr.atkList.adapter.update(atkList)
 
     def updateInventory(self):
-        inv = data.get('player')['inventory']
-        if inv != {}:
-            for x in inv:
-                self.inventory.text = self.inventory.text + x + '\n'
-        else:
-            self.inventory.text = self.inventory.text + 'None'
+        inv = []
+        for x in player.inventory:
+            inv.append(x)
+        if inv == []:
+            inv.append('None')
+        self.usr.inventory.adapter.update(inv)
 
-    def updateObjective(self):
-        pass
+    def updateEquipment(self):
+        avaEquip = []
+        for x in player.avaEquip:
+            avaEquip.append(x)
+        if avaEquip == []:
+            avaEquip.append('None')
+        self.usr.equipment.equipTop.adapter.update(avaEquip)
+        curEquip = []
+        for x in player.curEquip:
+            curEquip.append(x)
+        if curEquip == []:
+            curEquip.append('None')
+        self.usr.equipment.equipBot.adapter.update(curEquip)
+
+    def updateObjective(self, text):
+        self.objective.text = ' !-> %s' %(text)
+
+class Description(Label):
+    
+    def __init__(self, **kwargs):
+        super(Description, self).__init__(**kwargs)
+        self.text = 'None'
+        with self.canvas:
+            Color(0,0,0,1)
+            self.rect = Rectangle(size = self.size, pos = self.pos)
+        self.bind(pos = self.updateRect)
+        self.bind(size = self.updateRect)
+        self.viewable = False
+
+    def updateRect(self, *args):
+        self.rect.pos = self.pos
+        self.rect.size = self.size
+
+    def fade(self):
+        if not self.viewable:
+            anim = Animation(opacity = 1, duration = .5)
+            anim.start(self)
+            self.viewable = True
+        else:
+            anim = Animation(opacity = 0, duration = .5)
+            anim.start(self)
+            self.viewable = False
+
+class PlayerInfo(BoxLayout):
+
+    info = ObjectProperty(None)
+    upStats = ObjectProperty(None)
+    current = ObjectProperty(None)
+    cost = ObjectProperty(None)
+    pic = ObjectProperty(None)
+
+    def __init__(self, **kwargs):
+        super(PlayerInfo, self).__init__(**kwargs)
+        self.viewable = False
+
+    def fade(self):
+        if not self.viewable:
+            anim = Animation(opacity = 1, duration = .5)
+            anim.start(self)
+            self.viewable = True
+        else:
+            anim = Animation(opacity = 0, duration = .5)
+            anim.start(self)
+            self.viewable = False
+
+class Equipment(BoxLayout):
+
+    equipTop = ObjectProperty(None)
+    equipBot = ObjectProperty(None)
+
+    def __init__(self, **kwargs):
+        super(Equipment, self).__init__(**kwargs)
+        self.viewable = False
+
+    def fade(self):
+        if not self.viewable:
+            anim = Animation(opacity = 1, duration = .5)
+            anim.start(self)
+            self.viewable = True
+        else:
+            anim = Animation(opacity = 0, duration = .5)
+            anim.start(self)
+            self.viewable = False
+
+class Container(GridLayout):
+    
+    def __init__(self, **kwargs):
+        super(Container, self).__init__(**kwargs)
+        self.converter = lambda row_index, rec: {
+                'text': rec['name'],
+                'size_hint_y': None,
+                'height': 15,
+                'deselected_color': [0,0,0,1],
+                'selected_color': [0,0,.5,1],
+                'font_name': 'Pixel'}
+        self.adapter = Adapter(
+                data = [],
+                args_converter = self.converter,
+                cls = ListItemButton,
+                selection_mode = 'single',
+                allow_empty_selection = True)
+        self.list_view = ListView(adapter = self.adapter)
+        self.add_widget(self.list_view)
+
+class Adapter(ListAdapter):
+    
+    def update(self, lis):
+        for x in lis:
+            self.data.append({'name': x, 'is_selected': False})
 
 class UsrInput(TextInput):
 
     textinput = ObjectProperty(None)
+    inventory = ObjectProperty(None)
+    atkList = ObjectProperty(None)
+    descrip = ObjectProperty(None)
+    equipment = ObjectProperty(None)
+    playerInfo = ObjectProperty(None)
 
     def __init__(self, **kwargs):
         super(UsrInput, self).__init__(**kwargs)
         self.permission = False
-        self.storyMode = False
+        self.mode = ''
         self.tF = True
         self.ctrl = False
+        self.current = 0
 
     def keyboard_on_key_down(self, window, keycode, text, modifiers):
         global player
@@ -460,34 +614,174 @@ class UsrInput(TextInput):
         if not self.ctrl:
             self.ctrl = keyStr == 'ctrl'
         if keyStr in ('up', 'down'):
-            if keyStr == 'up':
+            if self.mode == 'inventory':
+                self.selectItem(self.inventory, string = keyStr)
+            elif self.mode == 'atkList':
+                self.selectItem(self.atkList, string = keyStr)
+            elif self.mode == 'avaEquip':
+                if self.ctrl:
+                    self.ctrl = False
+                    self.selectItem(self.equipment.equipTop)
+                    self.mode = 'curEquip'
+                    self.selectItem(self.equipment.equipBot, string = 'begin')
+                else:
+                    self.selectItem(self.equipment.equipTop, string = keyStr)
+            elif self.mode == 'curEquip':
+                if self.ctrl:
+                    self.ctrl = False
+                    self.selectItem(self.equipment.equipBot)
+                    self.mode = 'avaEquip'
+                    self.selectItem(self.equipment.equipTop, string = 'begin')
+                else:
+                    self.selectItem(self.equipment.equipBot, string = keyStr)
+            else:
                 self.textinput.focus = True
                 self.textinput.do_cursor_movement(
-                        'cursor_up',
+                        'cursor_' + keyStr,
                         control = True,
                         alt = False
                         )
                 self.textinput.focus = False
                 self.focus = True
-            if keyStr == 'down':
-                self.textinput.focus = True
-                self.textinput.do_cursor_movement(
-                        'cursor_down',
-                        control = True,
-                        alt = False
-                        )
-                self.textinput.focus = False
-                self.focus = True
-        if keyStr in ('0', '1', '2', '3', '4', '5') and self.permission:
+        elif keyStr in ('0', '1', '2', '3', '4', '5') and self.permission:
             if keyStr == '0':
                 player.checkEm('run', self.tF)
             else:
                 player.checkEm(int(keyStr) - 1, self.tF)
-        elif keyStr == 'enter' and self.storyMode:
-            pass
+        elif keyStr == 'i' and self.ctrl:
+            if self.mode != 'inventory':
+                check = True
+                if self.mode in ('avaEquip', 'curEquip','atkList'):
+                    if self.mode == 'atkList':
+                        self.selectItem(self.atkList)
+                    elif self.mode == 'avaEquip':
+                        self.equipment.fade()
+                        self.selectItem(self.equipmment.equipTop)
+                    elif self.mode == 'curEquip':
+                        self.equipment.fade()
+                        self.selectItem(self.equipmment.equipBot)
+                    check = False
+                self.mode = 'inventory'
+                self.selectItem(self.inventory, 'begin')
+                if check:
+                    self.descrip.fade()
+            else:
+                self.descrip.fade()
+                self.selectItem(self.inventory)
+                self.mode = ''
+                self.text = ''
+        elif keyStr == 'a' and self.ctrl:
+            if self.mode != 'atkList':
+                check = True
+                if self.mode in ('avaEquip', 'curEquip','inventory'):
+                    if self.mode == 'inventory':
+                        self.selectItem(self.inventory)
+                    elif self.mode == 'avaEquip':
+                        self.equipment.fade()
+                        self.selectItem(self.equipmment.equipTop)
+                    elif self.mode == 'curEquip':
+                        self.equipment.fade()
+                        self.selectItem(self.equipmment.equipBot)
+                    check = False
+                self.mode = 'atkList'
+                self.selectItem(self.atkList, 'begin')
+                if check:
+                    self.descrip.fade()
+            else:
+                self.descrip.fade()
+                self.selectItem(self.atkList)
+                self.mode = ''
+                self.text = ''
+        elif keyStr == 'e' and self.ctrl:
+            if self.mode not in ('avaEquip', 'curEquip'):
+                check = True
+                if self.mode in ('atkList', 'inventory'):
+                    if self.mode == 'inventory':
+                        self.selectItem(self.inventory)
+                    if self.mode == 'atkList':
+                        self.selectItem(self.atkList)
+                    check = False
+                self.mode = 'avaEquip'
+                self.equipment.fade()
+                self.selectItem(self.equipment.equipTop, 'begin')
+                if check:
+                    self.descrip.fade()
+                self.ctrl = False
+            else:
+                self.descrip.fade()
+                if self.mode == 'avaEquip':
+                    self.selectItem(self.equipment.equipTop)
+                elif self.mode == 'curEquip':
+                    self.selectItem(self.equipment.equipBot)
+                self.equipment.fade()
+                self.mode = ''
+                self.text = ''
+        elif keyStr == 'enter' and self.mode != '':
+            if self.mode == 'inventory':
+                self.selectItem(self.inventory)
+                self.mode = ''
+                self.descrip.fade()
+            elif self.mode == 'atkList' and self.permission:
+                self.selectItem(self.atkList)
+                self.mode = ''
+                self.descrip.fade()
+            if self.mode in ('avaEquip', 'curEquip'):
+                if self.mode == 'avaEquip':
+                    self.selectItem(self.equipment.equipTop)
+                elif self.mode == 'curEquip':
+                    self.selectItem(self.equipment.equipBot)
+                self.mode = ''
+                self.equipment.fade()
+                self.descrip.fade()
+            super(UsrInput, self).keyboard_on_key_down(window, keycode, text, modifiers)
         elif keyStr != 'ctrl':
             self.ctrl = False
             super(UsrInput, self).keyboard_on_key_down(window, keycode, text, modifiers)
+
+    def selectItem(self, container, string = ''):
+        data = len(container.adapter.data) -1
+        move = True
+        if string == 'begin':
+            self.current = 0
+        elif string == 'down':
+            self.current += 1
+            if self.current > data:
+                self.current -= 1
+                move = False
+        elif string == 'up':
+            self.current -= 1
+            if self.current < 0:
+                self.current += 1
+                move = False
+        if move:
+            view = container.adapter.get_view(self.current)
+            container.adapter.handle_selection(view)
+            if self.current == 0:
+                self.scroll(1, container)
+            elif self.current >= len(container.adapter.data) - 8:
+                self.scroll(0, container)
+            else:
+                pos = 1 - (self.current * 1.3  /len(container.adapter.data))
+                self.scroll(pos, container)
+            if string != '':
+                self.text = view.text
+                self.updateDescription()
+
+    def scroll(self, pos, container):
+        scrlview = container.list_view.container.parent
+        scrlview.scroll_y = pos
+
+    def updateDescription(self):
+        if self.text in ('None', '-----'):
+            self.descrip.text = 'None'
+        else:
+            if self.mode == 'inventory':
+                pass
+            elif self.mode == 'atkList':
+                pass
+
+class Menu(Screen):
+    pass
 
 class DungeonGame(App):
     """

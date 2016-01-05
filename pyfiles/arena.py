@@ -14,6 +14,8 @@ Right now, I will make it so that I can use it in the terminal
 
 from random import *
 from time import sleep
+
+#modules for dev use
 from rogue import *
 from mage import *
 from warrior import *
@@ -46,18 +48,20 @@ class Arena(object):
             x.battleStats['acc'] = 100
         for c in self.char:
             self.charNames.append(c.info['name'])
-            self.originalStats[c] = c.stats
+            stats = {}
+            stats.update(c.stats)
+            self.originalStats[c] = stats
         for e in self.enemy:
             self.enemyNames.append(e.info['name'])
         self.gui.usr.permission = True
         self.gui.usr.bind(on_text_validate = self.player.askQuestion)
-        print self.Reward
 
     def start(self, *args):
         if self.didWin():
             self.distributeReward()
             self.gui.usr.unbind(on_text_validate = self.player.askQuestion)
             self.gui.usr.permission = False
+            print self.player.stats
         elif self.player.stats['hp'] == 0:
             self.report('You lose')
             self.gui.usr.unbind(on_text_validate = self.player.askQuestion)
@@ -193,7 +197,6 @@ class Arena(object):
 
     def damage(self, char1, info):
         magAtk = info[6]
-        baseAtk = info[1]
         char2 = info[0]
         rps, rpsString = self.elementalRPS(info[15], char2.stats['elem'])
         if magAtk:
@@ -202,7 +205,11 @@ class Arena(object):
         else:
             defense = 'def'
             attack = 'atk'
-        mod = uniform(.9, 1) * char1.luck() * rps
+        baseAtk = (info[1] * char1.stats[attack]) / 100
+        luck = char1.luck()
+        mod = uniform(.9, 1) * luck * rps
+        if luck == 2:
+            self.report('That\'s gonna leave a mark!')
         adRatio = (char1.stats[attack] * 1.0) / (char2.stats[defense] * 2.0)
         if rpsString != '':
             self.report(rpsString)
@@ -323,20 +330,18 @@ class Arena(object):
     def checkIfDead(self, character):
         if character.isDead():
             name = character.info['name']
-            if character in self.allChar:
-                self.allChar.remove(character)
+            self.allChar.remove(character)
             if name in self.charNames:
                 self.charNames.remove(name)
-            if name in self.enemyNames:
-                self.enemyNames.remove(name)
-            if name == self.player.info['name']:
-                self.report('You died')
-                return True
-            if self.didWin() and name != self.player.info['name']:
-                self.report('You Win')
-                return True
+                if name == self.player.info['name']:
+                    self.report('You died')
+                    return True
             else:
-                self.report('%s died' %(character.info['name']))
+                self.enemyNames.remove(name)
+                if self.didWin():
+                    self.report('You Win')
+                    return True
+            self.report('%s died' %(character.info['name']))
         return False
 
     def sendMod(self, character,  targetInfo):
@@ -349,7 +354,7 @@ class Arena(object):
             self.report('%d damage done' %(damage))
         if targetInfo[4] != {}:
             target.statModifier(targetInfo[4])
-        if targetInfo[5] != '':
+        if targetInfo[5] != '' and target.stats['hp'] != 0:
             self.report(targetInfo[5])
         if self.checkIfDead(target):
             return True
@@ -361,7 +366,9 @@ class Arena(object):
         targetInfo[10][0] = False
         targetInfo[10].append(1)
         while c != times:
-            if targetInfo[10][2] != None and c != 0:
+            if targetInfo[0].stats['hp'] == 0:
+                return False
+            elif targetInfo[10][2] != None and c != 0:
                 self.report('\n')
                 self.report(targetInfo[10][2])
             elif c != 0:

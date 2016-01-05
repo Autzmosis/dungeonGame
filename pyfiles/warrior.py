@@ -61,8 +61,9 @@ class Warrior(Character):
 
     def shieldBash(self, target):
         if self.berserk:
-            self.statModifier({'atk': 2/3, 'def': 2.0})
-        baseAtk = 7
+            self.statModifier({'atk': 2.0/3, 'def': 2.0})
+            self.berserk = False
+        baseAtk = 85
         baseAcc = 90
         string = '%s used shield bash on %s' %(self.info['name'], target)
         mod = {'atk': .9}
@@ -84,7 +85,8 @@ class Warrior(Character):
             
     def parry(self):
         if self.berserk:
-            self.statModifier({'atk': 2/3, 'def': 2.0})
+            self.statModifier({'atk': 2.0/3, 'def': 2.0})
+            self.berserk = False
         target = self.info['name']
         baseAtk = 0
         baseAcc = 100
@@ -108,7 +110,8 @@ class Warrior(Character):
             
     def warcry(self):
         if self.berserk:
-            self.statModifier({'atk': 2/3, 'def': 2.0})
+            self.statModifier({'atk': 2.0/3, 'def': 2.0})
+            self.berserk = False
         target = self.info['name']
         baseAtk = 0
         baseAcc = 95

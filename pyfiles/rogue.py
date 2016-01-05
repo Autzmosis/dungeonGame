@@ -78,7 +78,7 @@ class Rogue(Character):
                 targetLoseTurn, absorb, status, element, sp]
             
     def backstab(self, target):
-        baseAtk = 7
+        baseAtk = 85
         baseAcc = 90
         string = self.info['name'] + ' used backstab!'
         mod = {'def': .7}
@@ -99,7 +99,7 @@ class Rogue(Character):
                 targetLoseTurn, absorb, status, element, sp]
             
     def shadeThrust(self, target):
-        baseAtk = 7
+        baseAtk = 95
         baseAcc = 70
         string = self.info['name'] + ' used shade thrust!'
         mod = {}

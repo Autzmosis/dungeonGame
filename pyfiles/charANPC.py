@@ -21,7 +21,8 @@ class Character(object):
         self.gui = gui
         self.inventory = []
         self.status = []
-        self.equipment = {}
+        self.curEquip = []
+        self.avaEquip = []
         self.battleStats = {'eva': 100, 'acc': 100}
         self.c = 0
         self.dc = 0
@@ -31,6 +32,17 @@ class Character(object):
         self.responce = None
         self.arenaInstance = None
         self.invalid = False
+
+        #will hold all items in game
+        #self.items = {
+        #        'potion': [
+        #            quantity,
+        #            effect,
+        #            descrip,
+        #            sell price,
+        #            buy price
+        #            ],
+        #        }
         
     def updateSelf(self):
         self.stats = self.gui.data.get('player')['stats']
@@ -98,7 +110,7 @@ class Character(object):
     def checkSpecial(self, targetInfo):
         if self.special[0] == 'random':
             rand = random() / self.luck()
-            if rand < .5:
+            if rand < .1:
                 return self.special[1](targetInfo)
             else:
                 return targetInfo
@@ -171,7 +183,12 @@ class Character(object):
 
         ORDER IS EXTREMELY IMPORTANT
         '''
-        baseAtk = 5
+        if self.info['name'] == self.gui.data.get('player')['info']['name']:
+            if self.info['class'] == 'warrior':
+                if self.berserk:
+                    self.statModifier({'atk': 2.0/3, 'def': 2.0})
+                    self.berserk = False
+        baseAtk = 60
         baseAcc = 95
         string = self.info['name'] + ' used ' + self.atkList[0] + ' on ' + target + '!'
         mod = {}
@@ -192,7 +209,7 @@ class Character(object):
                 targetLoseTurn, absorb, status, element, sp]
 
     def luck(self):
-        x = randint(1, 160 + self.stats['lck'])
+        x = randint(1, 60)
         for y in range(1, self.stats['lck'] + 1):
             if y == x:
                 return 2

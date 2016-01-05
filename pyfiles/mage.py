@@ -58,7 +58,7 @@ class Mage(Character):
         return targetInfo
 
     def magicBlast(self, target):
-        baseAtk = 7
+        baseAtk = 75
         baseAcc = 90
         string = '%s used magic blast on %s' %(self.info['name'], target)
         mod = {}
@@ -100,7 +100,7 @@ class Mage(Character):
                 ]
         daMonkey = [
                 target,
-                5,
+                85,
                 85,
                 '%s summoned Da Monkey!\n--> Da Monkey come into da village and throw barrels at %s' %(self.info['name'], target),
                 {'spe': .7},
@@ -119,7 +119,7 @@ class Mage(Character):
                 ]
         bahamut = [
                 target,
-                10,
+                95,
                 50,
                 self.info['name'] + ' summoned Bahamut!\n--> Bahamut used Air Slice!',
                 {},
