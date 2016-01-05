@@ -101,6 +101,7 @@ class TitleScreen(Screen):
     """
     
     usr = ObjectProperty(None)
+    hint = ObjectProperty(None)
 
     def __init__(self, **kwargs):
         super(TitleScreen, self).__init__(**kwargs)
@@ -130,7 +131,7 @@ class TitleScreen(Screen):
                         trigger = Clock.create_trigger(self.refocus_text)
                         trigger()
                     else:
-                        hint.text = 'Type \'new game\' or \'continue\' and press enter.'
+                        hint.text = 'Your story is about to begin.'
                         self.fadeOut('chooseclass')
                     break
                 elif usrinput.text[x:x+8].lower() == 'continue':
@@ -141,7 +142,7 @@ class TitleScreen(Screen):
                         trigger()
                     else:
                         usrinput.text = ''
-                        hint.text = 'Type \'new game\' or \'continue\' and press enter.'
+                        hint.text = 'Welcome back!'
                         self.fadeOut('gamescreen')
                     break
                 elif x == len(usrinput.text):
@@ -158,8 +159,8 @@ class TitleScreen(Screen):
     def confirmRestart(self, usr, hint):
         if usr.text in ('yes', 'yeah', 'ye', 'y', 'sure'):
             usr.text = ''
-            hint.text = 'Type \'new game\' or \'continue\' and press enter.'
             self.c = 0
+            hint.text = 'Your story is about to begin.'
             self.fadeOut('chooseclass')
         elif usr.text in ('no', 'nah', 'nope'):
             self.c = 0
@@ -189,6 +190,7 @@ class TitleScreen(Screen):
         trigger()
         trigfade = Clock.create_trigger(self.fade)
         trigfade()
+        self.hint.text = 'Type \'new game\' or \'continue\' and press enter.'
 
 class ChooseClass(Screen):
     
@@ -199,6 +201,7 @@ class ChooseClass(Screen):
     transit, and refocus_text method.
     """
     usr = ObjectProperty(None)
+    hint = ObjectProperty(None)
     c = 0
 
     def __init__(self, **kwargs):
@@ -260,7 +263,7 @@ class ChooseClass(Screen):
         if usrinput.text != '':
             self.info['name'] = usrinput.text
             usrinput.text = ''
-            hint.text = 'Type name of class and press enter'
+            hint.text = 'Cool, let\'s get going then.'
             self.setupPlayer()
             self.fadeOut('gamescreen')
             self.c = 0
@@ -299,6 +302,7 @@ class ChooseClass(Screen):
         trigger()
         trigfade = Clock.create_trigger(self.fade)
         trigfade()
+        self.hint.text = 'Type name of class and press enter'
 
 class GameScreen(Screen):
     """
@@ -323,6 +327,11 @@ class GameScreen(Screen):
         self.data = data
         self.box = []
         self.c = 0
+        self.queue = []
+        self.isReady = True
+        self.startQueue = True
+        self.stop = False
+        self.cleanUp = False
 
     def fade(self, dt):
         if self.color.a == 1:
@@ -371,6 +380,7 @@ class GameScreen(Screen):
         elif self.usr.text.lower() == 'battle':
             self.usr.text = ''
             self.trigger()
+            self.usr.readonly = False
             arena = main(player, self)
             arena.start()
         elif self.usr.text.lower() != '':
@@ -419,40 +429,51 @@ class GameScreen(Screen):
         this breaks up typed string into a box and packages each letter
         for shipping to the screen :)
         """
-        substring = ''
-        self.box = []
-        if string[:2] == '>_':
-            substring = string[2:]
-        if substring != '':
-            for x in substring:
-                self.box.append(x)
-        else:
+        if string[:4] not in ('>>> ', '\n>_ ', '\n>>>'):
+            if self.textinput.text == '' and self.isReady:
+                string = '>>> ' + string
+            elif string[:2]  == '>_':
+                string = '\n>_ ' + string[2:]
+            elif string != '\n':
+                string = '\n>>> ' + string
+        if self.isReady:
             for x in string:
-                self.box.append(x) 
-        if self.textinput.text == '':
-            self.textinput.text += '>>> '
-            self.prompt_send('dt')
-        elif string  == '\n':
-            self.textinput.text += '\n'
-        elif string[:2]  == '>_':
-            self.textinput.text += '\n>_ '
-            self.prompt_send('dt')
+                self.box.append(x)
+            self.isReady = False
+            self.startQueue = True
+            Clock.schedule_interval(self.promptSend, 1/10)
         else:
-            self.textinput.text += '\n>>> '
-            self.prompt_send('dt')
+            self.queue.append(string)
+            if self.startQueue:
+                self.startQueue = False
+                Clock.schedule_interval(self.promptQueue, 1/10)
+
+    def promptQueue(self, dt):
+        if self.isReady:
+            if not self.stop and self.queue != []:
+                self.prompt(self.queue[0])
+                self.queue.remove(self.queue[0])
+            elif self.stop:
+                self.stop = False
+            else:
+                self.stop = True
+        if self.cleanUp:
+            self.cleanUp = False
+            self.startQueue = True
+            return False
             
-    def prompt_send(self, dt):
+    def promptSend(self, dt):
         """
         this ships each given letter to the screen
         """
-        sleep(.01)
-        self.textinput.text += self.box[self.c]
-        self.c += 1
+        if len(self.box) != 0:
+            self.textinput.text += self.box[self.c]
+            self.c += 1
         if self.c == len(self.box):
             self.c = 0
+            self.isReady = True
+            self.box = []
             return False
-        else:
-            self.prompt_send('dt')
 
     def keepinItCool(self):
         self.textinput.text = ''
@@ -624,6 +645,13 @@ class UsrInput(TextInput):
         self.tF = True
         self.ctrl = False
         self.current = 0
+        self.bind(text = self.checkIfNum)
+        self.pressedNum = False
+
+    def checkIfNum(self, *args):
+        if self.pressedNum:
+            self.text = ''
+            self.pressedNum = False
 
     def keyboard_on_key_down(self, window, keycode, text, modifiers):
         global player
@@ -655,17 +683,19 @@ class UsrInput(TextInput):
                     self.selectItem(self.equipment.equipBot, string = keyStr)
             else:
                 self.textinput.focus = True
-                self.textinput.do_cursor_movement(
-                        'cursor_' + keyStr,
-                        control = True,
-                        alt = False
-                        )
-                self.textinput.focus = False
+                if keyStr == 'up':
+                    self.textinput.scroll_y = max(0, self.textinput.scroll_y - self.textinput.line_height)
+                    self.textinput.focus = False
+                elif keyStr == 'down':
+                    maxy = self.textinput.minimum_height - self.textinput.height
+                    self.textinput.scroll_y = max(0, min(maxy, self.textinput.scroll_y + self.textinput.line_height))
                 self.focus = True
         elif keyStr in ('0', '1', '2', '3', '4', '5') and self.permission:
             if keyStr == '0':
+                self.pressedNum = True
                 player.checkEm('run', self.tF)
             else:
+                self.pressedNum = True
                 player.checkEm(int(keyStr) - 1, self.tF)
         elif keyStr == 'i' and self.ctrl:
             if self.mode != 'inventory':
@@ -759,13 +789,14 @@ class UsrInput(TextInput):
                         self.equipment.fade()
                         self.selectItem(self.equipmment.equipBot)
                     check = False
-                self.mode = 'atkList'
-                self.selectItem(self.atkList, 'begin')
-                if check:
+                self.mode = 'playerInfo'
+                self.playerInfo.fade()
+                self.selectItem(self.playerInfo.upStats, 'begin')
+                if not check:
                     self.descrip.fade()
             else:
-                self.descrip.fade()
-                self.selectItem(self.atkList)
+                self.playerInfo.fade()
+                self.selectItem(self.playerInfo.upStats)
                 self.mode = ''
                 self.text = ''
         elif keyStr == 'enter' and self.mode != '':
@@ -788,7 +819,10 @@ class UsrInput(TextInput):
             super(UsrInput, self).keyboard_on_key_down(window, keycode, text, modifiers)
         elif keyStr not in ('lctrl', 'rctrl', 'ctrl'):
             self.ctrl = False
-            super(UsrInput, self).keyboard_on_key_down(window, keycode, text, modifiers)
+            if keyStr in ('0', '1', '2', '3', '4', '5'):
+                print keyStr
+            else:
+                super(UsrInput, self).keyboard_on_key_down(window, keycode, text, modifiers)
 
     def selectItem(self, container, string = ''):
         data = len(container.adapter.data) -1

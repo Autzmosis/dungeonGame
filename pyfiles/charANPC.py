@@ -32,6 +32,7 @@ class Character(object):
         self.responce = None
         self.arenaInstance = None
         self.invalid = False
+	self.question = ''
 
         #will hold all items in game
         #self.items = {
@@ -221,9 +222,12 @@ class Character(object):
     def askQuestion(self, question, enemyNames = [], charNames = [], arenaInstance = None):
         if self.c == 0:
             if enemyNames != []:
+		self.question = question
                 self.enemyNames = enemyNames
                 self.charNames = charNames
                 self.arenaInstance = arenaInstance
+		Clock.schedule_once(self.askQuestion, .5)
+		return
             if self.dc == 0:
                 if not self.invalid:
                     self.gui.keepinItCool()
@@ -233,7 +237,11 @@ class Character(object):
                 for x in self.enemyNames:
                     self.arenaInstance.report(x)
                 self.arenaInstance.report('\n')
-            self.arenaInstance.report(question)
+	    if self.question == '':
+            	self.arenaInstance.report(question)
+	    else:
+		self.arenaInstance.report(self.question)
+		self.question = ''
             self.c = 1
             if self.dc == 1:
                 self.c = 2

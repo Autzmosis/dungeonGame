@@ -13,7 +13,7 @@ Right now, I will make it so that I can use it in the terminal
 """
 
 from random import *
-from time import sleep
+from kivy.clock import Clock
 
 #modules for dev use
 from rogue import *
@@ -43,6 +43,8 @@ class Arena(object):
         self.statusDict = {}
         self.pressEnter = False
         self.cleanUp = False
+	self.string = ''
+        self.queue = []
         for x in self.allChar:
             x.battleStats['eva'] = 100
             x.battleStats['acc'] = 100
@@ -54,14 +56,15 @@ class Arena(object):
         for e in self.enemy:
             self.enemyNames.append(e.info['name'])
         self.gui.usr.permission = True
+	self.gui.usr.unbind(on_text_validate = self.gui.__on_enter__)
         self.gui.usr.bind(on_text_validate = self.player.askQuestion)
 
     def start(self, *args):
         if self.didWin():
             self.distributeReward()
             self.gui.usr.unbind(on_text_validate = self.player.askQuestion)
+	    self.gui.usr.bind(on_text_validate = self.gui.__on_enter__)
             self.gui.usr.permission = False
-            print self.player.stats
         elif self.player.stats['hp'] == 0:
             self.report('You lose')
             self.gui.usr.unbind(on_text_validate = self.player.askQuestion)
@@ -76,8 +79,8 @@ class Arena(object):
             self.report('Press Enter <<<')
             self.pressEnter = False
             self.cleanUp = True
+            self.gui.cleanUp = True
         else:
-            sleep(.5)
             if self.cleanUp:
                 self.gui.usr.unbind(on_text_validate = self.start)
                 self.cleanUp = False
@@ -287,8 +290,12 @@ class Arena(object):
             x.inventory.append(reward[2])
 
     def report(self, string):
-        self.gui.prompt(string)
-        sleep(.1)
+        self.queue.append(string)
+        Clock.schedule_once(self.reportQueue, .1)
+
+    def reportQueue(self, dt):
+        self.gui.prompt(self.queue[0])
+        self.queue.remove(self.queue[0])
 
     def didWin(self):
         if self.enemyNames == []:
