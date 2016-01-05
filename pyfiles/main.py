@@ -612,7 +612,7 @@ class UsrInput(TextInput):
         global player
         keyNum, keyStr = keycode
         if not self.ctrl:
-            self.ctrl = keyStr == 'ctrl'
+            self.ctrl = keyStr in ('lctrl', 'rctrl', 'ctrl')
         if keyStr in ('up', 'down'):
             if self.mode == 'inventory':
                 self.selectItem(self.inventory, string = keyStr)
@@ -734,7 +734,7 @@ class UsrInput(TextInput):
                 self.equipment.fade()
                 self.descrip.fade()
             super(UsrInput, self).keyboard_on_key_down(window, keycode, text, modifiers)
-        elif keyStr != 'ctrl':
+        elif keyStr not in ('lctrl', 'rctrl', 'ctrl'):
             self.ctrl = False
             super(UsrInput, self).keyboard_on_key_down(window, keycode, text, modifiers)
 
