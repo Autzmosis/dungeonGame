@@ -121,8 +121,30 @@ class TitleScreen(Screen):
         this function is called when player presses enter, it validates the
         text and does something, depending on what was typed.
         """
+        
         if not self.c:
             for x in range(0, len(usrinput.text) + 1):
+                if usrinput.text[x:x+8].lower() == 'fuck you':
+                    hint.text = 'fuck you too, then'
+                    usrinput.text = ''
+                    break
+                if usrinput.text[x:x+16].lower() == 'this game sucks':
+                    hint.text = 'then buy our dlc'
+                    usrinput.text = ''
+                    break
+     ###i wanted to put these for when ppl put their names :/
+                if usrinput.text[x:x+7].lower() == 'richard':
+                    hint.text = 'You taling \'bout the OG nigga?'
+                    usrinput.text = ''
+                    break
+                if usrinput.text[x:x+3].lower() == 'bob':
+                    hint.text = 'if you\'re actually named this, your parents failed you.'
+                    usrinput.text = ''
+                    break
+                if usrinput.text[x:x+5].lower() == 'ahmed':
+                    hint.text = 'professional voice acting @MrAye_'
+                    usrinput.text = ''
+                    break
                 if usrinput.text[x:x+8].lower() == 'new game':
                     usrinput.text = ''
                     if data.count() != 0:
