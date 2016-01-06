@@ -15,24 +15,33 @@ from random import *
 class Warrior(Character):
 
     def __init__(self, gui):
-        super(Warrior, self).__init__(gui)
         self.special= ['random', self.berserk, 'Berserk']
         self.berserk = False
         self.stats = {
-                'hp': 25,
-                'sp': 10,
-                'fullHP': 25,
-                'fullSP': 10,
-                'atk': 15,
-                'def': 15,
-                'ma': 5,
-                'md': 10,
-                'lck': 5,
-                'spe': 10,
+                'hp': 1,
+                'sp': 1,
+                'fullHP': 1,
+                'fullSP': 1,
+                'atk': 1,
+                'def': 1,
+                'ma': 1,
+                'md': 1,
+                'lck': 1,
+                'spe': 1,
                 'exp': 0,
                 'gol': 0,
                 'elem': ['none']
                 }
+	self.upStats = {
+                'fullHP': [1, -.47, 96.9, -70],
+                'fullSP': [1, -.05, 8.9, 6],
+                'atk': [1, -.009, 2.2, 14.5],
+                'def': [1, -.009, 2.3, 14],
+                'ma': [1, -.009, 2, 5],
+                'md': [1, -.009, 2, 6.3],
+                'lck': [1, -.007, 1.35, 6],
+                'spe': [1, -.007, 1.34, 6],
+		}
         self.atkList = [
                 'slash',
                 'shield bash',
@@ -49,6 +58,7 @@ class Warrior(Character):
                 'parry': self.parry,
                 'warcry': self.warcry
                 }
+        super(Warrior, self).__init__(gui)
 
     def berserk(self, targetInfo):
         '''

@@ -128,27 +128,26 @@ class TitleScreen(Screen):
                     hint.text = 'fuck you too, then'
                     usrinput.text = ''
                     break
-                if usrinput.text[x:x+16].lower() == 'this game sucks':
+                elif usrinput.text[x:x+16].lower() == 'this game sucks':
                     hint.text = 'then buy our dlc'
                     usrinput.text = ''
                     break
-     ###i wanted to put these for when ppl put their names :/
-                if usrinput.text[x:x+7].lower() == 'richard':
-                    hint.text = 'You taling \'bout the OG nigga?'
+                elif usrinput.text[x:x+7].lower() == 'richard':
+                    hint.text = 'You talking \'bout the OG nigga?'
                     usrinput.text = ''
                     break
-                if usrinput.text[x:x+3].lower() == 'bob':
+                elif usrinput.text[x:x+3].lower() == 'bob':
                     hint.text = 'if you\'re actually named this, your parents failed you.'
                     usrinput.text = ''
                     break
-                if usrinput.text[x:x+5].lower() == 'ahmed':
+                elif usrinput.text[x:x+5].lower() == 'ahmed':
                     hint.text = 'professional voice acting @MrAye_'
                     usrinput.text = ''
                     break
-                if usrinput.text[x:x+8].lower() == 'new game':
+                elif usrinput.text[x:x+8].lower() == 'new game':
                     usrinput.text = ''
                     if data.count() != 0:
-                        hint.text = 'Looks, like there you\'ve done this before. Are you sure you want to restart?'
+                        hint.text = 'Looks, like you\'ve done this before. Are you sure you want to restart?'
                         self.c = 1
                         trigger = Clock.create_trigger(self.refocus_text)
                         trigger()
@@ -184,7 +183,7 @@ class TitleScreen(Screen):
             self.c = 0
             hint.text = 'Your story is about to begin.'
             self.fadeOut('chooseclass')
-        elif usr.text in ('no', 'nah', 'nope'):
+        elif usr.text in ('no', 'nah', 'nope', 'n'):
             self.c = 0
             usr.text = ''
             hint.text = 'Type \'new game\' or \'continue\' and press enter.'

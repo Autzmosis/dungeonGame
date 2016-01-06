@@ -15,23 +15,32 @@ from random import *
 class Rogue(Character):
     
     def __init__(self, gui):
-        super(Rogue, self).__init__(gui)
         self.special = ['random', self.dualBlitz, 'Dual Blitz']
         self.stats = {
-            'hp': 22,
-            'sp': 13,
-            'fullHP': 22,
-            'fullSP': 13,
-            'atk': 10,
-            'def': 5,
-            'ma': 10,
-            'md': 5,
-            'lck': 15,
-            'spe': 15,
+            'hp': 1,
+            'sp': 1,
+            'fullHP': 1,
+            'fullSP': 1,
+            'atk': 1,
+            'def': 1,
+            'ma': 1,
+            'md': 1,
+            'lck': 1,
+            'spe': 1,
             'exp': 0,
             'gol': 0,
             'elem': ['none']
             }
+	self.upStats = {
+                'fullHP': [1, -.45, 93.3, -70],
+                'fullSP': [1, -.044, 9.1, 5],
+                'atk': [1, -.011, 2.3, 11.5],
+                'def': [1, -.009, 2, 5],
+                'ma': [1, -.009, 2.05, 10],
+                'md': [1, -.009, 2.1, 7.3],
+                'lck': [1, -.007, 1.57, 13.03],
+                'spe': [1, -.007, 1.58, 13.03],
+		}
         self.atkList = [
                 'shank',
                 'smokescreen',
@@ -46,6 +55,7 @@ class Rogue(Character):
                 'backstab': self.backstab,
                 'shade thrust': self.shadeThrust
                 }
+        super(Rogue, self).__init__(gui)
 
     def dualBlitz(self, targetInfo):
         '''

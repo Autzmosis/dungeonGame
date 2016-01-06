@@ -15,23 +15,32 @@ from random import *
 class Mage(Character):
 
     def __init__(self, gui):
-        super(Mage, self).__init__(gui)
         self.special = ['random', self.ciphon, 'Ciphon']
         self.stats = {
-                'hp': 19,
-                'sp': 16,
-                'fullHP': 19,
-                'fullSP': 16,
-                'atk': 5,
-                'def': 10,
-                'ma': 15,
-                'md': 15,
-                'lck': 5,
-                'spe': 10,
+                'hp': 1,
+                'sp': 1,
+                'fullHP': 1,
+                'fullSP': 1,
+                'atk': 1,
+                'def': 1,
+                'ma': 1,
+                'md': 1,
+                'lck': 1,
+                'spe': 1,
                 'exp': 0,
                 'gol': 0,
                 'elem': ['none']
                 }
+	self.upStats = {
+                'fullHP': [1, -.43, 88.7, -70],
+                'fullSP': [1, -.04, 8.9, 6],
+                'atk': [1, -.011, 2.2, 5],
+                'def': [1, -.009, 2.1, 10],
+                'ma': [1, -.009, 2.19, 13.8],
+                'md': [1, -.009, 2.29, 10.3],
+                'lck': [1, -.007, 1.42, 10],
+                'spe': [1, -.007, 1.43, 10],
+		}
         self.atkList = [
                 'knock',
                 'magic blast',
@@ -47,6 +56,7 @@ class Mage(Character):
                 'summon': self.summon,
                 'cure': self.cure
                 }
+        super(Mage, self).__init__(gui)
 
     def ciphon(self, targetInfo):
         '''

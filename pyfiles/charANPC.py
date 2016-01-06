@@ -33,6 +33,7 @@ class Character(object):
         self.arenaInstance = None
         self.invalid = False
 	self.question = ''
+        self.makeSelf()
 
         #will hold all items in game
         #self.items = {
@@ -44,6 +45,12 @@ class Character(object):
         #            buy price
         #            ],
         #        }
+
+    def makeSelf(self):
+        for x in self.upStats:
+            self.upgradeStat(x, make = True)
+        self.stats['hp'] = self.stats['fullHP']
+        self.stats['sp'] = self.stats['fullSP']
         
     def updateSelf(self):
         self.stats = self.gui.data.get('player')['stats']
@@ -62,6 +69,17 @@ class Character(object):
 		avaEquip = self.avaEquip,
                 info = self.info
                 )
+
+    def upgradeStat(self, stat, make = False):
+        x, a, b, c = self.upStats[stat]
+        self.stats[stat] = int(round((a * (x**2)) + (b * x) + c))
+        if not make:
+            self.upStats[stat][0] += 1
+        print stat, self.stats[stat]
+
+    def generateNextExpForStat(self, stat):
+        x = self.upStats[stat][0]
+        return int(round((-.7 * (x**3)) + (108.3 * (x**2)) + (1403.85 * x) - 999.47))
 
     def spHandle(self, atk):
         try:
