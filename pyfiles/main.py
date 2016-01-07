@@ -542,6 +542,7 @@ class GameScreen(Screen):
     def updatePlayerInfo(self, quick = False):
         stats = []
         costs = []
+        lvls = []
         realStatName = []
         statName = ['Health', 'Skill Points', 'Attack', 'Defense',
                 'Magic Attack', 'Magic Defense', 'Luck', 'Speed']
@@ -550,14 +551,19 @@ class GameScreen(Screen):
         for x in realStatName:
             costs.append(str(player.generateNextExpForStat(x)))
             stats.append(str(player.stats[x]))
+            lvls.append(str(player.upStats[x][0]))
         self.usr.playerInfo.current.adapter.update(stats)
+        self.usr.playerInfo.lvl.adapter.update(lvls)
         self.usr.playerInfo.cost.adapter.update(costs)
         if not quick:
             pic = player.info['image']
             special = player.special[2]
             name = player.info['name']
+            Class = player.info['class']
+            element = player.stats['elem'][0]
             self.usr.playerInfo.pic.source = pic
-            self.usr.playerInfo.info.text = name + '\n' + special
+            self.usr.playerInfo.info.text = '%s\n%s\nElement: %s' %(name, Class, element)
+            self.usr.playerInfo.special.text = special + '\nDescription'
             self.usr.playerInfo.upStats.adapter.update(statName)
 
     def updateObjective(self, text):
@@ -568,16 +574,7 @@ class Description(Label):
     def __init__(self, **kwargs):
         super(Description, self).__init__(**kwargs)
         self.text = 'None'
-        with self.canvas:
-            Color(0,0,0,1)
-            self.rect = Rectangle(size = self.size, pos = self.pos)
-        self.bind(pos = self.updateRect)
-        self.bind(size = self.updateRect)
         self.viewable = False
-
-    def updateRect(self, *args):
-        self.rect.pos = self.pos
-        self.rect.size = self.size
 
     def fade(self):
         if not self.viewable:
@@ -596,19 +593,25 @@ class PlayerInfo(BoxLayout):
     current = ObjectProperty(None)
     cost = ObjectProperty(None)
     pic = ObjectProperty(None)
+    whole = ObjectProperty(None)
+    lvl = ObjectProperty(None)
+    special = ObjectProperty(None)
+    hint = ObjectProperty(None)
 
     def __init__(self, **kwargs):
         super(PlayerInfo, self).__init__(**kwargs)
+        self.In = Animation(opacity = 1, duration = .5)
+        self.out = Animation(opacity = 0, duration = .5)
         self.viewable = False
 
     def fade(self):
         if not self.viewable:
-            anim = Animation(opacity = 1, duration = .5)
-            anim.start(self)
+            self.out.start(self.whole)
+            self.In.start(self)
             self.viewable = True
         else:
-            anim = Animation(opacity = 0, duration = .5)
-            anim.start(self)
+            self.out.start(self)
+            self.In.start(self.whole)
             self.viewable = False
 
 class Equipment(BoxLayout):
@@ -630,6 +633,22 @@ class Equipment(BoxLayout):
             anim.start(self)
             self.viewable = False
 
+class InvAtkBox(BoxLayout):
+
+    def __init__(self, **kwargs):
+        super(InvAtkBox, self).__init__(**kwargs)
+        self.viewable = True
+
+    def fade(self):
+        if not self.viewable:
+            anim = Animation(opacity = 1, duration = .5)
+            anim.start(self)
+            self.viewable = True
+        else:
+            anim = Animation(opacity = 0, duration = .5)
+            anim.start(self)
+            self.viewable = False
+
 class Container(GridLayout):
     
     def __init__(self, **kwargs):
@@ -638,8 +657,8 @@ class Container(GridLayout):
                 'text': rec['name'],
                 'size_hint_y': None,
                 'height': 15,
-                'deselected_color': [0,0,0,1],
-                'selected_color': [0,0,.5,1],
+                'deselected_color': [.5,.5,.5,0],
+                'selected_color': [0,0,1,.2],
                 'font_name': 'Pixel'}
         self.adapter = Adapter(
                 data = [],
@@ -666,6 +685,7 @@ class UsrInput(TextInput):
     equipment = ObjectProperty(None)
     playerInfo = ObjectProperty(None)
     screen = ObjectProperty(None)
+    box = ObjectProperty(None)
 
     def __init__(self, **kwargs):
         super(UsrInput, self).__init__(**kwargs)
@@ -748,9 +768,6 @@ class UsrInput(TextInput):
                 if self.mode in ('avaEquip', 'curEquip','atkList', 'playerInfo'):
                     if self.mode == 'atkList':
                         self.selectItem(self.atkList)
-                    elif self.mode == 'playerInfo':
-                        self.playerInfo.fade()
-                        self.selectPlayerInfo()
                     elif self.mode == 'avaEquip':
                         self.equipment.fade()
                         self.selectItem(self.equipmment.equipTop)
@@ -758,6 +775,9 @@ class UsrInput(TextInput):
                         self.equipment.fade()
                         self.selectItem(self.equipmment.equipBot)
                     check = False
+                    if self.mode == 'playerInfo':
+                        self.playerInfo.fade()
+                        self.selectPlayerInfo()
                 self.mode = 'inventory'
                 self.selectItem(self.inventory, string = 'begin')
                 if check:
@@ -774,16 +794,18 @@ class UsrInput(TextInput):
                 if self.mode in ('avaEquip', 'curEquip','inventory', 'playerInfo'):
                     if self.mode == 'inventory':
                         self.selectItem(self.inventory)
-                    elif self.mode == 'playerInfo':
-                        self.playerInfo.fade()
-                        self.selectPlayerInfo()
                     elif self.mode == 'avaEquip':
                         self.equipment.fade()
                         self.selectItem(self.equipment.equipTop)
+                        self.box.fade()
                     elif self.mode == 'curEquip':
                         self.equipment.fade()
                         self.selectItem(self.equipment.equipBot)
+                        self.box.fade()
                     check = False
+                    if self.mode == 'playerInfo':
+                        self.playerInfo.fade()
+                        self.selectPlayerInfo()
                 self.mode = 'atkList'
                 self.selectItem(self.atkList, string = 'begin')
                 if check:
@@ -802,11 +824,12 @@ class UsrInput(TextInput):
                         self.selectItem(self.inventory)
                     elif self.mode == 'atkList':
                         self.selectItem(self.atkList)
-                    elif self.mode == 'playerInfo':
+                    check = False
+                    if self.mode == 'playerInfo':
                         self.playerInfo.fade()
                         self.selectPlayerInfo()
-                    check = False
                 self.mode = 'avaEquip'
+                self.box.fade()
                 self.equipment.fade()
                 self.selectItem(self.equipment.equipTop, string = 'begin')
                 if check:
@@ -819,6 +842,7 @@ class UsrInput(TextInput):
                 elif self.mode == 'curEquip':
                     self.selectItem(self.equipment.equipBot)
                 self.equipment.fade()
+                self.box.fade()
                 self.mode = ''
                 self.text = ''
         elif keyStr == 'u' and self.ctrl:
@@ -849,11 +873,10 @@ class UsrInput(TextInput):
                 self.text = ''
         elif keyStr == 's' and self.mode == 'playerInfo' and self.ctrl:
             if self.memoryStat != {}:
-                self.playerInfo.fade()
-                self.screen.prompt('Do you want to keep these changes?')
+                self.playerInfo.hint.text = 'Do you want to keep these changes?'
                 self.bind(on_text_validate = self.confirmUpgradeStat)
             else:
-                self.screen.prompt('No changes to be saved.')
+                self.playerInfo.hint.text = 'Changes have not been done.'
         elif keyStr == 'enter' and self.mode != '':
             if self.mode == 'inventory':
                 self.selectItem(self.inventory)
@@ -880,7 +903,10 @@ class UsrInput(TextInput):
                 super(UsrInput, self).keyboard_on_key_down(window, keycode, text, modifiers)
 
     def selectItem(self, *containers, **kwargs):
-        string = kwargs['string']
+        try:
+            string = kwargs['string']
+        except KeyError:
+            string = ''
         for container in containers:
             if container not in self.current:
                 self.current[container] = 0
@@ -921,7 +947,9 @@ class UsrInput(TextInput):
         self.selectItem(
                 self.playerInfo.upStats, 
                 self.playerInfo.current, 
-                self.playerInfo.cost, string = string)
+                self.playerInfo.lvl,
+                self.playerInfo.cost, 
+                string = string)
 
     def scroll(self, pos, container):
         scrlview = container.list_view.container.parent
@@ -960,24 +988,16 @@ class UsrInput(TextInput):
             self.screen.updateSmallStats()
             self.unbind(on_text_validate = self.confirmUpgradeStat)
             self.count = 1
-            self.screen.prompt('Upgrade has been saved')
+            self.playerInfo.hint.text = 'Stats have been upgraded.'
         elif answer in ('no', 'nah', 'nope', 'n'):
             for s in self.memoryStat:
                 player.upStats[s][0] -= self.memoryStat[s]
                 player.upgradeStat(s)
                 self.screen.updatePlayerInfo()
                 self.count = 1
-                self.screen.prompt('Upgrade reversed')
-        elif answer == '':
-            self.screen.prompt('Well, since you didn\'t specify, i\'ll randomly choose for you')
-            rand = randint(0,1)
-            if rand:
-                self.text = 'y'
-            else:
-                self.text = 'n'
-            self.confirmUpgradeStat()
+                self.playerInfo.hint.text = 'Upgrade has been reversed.'
         else:
-            self.screen.prompt('That was a yes or no question!!')
+            self.playerInfo.hint.text = 'That was a yes or no question!!'
 
 class DungeonGame(App):
     """

@@ -242,10 +242,14 @@
 	height: 480
 	width: 640
 	pos_hint: {'center_x': .5, 'center_y': .5}
+	AsyncImage:
+		source: '../images/flippybackground.png'
+		pos: 0, 0
 	BoxLayout:
 		orientation: 'horizontal'
 		size: root.size
 		pos_hint: {'center_x': .5, 'center_y': .5}
+		id: whole
 		BoxLayout:
 			orientation: 'vertical'
 			size_hint_x: None
@@ -265,6 +269,12 @@
 			BoxLayout:
 				orientation: 'horizontal'
 				size_hint_y: .15
+				canvas.before:
+					Color:
+						rgba: .5, .5, .5, .5
+					Rectangle:
+						size: self.size
+						pos: self.pos
 				AsyncImage:
 					id: image
 					source: '../images/rogue.png' 
@@ -289,9 +299,16 @@
 					Rectangle:
 						size: self.size
 						pos: self.pos
-			BoxLayout:
-				size_hint_y: .6
+			InvAtkBox:
+				size_hint_y: .85
 				orientation: 'vertical'
+				id: box
+				canvas.before:
+					Color:
+						rgba: .5, .5, .5, .5
+					Rectangle:
+						size: self.size
+						pos: self.pos
 				Label:
 					size_hint_y: None
 					height: 20
@@ -304,21 +321,18 @@
 				Container:
 					id: inventory
 					cols: 1
-			BoxLayout:
-				size_hint_x: None
-				width: 178
-				size_hint_y: None
-				height: 1
-				pos_hint: {'center_x': .5}
-				canvas.before:
-					Color:
-						rgba: 1, 1, 1, 1
-					Rectangle:
-						size: self.size
-						pos: self.pos
-			BoxLayout:
-				size_hint_y: .25
-				orientation: 'vertical'
+				BoxLayout:
+					size_hint_x: None
+					width: 178
+					size_hint_y: None
+					height: 1
+					pos_hint: {'center_x': .5}
+					canvas.before:
+						Color:
+							rgba: 1, 1, 1, 1
+						Rectangle:
+							size: self.size
+							pos: self.pos
 				Label:
 					size_hint_y: None
 					height: 20
@@ -355,8 +369,7 @@
 					pos: self.pos
 		BoxLayout:
 			orientation: 'vertical'
-			AsyncImage:
-				source: '../images/flippybackground.png'
+			Widget:
 				width: 460
 				height: 200
 				size_hint_y: None
@@ -387,6 +400,12 @@
 				width: 460
 				color: 1, 1, 1, 1
 				valign: 'middle'
+				canvas.before:
+					Color:
+						rgba: .5, .5, .5, .5
+					Rectangle:
+						size: self.size
+						pos: self.pos
 			BoxLayout:
 				size_hint_x: None
 				size_hint_y: None
@@ -407,7 +426,7 @@
 				height: 226
 				foreground_color: 1, 1, 1, 1
 				font_name: 'Pixel'
-				background_color: 0, 0, 0, 1
+				background_color: .5, .5, .5, .5
 				readonly: True
 			BoxLayout:
 				size_hint_x: None
@@ -432,7 +451,7 @@
 					width: 30
 					foreground_color: 1, 1, 1, 1
 					font_name: 'Pixel'
-					background_color: 0, 0, 0, 1
+					background_color: .5, .5, .5, .5
 					readonly: True
 				UsrInput:
 					screen: root
@@ -442,13 +461,14 @@
 					descrip: descrip
 					equipment: equipment
 					playerInfo: playerInfo
+					box: box
 					id: usr
 					multiline: False
 					size_hint_x: None
 					width: 430
 					foreground_color: 1, 1, 1, 1
 					font_name: 'Pixel'
-					background_color: 0, 0, 0, 1
+					background_color: .5, .5, .5, .5
 					cursor_blink: True
 					cursor_color: 1, 1, 1, 1
 					on_text_validate: root.__on_enter__()
@@ -471,10 +491,16 @@
 		height: 200
 		width: 200
 		text_size: self.size
-		pos: 440, 49
+		pos: 440, 280
 		opacity: 0
 		halign: 'center'
 		valign: 'top'
+		canvas.before:
+			Color:
+				rgba: .5, .5, .5, .5
+			Rectangle:
+				size: self.size
+				pos: self.pos
 	Equipment:
 		equipTop: equipTop
 		equipBot: equipBot
@@ -487,7 +513,7 @@
 		orientation: 'vertical'
 		canvas.before:
 			Color:
-				rgba: 0, 0, 0, 1
+				rgba: .5, .5, .5, .5
 			Rectangle:
 				size: self.size
 				pos: self.pos
@@ -539,28 +565,39 @@
 		current: current
 		cost: cost
 		pic: pic
+		hint: hint
+		lvl: lvl
+		special: special
+		whole: whole
 		opacity: 0
 		size_hint: None, None
-		width: 320
-		height: 240
+		width: 480
+		height: 300
 		pos_hint: {'center_x': .5, 'center_y': .5}
 		orientation: 'vertical'
 		canvas.before:
 			Color:
-				rgba: 0, 0, 0, 1
+				rgba: .5, .5, .5, .5
 			Rectangle:
 				size: self.size
 				pos: self.pos
 		BoxLayout:
 			size_hint_y: None
-			height: 99
+			height: 140
 			orientation: 'horizontal'
-			BoxLayout:
-				orientation: 'vertical'
+			AsyncImage:
+				id: pic
+				source: '../images/rogue.png' 
+				size_hint_x: .2
+			Label:
+				text: 'name\nclass\nelement'
+				id: info
 				size_hint_x: .3
-				AsyncImage:
-					id: pic
-					source: '../images/rogue.png' 
+				height: 20
+				markup: True
+				halign: 'center'
+				font_name: 'Pixel'
+				font_size: 15
 			BoxLayout:
 				size_hint_x: None
 				width: 1
@@ -572,9 +609,34 @@
 						size: self.size
 						pos: self.pos
 			Label:
-				text: 'name & info'
-				id: info
-				size_hint_x: .7
+				text: 'special'
+				id: special
+				size_hint_x: .5
+				height: 20
+				markup: True
+				halign: 'center'
+				font_name: 'Pixel'
+				font_size: 15
+		BoxLayout:
+			size_hint_y: None
+			height: 1
+			pos_hint: {'center_x': .5}
+			canvas.before:
+				Color:
+					rgba: 1, 1, 1, 1
+				Rectangle:
+					size: self.size
+					pos: self.pos
+		Label:
+			text: 'Select which stat you want to upgrade.'
+			id: hint
+			size_hint_y: None
+			height: 20
+			markup: True
+			halign: 'center'
+			valign: 'middle'
+			font_name: 'Pixel'
+			font_size: 15
 		BoxLayout:
 			size_hint_y: None
 			height: 1
@@ -588,18 +650,15 @@
 		BoxLayout:
 			orientation: 'horizontal'
 			size_hint_y: None
-			height: 150
-			BoxLayout:
-				size_hint_x: .45
-				orientation: 'vertical'
-				Label:
-					text: '>> Upgrade <<'
-					halign: 'center'
-					size_hint_y: .1
-				Container:
-					id: upStats
-					cols: 1
-					size_hint_y: .9
+			height: 20
+			Label:
+				text: '[b]Stats[/b]'
+				size_hint_x: .65
+				markup: True
+				halign: 'center'
+				valign: 'middle'
+				font_name: 'Pixel'
+				font_size: 15
 			BoxLayout:
 				size_hint_x: None
 				width: 1
@@ -610,17 +669,14 @@
 					Rectangle:
 						size: self.size
 						pos: self.pos
-			BoxLayout:
-				size_hint_x: .275
-				orientation: 'vertical'
-				Label:
-					text: '>> current <<'
-					halign: 'center'
-					size_hint_y: .1
-				Container:
-					id: current
-					cols: 1
-					size_hint_y: .9
+			Label:
+				text: '[b]Lvl[/b]'
+				size_hint_x: .1
+				markup: True
+				halign: 'center'
+				valign: 'middle'
+				font_name: 'Pixel'
+				font_size: 15
 			BoxLayout:
 				size_hint_x: None
 				width: 1
@@ -631,14 +687,69 @@
 					Rectangle:
 						size: self.size
 						pos: self.pos
+			Label:
+				text: '[b]cost[/b]'
+				size_hint_x: .25
+				markup: True
+				halign: 'center'
+				valign: 'middle'
+				font_name: 'Pixel'
+				font_size: 15
+		BoxLayout:
+			size_hint_y: None
+			height: 1
+			pos_hint: {'center_x': .5}
+			canvas.before:
+				Color:
+					rgba: 1, 1, 1, 1
+				Rectangle:
+					size: self.size
+					pos: self.pos
+		BoxLayout:
+			orientation: 'horizontal'
+			Container:
+				id: upStats
+				cols: 1
+				size_hint_x: .4
 			BoxLayout:
-				size_hint_x: .275
-				orientation: 'vertical'
-				Label:
-					text: '>> cost <<'
-					halign: 'center'
-					size_hint_y: .1
-				Container:
-					id: cost
-					cols: 1
-					size_hint_y: .9
+				size_hint_x: None
+				width: 1
+				pos_hint: {'center_x': .5}
+				canvas.before:
+					Color:
+						rgba: 1, 1, 1, 1
+					Rectangle:
+						size: self.size
+						pos: self.pos
+			Container:
+				id: current
+				cols: 1
+				size_hint_x: .25
+			BoxLayout:
+				size_hint_x: None
+				width: 1
+				pos_hint: {'center_x': .5}
+				canvas.before:
+					Color:
+						rgba: 1, 1, 1, 1
+					Rectangle:
+						size: self.size
+						pos: self.pos
+			Container:
+				id: lvl
+				cols: 1
+				size_hint_x: .1
+			BoxLayout:
+				size_hint_x: None
+				width: 1
+				pos_hint: {'center_x': .5}
+				canvas.before:
+					Color:
+						rgba: 1, 1, 1, 1
+					Rectangle:
+						size: self.size
+						pos: self.pos
+			Container:
+				id: cost
+				cols: 1
+				size_hint_x: .25
