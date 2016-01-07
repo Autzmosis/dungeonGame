@@ -435,6 +435,7 @@
 					background_color: 0, 0, 0, 1
 					readonly: True
 				UsrInput:
+					screen: root
 					textinput: textinput
 					inventory: inventory
 					atkList: atkList
@@ -587,9 +588,9 @@
 		BoxLayout:
 			orientation: 'horizontal'
 			size_hint_y: None
-			height: 140
+			height: 150
 			BoxLayout:
-				size_hint_x: .5
+				size_hint_x: .45
 				orientation: 'vertical'
 				Label:
 					text: '>> Upgrade <<'
@@ -609,10 +610,17 @@
 					Rectangle:
 						size: self.size
 						pos: self.pos
-			Label:
-				text: 'current'
-				size_hint_x: .25
-				id: current
+			BoxLayout:
+				size_hint_x: .275
+				orientation: 'vertical'
+				Label:
+					text: '>> current <<'
+					halign: 'center'
+					size_hint_y: .1
+				Container:
+					id: current
+					cols: 1
+					size_hint_y: .9
 			BoxLayout:
 				size_hint_x: None
 				width: 1
@@ -623,7 +631,14 @@
 					Rectangle:
 						size: self.size
 						pos: self.pos
-			Label:
-				text: 'cost'
-				size_hint_x: .25
-				id: cost
+			BoxLayout:
+				size_hint_x: .275
+				orientation: 'vertical'
+				Label:
+					text: '>> cost <<'
+					halign: 'center'
+					size_hint_y: .1
+				Container:
+					id: cost
+					cols: 1
+					size_hint_y: .9

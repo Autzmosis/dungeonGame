@@ -48,7 +48,7 @@ class Character(object):
 
     def makeSelf(self):
         for x in self.upStats:
-            self.upgradeStat(x, make = True)
+            self.upgradeStat(x, True)
         self.stats['hp'] = self.stats['fullHP']
         self.stats['sp'] = self.stats['fullSP']
         
@@ -70,12 +70,13 @@ class Character(object):
                 info = self.info
                 )
 
-    def upgradeStat(self, stat, make = False):
+    def upgradeStat(self, stat, stop = False):
+        if not stop:
+            self.upStats[stat][0] += 1
         x, a, b, c = self.upStats[stat]
         self.stats[stat] = int(round((a * (x**2)) + (b * x) + c))
-        if not make:
-            self.upStats[stat][0] += 1
-        print stat, self.stats[stat]
+        self.stats['hp'] = self.stats['fullHP']
+        self.stats['sp'] = self.stats['fullSP']
 
     def generateNextExpForStat(self, stat):
         x = self.upStats[stat][0]
@@ -291,7 +292,7 @@ class Character(object):
             invc = (0, 1)
         if text  == 'run':
             self.arenaInstance.playerTarget = text
-            self.arenaInstance.report('>_' + text)
+            self.gui.textinput.text += '\n>_ %s' %(text)
             self.c = 0
             self.dc = 0
             self.arenaInstance.decide()
@@ -300,7 +301,7 @@ class Character(object):
                 if array == self.atkList:
                     self.atk = array[text]
                     if self.spHandle(self.atk):
-                        self.arenaInstance.report('>_' + str(array[text]))
+                        self.gui.textinput.text += '\n>_ %s' %(str(array[text]))
                         self.gui.usr.tF = False
                         self.c = 0
                         self.dc = 1
@@ -322,7 +323,7 @@ class Character(object):
                         self.askQuestion(invQuestion)
                 else:
                     self.arenaInstance.playerTarget = self.atkDict[self.atk](array[text])
-                    self.arenaInstance.report('>_' + str(array[text]))
+                    self.gui.textinput.text += '\n>_ %s' %(str(array[text]))
                     self.gui.usr.tF = True
                     self.c = 0
                     self.dc = 0
@@ -337,7 +338,7 @@ class Character(object):
                 if text in array:
                     self.atk = text
                     if self.spHandle(self.atk):
-                        self.arenaInstance.report('>_' + text)
+                        self.gui.textinput.text += '\n>_ %s' %(text)
                         self.gui.usr.tF = False
                         self.c = 0
                         self.dc = 1
@@ -365,7 +366,7 @@ class Character(object):
             else:
                 if text in array:
                     self.arenaInstance.playerTarget = self.atkDict[self.atk](text)
-                    self.arenaInstance.report('>_' + text)
+                    self.gui.textinput.text += '\n>_ %s' %(text)
                     self.gui.usr.tF = True
                     self.c = 0
                     self.dc = 0

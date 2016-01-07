@@ -294,6 +294,7 @@ class ChooseClass(Screen):
             self.trigger()
 
     def setupPlayer(self):
+        global player
         if self.info['class'] == 'rogue':
             player = Rogue(self.manager.get_screen('gamescreen'))
         elif self.info['class'] == 'warrior':
@@ -538,21 +539,26 @@ class GameScreen(Screen):
             curEquip.append('None')
         self.usr.equipment.equipBot.adapter.update(curEquip)
 
-    def updatePlayerInfo(self):
-        stats = player.stats
-        pic = player.info['image']
-        #make algorithm for cost for each stat
+    def updatePlayerInfo(self, quick = False):
+        stats = []
+        costs = []
+        realStatName = []
         statName = ['Health', 'Skill Points', 'Attack', 'Defense',
                 'Magic Attack', 'Magic Defense', 'Luck', 'Speed']
-        special = player.special[2]
-        name = player.info['name']
-        self.usr.playerInfo.pic.source = pic
-        self.usr.playerInfo.info.text = name + '\n' + special
-        self.usr.playerInfo.upStats.adapter.update(statName)
-        for s in stats:
-            self.usr.playerInfo.current.text += ('\n' + s)
-        #for c in costs:
-        #    self.usr.playerInfo.current.text += ('\n' + c)
+        for s in statName:
+            realStatName.append(self.usr.translateDict[s])
+        for x in realStatName:
+            costs.append(str(player.generateNextExpForStat(x)))
+            stats.append(str(player.stats[x]))
+        self.usr.playerInfo.current.adapter.update(stats)
+        self.usr.playerInfo.cost.adapter.update(costs)
+        if not quick:
+            pic = player.info['image']
+            special = player.special[2]
+            name = player.info['name']
+            self.usr.playerInfo.pic.source = pic
+            self.usr.playerInfo.info.text = name + '\n' + special
+            self.usr.playerInfo.upStats.adapter.update(statName)
 
     def updateObjective(self, text):
         self.objective.text = ' !-> %s' %(text)
@@ -647,8 +653,9 @@ class Container(GridLayout):
 class Adapter(ListAdapter):
     
     def update(self, lis):
+        self.data = []
         for x in lis:
-            self.data.append({'name': x, 'is_selected': False})
+                self.data.append({'name': x, 'is_selected': False})
 
 class UsrInput(TextInput):
 
@@ -658,6 +665,7 @@ class UsrInput(TextInput):
     descrip = ObjectProperty(None)
     equipment = ObjectProperty(None)
     playerInfo = ObjectProperty(None)
+    screen = ObjectProperty(None)
 
     def __init__(self, **kwargs):
         super(UsrInput, self).__init__(**kwargs)
@@ -665,9 +673,21 @@ class UsrInput(TextInput):
         self.mode = ''
         self.tF = True
         self.ctrl = False
-        self.current = 0
+        self.current = {}
         self.bind(text = self.checkIfNum)
         self.pressedNum = False
+        self.memoryStat = {}
+        self.count = 1
+        self.translateDict = {
+                'Health': 'fullHP',
+                'Skill Points': 'fullSP',
+                'Attack': 'atk',
+                'Defense': 'def',
+                'Magic Attack': 'ma',
+                'Magic Defense': 'md',
+                'Luck': 'lck',
+                'Speed': 'spe'
+                }
 
     def checkIfNum(self, *args):
         if self.pressedNum:
@@ -677,15 +697,18 @@ class UsrInput(TextInput):
     def keyboard_on_key_down(self, window, keycode, text, modifiers):
         global player
         keyNum, keyStr = keycode
-        if not self.ctrl:
-            self.ctrl = keyStr in ('lctrl', 'rctrl', 'ctrl')
+        self.ctrl = (keyStr == 'ctrl') or ('ctrl' in modifiers)
         if keyStr in ('up', 'down'):
             if self.mode == 'inventory':
                 self.selectItem(self.inventory, string = keyStr)
             elif self.mode == 'atkList':
                 self.selectItem(self.atkList, string = keyStr)
             elif self.mode == 'playerInfo':
-                self.selectItem(self.playerInfo.upStats, string = keyStr)
+                if self.ctrl and keyStr == 'up':
+                    self.upgradeStat()
+                    self.selectPlayerInfo()
+                else:
+                    self.selectPlayerInfo(string = keyStr)
             elif self.mode == 'avaEquip':
                 if self.ctrl:
                     self.ctrl = False
@@ -719,6 +742,7 @@ class UsrInput(TextInput):
                 self.pressedNum = True
                 player.checkEm(int(keyStr) - 1, self.tF)
         elif keyStr == 'i' and self.ctrl:
+            self.ctrl = False
             if self.mode != 'inventory':
                 check = True
                 if self.mode in ('avaEquip', 'curEquip','atkList', 'playerInfo'):
@@ -726,7 +750,7 @@ class UsrInput(TextInput):
                         self.selectItem(self.atkList)
                     elif self.mode == 'playerInfo':
                         self.playerInfo.fade()
-                        self.selectItem(self.playerInfo.upStats)
+                        self.selectPlayerInfo()
                     elif self.mode == 'avaEquip':
                         self.equipment.fade()
                         self.selectItem(self.equipmment.equipTop)
@@ -735,7 +759,7 @@ class UsrInput(TextInput):
                         self.selectItem(self.equipmment.equipBot)
                     check = False
                 self.mode = 'inventory'
-                self.selectItem(self.inventory, 'begin')
+                self.selectItem(self.inventory, string = 'begin')
                 if check:
                     self.descrip.fade()
             else:
@@ -744,6 +768,7 @@ class UsrInput(TextInput):
                 self.mode = ''
                 self.text = ''
         elif keyStr == 'a' and self.ctrl:
+            self.ctrl = False
             if self.mode != 'atkList':
                 check = True
                 if self.mode in ('avaEquip', 'curEquip','inventory', 'playerInfo'):
@@ -751,16 +776,16 @@ class UsrInput(TextInput):
                         self.selectItem(self.inventory)
                     elif self.mode == 'playerInfo':
                         self.playerInfo.fade()
-                        self.selectItem(self.playerInfo.upStats)
+                        self.selectPlayerInfo()
                     elif self.mode == 'avaEquip':
                         self.equipment.fade()
-                        self.selectItem(self.equipmment.equipTop)
+                        self.selectItem(self.equipment.equipTop)
                     elif self.mode == 'curEquip':
                         self.equipment.fade()
-                        self.selectItem(self.equipmment.equipBot)
+                        self.selectItem(self.equipment.equipBot)
                     check = False
                 self.mode = 'atkList'
-                self.selectItem(self.atkList, 'begin')
+                self.selectItem(self.atkList, string = 'begin')
                 if check:
                     self.descrip.fade()
             else:
@@ -769,6 +794,7 @@ class UsrInput(TextInput):
                 self.mode = ''
                 self.text = ''
         elif keyStr == 'e' and self.ctrl:
+            self.ctrl = False
             if self.mode not in ('avaEquip', 'curEquip'):
                 check = True
                 if self.mode in ('atkList', 'inventory', 'playerInfo'):
@@ -778,11 +804,11 @@ class UsrInput(TextInput):
                         self.selectItem(self.atkList)
                     elif self.mode == 'playerInfo':
                         self.playerInfo.fade()
-                        self.selectItem(self.playerInfo.upStats)
+                        self.selectPlayerInfo()
                     check = False
                 self.mode = 'avaEquip'
                 self.equipment.fade()
-                self.selectItem(self.equipment.equipTop, 'begin')
+                self.selectItem(self.equipment.equipTop, string = 'begin')
                 if check:
                     self.descrip.fade()
                 self.ctrl = False
@@ -796,8 +822,9 @@ class UsrInput(TextInput):
                 self.mode = ''
                 self.text = ''
         elif keyStr == 'u' and self.ctrl:
+            self.ctrl = False
             if self.mode != 'playerInfo':
-                check = True
+                check = False
                 if self.mode in ('avaEquip', 'curEquip','inventory', 'atkList'):
                     if self.mode == 'inventory':
                         self.selectItem(self.inventory)
@@ -805,21 +832,28 @@ class UsrInput(TextInput):
                         self.selectItem(self.atkList)
                     elif self.mode == 'avaEquip':
                         self.equipment.fade()
-                        self.selectItem(self.equipmment.equipTop)
+                        self.selectItem(self.equipment.equipTop)
                     elif self.mode == 'curEquip':
                         self.equipment.fade()
                         self.selectItem(self.equipmment.equipBot)
-                    check = False
+                    check = True
                 self.mode = 'playerInfo'
                 self.playerInfo.fade()
-                self.selectItem(self.playerInfo.upStats, 'begin')
-                if not check:
+                self.selectPlayerInfo(string = 'begin')
+                if check:
                     self.descrip.fade()
             else:
                 self.playerInfo.fade()
-                self.selectItem(self.playerInfo.upStats)
+                self.selectPlayerInfo()
                 self.mode = ''
                 self.text = ''
+        elif keyStr == 's' and self.mode == 'playerInfo' and self.ctrl:
+            if self.memoryStat != {}:
+                self.playerInfo.fade()
+                self.screen.prompt('Do you want to keep these changes?')
+                self.bind(on_text_validate = self.confirmUpgradeStat)
+            else:
+                self.screen.prompt('No changes to be saved.')
         elif keyStr == 'enter' and self.mode != '':
             if self.mode == 'inventory':
                 self.selectItem(self.inventory)
@@ -829,7 +863,7 @@ class UsrInput(TextInput):
                 self.selectItem(self.atkList)
                 self.mode = ''
                 self.descrip.fade()
-            if self.mode in ('avaEquip', 'curEquip'):
+            elif self.mode in ('avaEquip', 'curEquip'):
                 if self.mode == 'avaEquip':
                     self.selectItem(self.equipment.equipTop)
                 elif self.mode == 'curEquip':
@@ -845,34 +879,49 @@ class UsrInput(TextInput):
             else:
                 super(UsrInput, self).keyboard_on_key_down(window, keycode, text, modifiers)
 
-    def selectItem(self, container, string = ''):
-        data = len(container.adapter.data) -1
-        move = True
-        if string == 'begin':
-            self.current = 0
-        elif string == 'down':
-            self.current += 1
-            if self.current > data:
-                self.current -= 1
-                move = False
-        elif string == 'up':
-            self.current -= 1
-            if self.current < 0:
-                self.current += 1
-                move = False
-        if move:
-            view = container.adapter.get_view(self.current)
-            container.adapter.handle_selection(view)
-            if self.current == 0:
-                self.scroll(1, container)
-            elif self.current >= len(container.adapter.data) - 8:
-                self.scroll(0, container)
-            else:
-                pos = 1 - (self.current * 1.3  /len(container.adapter.data))
-                self.scroll(pos, container)
-            if string != '':
-                self.text = view.text
-                self.updateDescription()
+    def selectItem(self, *containers, **kwargs):
+        string = kwargs['string']
+        for container in containers:
+            if container not in self.current:
+                self.current[container] = 0
+            data = len(container.adapter.data) -1
+            move = True
+            current = self.current[container]
+            if string == 'begin':
+                current = 0
+            elif string == 'down':
+                current += 1
+                if current > data:
+                    current -= 1
+                    move = False
+            elif string == 'up':
+                current -= 1
+                if current < 0:
+                    current += 1
+                    move = False
+            self.current[container] = current
+            if move:
+                view = container.adapter.get_view(current)
+                container.adapter.handle_selection(view)
+                if current == 0:
+                    self.scroll(1, container)
+                elif self.current >= len(container.adapter.data) - 8:
+                    self.scroll(0, container)
+                else:
+                    pos = 1 - (self.current * 1.3  /len(container.adapter.data))
+                    self.scroll(pos, container)
+                if string != '':
+                    if self.mode != 'playerInfo':
+                        self.text = view.text
+                    else:
+                        self.currentStat = self.playerInfo.upStats.adapter.get_view(current)
+                    self.updateDescription()
+
+    def selectPlayerInfo(self, string = ''):
+        self.selectItem(
+                self.playerInfo.upStats, 
+                self.playerInfo.current, 
+                self.playerInfo.cost, string = string)
 
     def scroll(self, pos, container):
         scrlview = container.list_view.container.parent
@@ -886,9 +935,49 @@ class UsrInput(TextInput):
                 pass
             elif self.mode == 'atkList':
                 pass
+            elif self.mode == 'avaEquip':
+                pass
+            elif self.mode == 'curEquip':
+                pass
 
-class Menu(Screen):
-    pass
+    def upgradeStat(self):
+        x = self.current[self.playerInfo.upStats]
+        statView = self.playerInfo.upStats.adapter.get_view(x)
+        stat = self.translateDict[statView.text]
+        player.upgradeStat(stat)
+        try:
+            self.memoryStat[stat] += self.count
+        except KeyError:
+            self.memoryStat[stat] = self.count
+        self.count += 1
+        self.screen.updatePlayerInfo()
+
+    def confirmUpgradeStat(self, *args):
+        answer = self.text
+        self.text = ''
+        self.focus = True
+        if answer in ('yes', 'yeah', 'ye', 'y', 'sure'):
+            self.screen.updateSmallStats()
+            self.unbind(on_text_validate = self.confirmUpgradeStat)
+            self.count = 1
+            self.screen.prompt('Upgrade has been saved')
+        elif answer in ('no', 'nah', 'nope', 'n'):
+            for s in self.memoryStat:
+                player.upStats[s][0] -= self.memoryStat[s]
+                player.upgradeStat(s)
+                self.screen.updatePlayerInfo()
+                self.count = 1
+                self.screen.prompt('Upgrade reversed')
+        elif answer == '':
+            self.screen.prompt('Well, since you didn\'t specify, i\'ll randomly choose for you')
+            rand = randint(0,1)
+            if rand:
+                self.text = 'y'
+            else:
+                self.text = 'n'
+            self.confirmUpgradeStat()
+        else:
+            self.screen.prompt('That was a yes or no question!!')
 
 class DungeonGame(App):
     """
