@@ -569,10 +569,11 @@
 		lvl: lvl
 		special: special
 		whole: whole
+		upStatUsr: upStatUsr
 		opacity: 0
 		size_hint: None, None
 		width: 480
-		height: 300
+		height: 330
 		pos_hint: {'center_x': .5, 'center_y': .5}
 		orientation: 'vertical'
 		canvas.before:
@@ -753,3 +754,26 @@
 				id: cost
 				cols: 1
 				size_hint_x: .25
+		BoxLayout:
+			size_hint_y: None
+			height: 1
+			pos_hint: {'center_x': .5}
+			canvas.before:
+				Color:
+					rgba: 1, 1, 1, 1
+				Rectangle:
+					size: self.size
+					pos: self.pos
+		TextInput:
+			multiline: False
+			id: upStatUsr
+			size_hint_x: None
+			width: 80
+			size_hint_y: None
+			height: 25
+			pos_hint: {'center_x': .5}
+			foreground_color: 1, 1, 1, 1
+			font_name: 'Pixel'
+			background_color: .5, .5, .5, .5
+			cursor_blink: True
+			cursor_color: 1, 1, 1, 1

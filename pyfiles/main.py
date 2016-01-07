@@ -597,6 +597,7 @@ class PlayerInfo(BoxLayout):
     lvl = ObjectProperty(None)
     special = ObjectProperty(None)
     hint = ObjectProperty(None)
+    upStatUsr = ObjectProperty(None)
 
     def __init__(self, **kwargs):
         super(PlayerInfo, self).__init__(**kwargs)
@@ -697,7 +698,6 @@ class UsrInput(TextInput):
         self.bind(text = self.checkIfNum)
         self.pressedNum = False
         self.memoryStat = {}
-        self.count = 1
         self.translateDict = {
                 'Health': 'fullHP',
                 'Skill Points': 'fullSP',
@@ -718,6 +718,14 @@ class UsrInput(TextInput):
         global player
         keyNum, keyStr = keycode
         self.ctrl = (keyStr == 'ctrl') or ('ctrl' in modifiers)
+        if not self.ctrl and self.mode == 'playerInfo':
+            self.playerInfo.upStatUsr.focus = True
+            if len(keyStr) == 1:
+                self.playerInfo.upStatUsr.text += keyStr
+            self.playerInfo.upStatUsr.keyboard_on_key_down(window, keycode, text, modifiers)
+            self.focus = True
+            if keyStr not in ('up', 'down'):
+                return
         if keyStr in ('up', 'down'):
             if self.mode == 'inventory':
                 self.selectItem(self.inventory, string = keyStr)
@@ -864,6 +872,7 @@ class UsrInput(TextInput):
                 self.mode = 'playerInfo'
                 self.playerInfo.fade()
                 self.selectPlayerInfo(string = 'begin')
+                self.playerInfo.hint.text = 'Select which stat you want to upgrade.'
                 if check:
                     self.descrip.fade()
             else:
@@ -874,7 +883,7 @@ class UsrInput(TextInput):
         elif keyStr == 's' and self.mode == 'playerInfo' and self.ctrl:
             if self.memoryStat != {}:
                 self.playerInfo.hint.text = 'Do you want to keep these changes?'
-                self.bind(on_text_validate = self.confirmUpgradeStat)
+                self.playerInfo.upStatUsr.bind(on_text_validate = self.confirmUpgradeStat)
             else:
                 self.playerInfo.hint.text = 'Changes have not been done.'
         elif keyStr == 'enter' and self.mode != '':
@@ -974,28 +983,28 @@ class UsrInput(TextInput):
         stat = self.translateDict[statView.text]
         player.upgradeStat(stat)
         try:
-            self.memoryStat[stat] += self.count
+            self.memoryStat[stat] += 1
         except KeyError:
-            self.memoryStat[stat] = self.count
-        self.count += 1
+            self.memoryStat[stat] = 1
         self.screen.updatePlayerInfo()
 
     def confirmUpgradeStat(self, *args):
-        answer = self.text
-        self.text = ''
-        self.focus = True
+        answer = self.playerInfo.upStatUsr.text
+        self.playerInfo.upStatUsr.text = ''
         if answer in ('yes', 'yeah', 'ye', 'y', 'sure'):
             self.screen.updateSmallStats()
-            self.unbind(on_text_validate = self.confirmUpgradeStat)
             self.count = 1
             self.playerInfo.hint.text = 'Stats have been upgraded.'
+            self.playerInfo.upStatUsr.unbind(on_text_validate = self.confirmUpgradeStat)
         elif answer in ('no', 'nah', 'nope', 'n'):
             for s in self.memoryStat:
                 player.upStats[s][0] -= self.memoryStat[s]
-                player.upgradeStat(s)
-                self.screen.updatePlayerInfo()
-                self.count = 1
-                self.playerInfo.hint.text = 'Upgrade has been reversed.'
+                player.upgradeStat(s, True)
+            self.screen.updatePlayerInfo()
+            self.memoryStat.clear()
+            self.playerInfo.hint.text = 'Upgrade has been reversed.'
+            self.playerInfo.upStatUsr.unbind(on_text_validate = self.confirmUpgradeStat)
+            self.selectPlayerInfo()
         else:
             self.playerInfo.hint.text = 'That was a yes or no question!!'
 
