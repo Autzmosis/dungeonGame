@@ -356,7 +356,6 @@ class GameScreen(FadeScreen):
         self.startQueue = True
         self.stop = False
         self.cleanUp = False
-        self.typePos = None
 
     def fade(self, dt):
         if self.color.a == 1:
@@ -454,9 +453,10 @@ class GameScreen(FadeScreen):
         this breaks up typed string into a box and packages each letter
         for shipping to the screen :)
         """
-        typing.play()
-        if self.typePos is not None:
-            typing.seek(self.typePos)
+        if not typing.get_pos():
+            typing.play()
+        else:
+            typing.volume = .5
         if string[:4] not in ('>>> ', '\n>_ ', '\n>>>'):
             if self.textinput.text == '' and self.isReady:
                 string = '>>> ' + string
@@ -498,8 +498,9 @@ class GameScreen(FadeScreen):
             self.textinput.text += self.box[self.c]
             self.c += 1
         if self.c == len(self.box):
-            self.typePos = typing.get_pos()
-            typing.stop()
+            typing.volume = 0
+            if self.queue == []:
+                typing.stop()
             self.c = 0
             self.isReady = True
             self.box = []
@@ -1047,6 +1048,5 @@ if __name__ == '__main__':
     audio = SoundLoader()
     typing = audio.load('../audio/typingSound.wav')
     typing.loop = True
-    typing.volume = .5
     app = DungeonGame()
     app.run()
