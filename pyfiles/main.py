@@ -50,7 +50,61 @@ LabelBase.register(name='Pixel',
                    fn_bold='../fonts/slkscrb.ttf')
 
 class FadeScreen(Screen):
-    pass
+
+    def __init__(self, **kwargs):
+        super(FadeScreen, self).__init__(**kwargs)
+        self.opacity = 0
+        self.inAndOut = Animation(opacity = 1, duration = 2.5) + Animation(
+                opacity = 0,
+                duration = 2.5)
+        self.In = Animation(opacity = 1, duration = 3.)
+        self.Out = Animation(opacity = 0, duration = 3.)
+        self.trigSplashFade = Clock.create_trigger(self.splashFade)
+        self.refocus = Clock.create_trigger(self.refocus_text)
+        self.trigFadeIn = Clock.create_trigger(self.fadeIn)
+        self.dc = 0 #double check
+        self.string = '' #this string is used to switch between screens
+
+    def splashFade(self, dt):
+        """
+        This does what the name says, it fades in to the current screen
+        and fades out
+        """
+        if not self.opacity:
+            self.inAndOut.start(self)
+            self.inAndOut.on_complete(Clock.schedule_interval(self.splashTransit, 1/60))
+
+    def fadeIn(self, dt):
+        if not self.opacity:
+            self.In.start(self)
+
+    def fadeOut(self, screen):
+        self.string = screen
+        if self.opacity:
+            self.Out.start(self)
+            self.Out.on_complete(Clock.schedule_interval(self.regTransit, 1/60))
+
+    def regTransit(self, dt):
+        if not self.opacity:
+            self.manager.current = self.string
+            return False
+        
+    def splashTransit(self, dt):
+        """
+        this allows the fade method to not only fade in, but also fade out
+        and go to the next screen after animation is complete
+        """
+        if self.opacity or self.dc: #here is where the dc comes in handy
+            self.dc = 1
+            if not self.opacity:
+                self.manager.current = 'title'
+                self.dc = 0
+                return False
+
+    def refocus_text(self, dt):
+        self.usr.focus = True
+        self.usr.text = ''
+        self.usr.readonly = False
 
 class SplashScreen(FadeScreen):
     """
@@ -60,40 +114,14 @@ class SplashScreen(FadeScreen):
 
     def __init__(self, **kwargs):
         super(SplashScreen, self).__init__(**kwargs)
-        self.dc = 0 #double check
-        with self.canvas: #set up blackscreen
-            self.color = Color(0,0,0,1)
-            self.rect = Rectangle(size = self.size)
 
     def on_pre_enter(self):
         """
         This method is executed when the screen is about to be transitioned
         too, or on window creation. It just fades to the screen.
         """
-        trigfade = Clock.create_trigger(self.fade)
-        trigfade()
+        self.trigSplashFade()
 
-    def fade(self, dt):
-        """
-        This does what the name says, it fades in to the current screen
-        and fades out
-        """
-        if self.color.a == 1:
-            anim = Animation(a = 0, duration = 5.) + Animation(a = 1,
-                                                              duration = 5.)
-            anim.start(self.color)
-            anim.on_complete(Clock.schedule_interval(self.transit, 1/60))
-
-    def transit(self, dt):
-        """
-        this allows the fade method to not only fade in, but also fade out
-        and go to the next screen after animation is complete
-        """
-        if self.color.a == 0 or self.dc == 1: #here is where the dc comes in handy
-            self.dc = 1
-            if self.color.a == 1:
-                self.manager.current = 'title'
-                return False
 
 class TitleScreen(FadeScreen):
     """
@@ -107,112 +135,70 @@ class TitleScreen(FadeScreen):
 
     def __init__(self, **kwargs):
         super(TitleScreen, self).__init__(**kwargs)
-        self.string = '' #this string is used to switch between screens
-        self.c = 0 #This is heroe to ask the user for confirmation
-        with self.canvas:
-            self.color = Color(0,0,0,1)
-            self.rect = Rectangle(size = self.size)
+        self.c = 0 #This is here to ask the user for confirmation
 
-    def fade(self, dt):
-        if self.color.a == 1:
-            anim = Animation(a = 0, duration = 3.)
-            anim.start(self.color)
-        
-    def __on_enter__(self, usrinput, hint):
+    def __on_enter__(self):
         """
         this function is called when player presses enter, it validates the
         text and does something, depending on what was typed.
         """
         
         if not self.c:
-            for x in range(0, len(usrinput.text) + 1):
-                if usrinput.text[x:x+8].lower() == 'fuck you':
-                    hint.text = 'fuck you too, then'
-                    usrinput.text = ''
+            for x in range(0, len(self.usr.text) + 1):
+                if self.usr.text[x:x+8].lower() == 'fuck you':
+                    self.hint.text = 'fuck you too, then'
                     break
-                elif usrinput.text[x:x+16].lower() == 'this game sucks':
-                    hint.text = 'then buy our dlc'
-                    usrinput.text = ''
+                elif self.usr.text[x:x+16].lower() == 'this game sucks':
+                    self.hint.text = 'then buy our dlc'
                     break
-                elif usrinput.text[x:x+7].lower() == 'richard':
-                    hint.text = 'You talking \'bout the OG nigga?'
-                    usrinput.text = ''
+                elif self.usr.text[x:x+7].lower() == 'richard':
+                    self.hint.text = 'You talking \'bout the OG nigga?'
                     break
-                elif usrinput.text[x:x+3].lower() == 'bob':
-                    hint.text = 'if you\'re actually named this, your parents failed you.'
-                    usrinput.text = ''
+                elif self.usr.text[x:x+3].lower() == 'bob':
+                    self.hint.text = 'if you\'re actually named this, your parents failed you.'
                     break
-                elif usrinput.text[x:x+5].lower() == 'ahmed':
-                    hint.text = 'professional voice acting @MrAye_'
-                    usrinput.text = ''
+                elif self.usr.text[x:x+5].lower() == 'ahmed':
+                    self.hint.text = 'professional voice acting @MrAye_'
                     break
-                elif usrinput.text[x:x+8].lower() == 'new game':
-                    usrinput.text = ''
-                    if data.count() != 0:
-                        hint.text = 'Looks, like you\'ve done this before. Are you sure you want to restart?'
+                elif self.usr.text[x:x+8].lower() == 'new game':
+                    if data.count():
+                        self.hint.text = 'Looks, like you\'ve done this before. Are you sure you want to restart?'
                         self.c = 1
-                        trigger = Clock.create_trigger(self.refocus_text)
-                        trigger()
                     else:
-                        hint.text = 'Your story is about to begin.'
-                        self.fadeOut('chooseclass')
+                        self.hint.text = 'Your story is about to begin.'
+                        self.self.fadeOut('chooseclass')
                     break
-                elif usrinput.text[x:x+8].lower() == 'continue':
-                    if data.count() == 0:
-                        hint.text = 'You must begin before you can continue!\nType \'new game\' and press enter.'
-                        usrinput.text = ''
-                        trigger = Clock.create_trigger(self.refocus_text)
-                        trigger()
+                elif self.usr.text[x:x+8].lower() == 'continue':
+                    if not data.count():
+                        self.hint.text = 'You must begin before you can continue!\nType \'new game\' and press enter.'
                     else:
-                        usrinput.text = ''
-                        hint.text = 'Welcome back!'
+                        self.hint.text = 'Welcome back!'
                         self.fadeOut('gamescreen')
                     break
-                elif x == len(usrinput.text):
-                    usrinput.text = ''
-                    hint.text = 'Please type either \'new game\' or \'continue\'.'
-                    trigger = Clock.create_trigger(self.refocus_text)
-                    trigger()
+                elif x == len(self.usr.text):
+                    self.hint.text = 'Please type either \'new game\' or \'continue\'.'
                     break
         else:
-            self.confirmRestart(usrinput, hint)
-            trigger = Clock.create_trigger(self.refocus_text)
-            trigger()
+            self.confirmRestart()
+        self.refocus()
 
-    def confirmRestart(self, usr, hint):
-        if usr.text in ('yes', 'yeah', 'ye', 'y', 'sure'):
-            usr.text = ''
+    def confirmRestart(self):
+        if self.usr.text in ('yes', 'yeah', 'ye', 'y', 'sure'):
             self.c = 0
-            hint.text = 'Your story is about to begin.'
+            self.hint.text = 'Your story is about to begin.'
             self.fadeOut('chooseclass')
-        elif usr.text in ('no', 'nah', 'nope', 'n'):
+            return True
+        elif self.usr.text in ('no', 'nah', 'nope', 'n'):
             self.c = 0
-            usr.text = ''
-            hint.text = 'Type \'new game\' or \'continue\' and press enter.'
+            self.hint.text = 'Type \'new game\' or \'continue\' and press enter.'
+            return
         else:
-            hint.text = 'You mind answering my yes or no question?!'
-            usr.text = ''
-
-    def fadeOut(self, screen):
-        self.string = screen
-        if self.color.a == 0:
-            anim = Animation(a = 1, duration = 3.)
-            anim.start(self.color)
-            anim.on_complete(Clock.schedule_interval(self.transit, 1/60))
-
-    def transit(self, dt):
-        if self.color.a == 1:
-            self.manager.current = self.string
-            return False
-
-    def refocus_text(self, dt):
-        self.usr.focus = True
+            self.hint.text = 'You mind answering my yes or no question?!'
+            return
 
     def on_pre_enter(self):
-        trigger = Clock.create_trigger(self.refocus_text)
-        trigger()
-        trigfade = Clock.create_trigger(self.fade)
-        trigfade()
+        self.refocus()
+        self.trigFadeIn()
         self.hint.text = 'Type \'new game\' or \'continue\' and press enter.'
 
 class ChooseClass(FadeScreen):
@@ -229,71 +215,49 @@ class ChooseClass(FadeScreen):
 
     def __init__(self, **kwargs):
         super(ChooseClass, self).__init__(**kwargs)
-        self.string = ''
         self.c = 0 #used so i can ask player their name
         self.info = {}
-        self.trigger = Clock.create_trigger(self.refocus_text)
-        with self.canvas:
-            self.color = Color(0,0,0,1)
-            self.rect = Rectangle(size = self.size)
 
-    def fade(self, dt):
-        if self.color.a == 1:
-            anim = Animation(a = 0, duration = 3.)
-            anim.start(self.color)
-        if self.color.a == 0:
-            anim = Animation(a = 1, duration = 3.)
-            anim.start(self.color)
-
-    def __on_enter__(self, usrinput, hint, image=()):
+    def __on_enter__(self, image=()):
         """
         this function is used for text recognition features
         """
         if self.c == 0:
-            for x in range(0, len(usrinput.text) + 1):
-                if usrinput.text[x:x+5].lower() == 'rogue':
+            self.c = 1
+            for x in range(0, len(self.usr.text) + 1):
+                if self.usr.text[x:x+5].lower() == 'rogue':
                     self.info['class'] = 'rogue'
                     self.info['image'] = image[0].source
-                    usrinput.text = ''
-                    hint.text = 'By the way, what might your name be?'
-                    self.c = 1
-                    self.trigger()
+                    self.hint.text = 'By the way, what might your name be?'
                     break
-                elif usrinput.text[x:x+7].lower() == 'warrior':
+                elif self.usr.text[x:x+7].lower() == 'warrior':
                     self.info['class'] = 'warrior'
                     self.info['image'] = image[1].source
-                    usrinput.text = ''
-                    hint.text = 'By the way, what might your name be?'
-                    self.c = 1
-                    self.trigger()
+                    self.hint.text = 'By the way, what might your name be?'
                     break
-                elif usrinput.text[x:x+4].lower() == 'mage':
+                elif self.usr.text[x:x+4].lower() == 'mage':
                     self.info['class'] = 'mage'
                     self.info['image'] = image[2].source
-                    usrinput.text = ''
-                    hint.text = 'By the way, what might your name be?'
-                    self.c = 1
-                    self.trigger()
+                    self.hint.text = 'By the way, what might your name be?'
                     break
-                elif x == len(usrinput.text):
-                    usrinput.text = ''
-                    hint.text = 'Please choose one of the classes above.'
-                    self.trigger()
+                elif x == len(self.usr.text):
+                    self.c = 0
+                    self.hint.text = 'Please choose one of the classes above.'
         else:
-            self.getName(usrinput, hint)
+            self.getName()
+        self.refocus()
 
-    def getName(self, usrinput, hint):
-        if usrinput.text != '':
-            self.info['name'] = usrinput.text
-            usrinput.text = ''
-            hint.text = 'Cool, let\'s get going then.'
+    def getName(self):
+        if self.usr.text != '':
+            self.info['name'] = self.usr.text
+            self.hint.text = 'Cool, let\'s get going then.'
             self.setupPlayer()
             self.fadeOut('gamescreen')
             self.c = 0
-            self.trigger()
+            self.refocus()
         else:
-            hint.text = 'Unresponsive, are we? Well it takes two to tango!'
-            self.trigger()
+            self.hint.text = 'Unresponsive, are we? Well it takes two to tango!'
+            self.refocus()
 
     def setupPlayer(self):
         global player
@@ -306,26 +270,9 @@ class ChooseClass(FadeScreen):
         player.info = self.info
         player.updateBase()
 
-    def fadeOut(self, screen):
-        self.string = screen
-        if self.color.a == 0:
-            anim = Animation(a = 1, duration = 3.)
-            anim.start(self.color)
-            anim.on_complete(Clock.schedule_interval(self.transit, 1/60))
-
-    def transit(self, dt):
-        if self.color.a == 1:
-            self.manager.current = self.string
-            return False
-
-    def refocus_text(self, dt):
-        self.usr.focus = True
-
     def on_pre_enter(self):
-        trigger = Clock.create_trigger(self.refocus_text)
-        trigger()
-        trigfade = Clock.create_trigger(self.fade)
-        trigfade()
+        self.refocus()
+        self.trigFadeIn()
         self.hint.text = 'Type name of class and press enter'
 
 class GameScreen(FadeScreen):
@@ -343,11 +290,6 @@ class GameScreen(FadeScreen):
 
     def __init__(self, **kwargs):
         super(GameScreen, self).__init__(**kwargs)
-        with self.canvas:
-            self.color = Color(0,0,0,1)
-            self.rect = Rectangle(size = self.size)
-        self.string = ''
-        self.trigger = Clock.create_trigger(self.refocus_text)
         self.data = data
         self.box = []
         self.c = 0
@@ -357,18 +299,11 @@ class GameScreen(FadeScreen):
         self.stop = False
         self.cleanUp = False
 
-    def fade(self, dt):
-        if self.color.a == 1:
-            anim = Animation(a = 0, duration = 2.)
-            anim.start(self.color)
-            self.color.a == 0
-        
     def on_enter(self):
         global player
-        self.trigger()
-        trigfade = Clock.create_trigger(self.fade)
-        trigfade()
-        Clock.schedule_once(self.welcome, 2)
+        self.refocus()
+        self.trigFadeIn()
+        Clock.schedule_once(self.welcome, 2.5)
         if player is None:
             self.setupPlayer()
         self.image.source = player.info['image']
@@ -397,41 +332,22 @@ class GameScreen(FadeScreen):
         if self.usr.text.lower() == 'exit':
             app.get_running_app().stop()
         elif self.usr.text.lower() == 'back to start':
-            self.usr.text = ''
             self.textinput.text = ''
-            self.usr.readonly = False
             self.fadeOut('title')
         elif self.usr.text.lower() == 'battle':
-            self.usr.text = ''
-            self.trigger()
-            self.usr.readonly = False
+            self.refocus()
             arena = main(player, self)
             arena.start()
-        elif self.usr.text.lower() != '':
+        elif self.usr.text.lower():
             self.textinput.text += '\n>_ ' + self.usr.text
-            self.usr.text = ''
             sleep(.25)
             thread = Thread(None, self.prompt, 'thread',
                             args=['I be test prompt.'])
             thread.daemon = True
             thread.start()
-            self.usr.readonly = False
-            self.trigger()
+            self.refocus()
         else:
-            self.trigger()
-            self.usr.readonly = False
-            return False
-
-    def fadeOut(self, screen):
-        self.string = screen
-        if self.color.a == 0:
-            anim = Animation(a = 1, duration = 3.)
-            anim.start(self.color)
-            anim.on_complete(Clock.schedule_interval(self.transit, 1/60))
-
-    def transit(self, dt):
-        if self.color.a == 1:
-            self.manager.current = self.string
+            self.refocus()
             return False
         
     def welcome(self, dt):
@@ -444,10 +360,6 @@ class GameScreen(FadeScreen):
         thread.daemon = True
         thread.start()
 
-    def refocus_text(self, dt):
-        self.usr.focus = True
-        self.usr.readonly = False
-    
     def prompt(self, string, **kwargs):
         """
         this breaks up typed string into a box and packages each letter
@@ -578,24 +490,32 @@ class GameScreen(FadeScreen):
     def updateObjective(self, text):
         self.objective.text = ' !-> %s' %(text)
 
-class Description(Label):
-    
+class FadePart(object):
+
     def __init__(self, **kwargs):
-        super(Description, self).__init__(**kwargs)
-        self.text = 'None'
-        self.viewable = False
+        self.In = Animation(opacity = 1, duration = .5)
+        self.out = Animation(opacity = 0, duration = .5)
+        self.opacity = 0
+        if isinstance(self, InvAtkBox):
+            self.opacity = 1
 
     def fade(self):
-        if not self.viewable:
-            anim = Animation(opacity = 1, duration = .5)
-            anim.start(self)
-            self.viewable = True
+        if self.opacity:
+            self.In.start(self)
         else:
-            anim = Animation(opacity = 0, duration = .5)
-            anim.start(self)
-            self.viewable = False
+            self.out.start(self)
 
-class PlayerInfo(BoxLayout):
+class FadeLabel(Label, FadePart):
+    
+    def __init__(self, **kwargs):
+        super(FadeLabel, self).__init__(**kwargs)
+
+class FadeBox(BoxLayout, FadePart):
+
+    def __init__(self, **kwargs):
+        super(FadeBox, self).__init__(**kwargs)
+
+class PlayerInfo(BoxLayout, FadePart):
 
     info = ObjectProperty(None)
     upStats = ObjectProperty(None)
@@ -610,54 +530,26 @@ class PlayerInfo(BoxLayout):
 
     def __init__(self, **kwargs):
         super(PlayerInfo, self).__init__(**kwargs)
-        self.In = Animation(opacity = 1, duration = .5)
-        self.out = Animation(opacity = 0, duration = .5)
-        self.viewable = False
 
     def fade(self):
-        if not self.viewable:
+        if self.opacity:
             self.out.start(self.whole)
-            self.In.start(self)
-            self.viewable = True
         else:
-            self.out.start(self)
             self.In.start(self.whole)
-            self.viewable = False
+        super(PlayerInfo, self).fade()
 
-class Equipment(BoxLayout):
+class Equipment(FadeBox):
 
     equipTop = ObjectProperty(None)
     equipBot = ObjectProperty(None)
 
     def __init__(self, **kwargs):
         super(Equipment, self).__init__(**kwargs)
-        self.viewable = False
 
-    def fade(self):
-        if not self.viewable:
-            anim = Animation(opacity = 1, duration = .5)
-            anim.start(self)
-            self.viewable = True
-        else:
-            anim = Animation(opacity = 0, duration = .5)
-            anim.start(self)
-            self.viewable = False
-
-class InvAtkBox(BoxLayout):
+class InvAtkBox(FadeBox):
 
     def __init__(self, **kwargs):
         super(InvAtkBox, self).__init__(**kwargs)
-        self.viewable = True
-
-    def fade(self):
-        if not self.viewable:
-            anim = Animation(opacity = 1, duration = .5)
-            anim.start(self)
-            self.viewable = True
-        else:
-            anim = Animation(opacity = 0, duration = .5)
-            anim.start(self)
-            self.viewable = False
 
 class Container(GridLayout):
     
@@ -787,10 +679,10 @@ class UsrInput(TextInput):
                         self.selectItem(self.atkList)
                     elif self.mode == 'avaEquip':
                         self.equipment.fade()
-                        self.selectItem(self.equipmment.equipTop)
+                        self.selectItem(self.equipment.equipTop)
                     elif self.mode == 'curEquip':
                         self.equipment.fade()
-                        self.selectItem(self.equipmment.equipBot)
+                        self.selectItem(self.equipment.equipBot)
                     check = False
                     if self.mode == 'playerInfo':
                         self.playerInfo.fade()
@@ -879,7 +771,7 @@ class UsrInput(TextInput):
                         self.selectItem(self.equipment.equipTop)
                     elif self.mode == 'curEquip':
                         self.equipment.fade()
-                        self.selectItem(self.equipmment.equipBot)
+                        self.selectItem(self.equipment.equipBot)
                     check = True
                 self.mode = 'playerInfo'
                 self.playerInfo.fade()
