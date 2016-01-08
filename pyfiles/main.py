@@ -49,7 +49,10 @@ LabelBase.register(name='Pixel',
                    fn_regular='../fonts/slkscr.ttf',
                    fn_bold='../fonts/slkscrb.ttf')
 
-class SplashScreen(Screen):
+class FadeScreen(Screen):
+    pass
+
+class SplashScreen(FadeScreen):
     """
     This is the splash screen that will display the team name and logo,
     until we create the name and logo, my logo stays.
@@ -92,7 +95,7 @@ class SplashScreen(Screen):
                 self.manager.current = 'title'
                 return False
 
-class TitleScreen(Screen):
+class TitleScreen(FadeScreen):
     """
     This is the title screen, it has one text input, so it needs to have access
     to it, to detect player input, just like every other screen, it has
@@ -212,7 +215,7 @@ class TitleScreen(Screen):
         trigfade()
         self.hint.text = 'Type \'new game\' or \'continue\' and press enter.'
 
-class ChooseClass(Screen):
+class ChooseClass(FadeScreen):
     
     """
     This class allows the player to choose there character for the
@@ -325,7 +328,7 @@ class ChooseClass(Screen):
         trigfade()
         self.hint.text = 'Type name of class and press enter'
 
-class GameScreen(Screen):
+class GameScreen(FadeScreen):
     """
     This is the GameScreen class. This class needs a lot more functionality
     than the other screens, so there are more than a few different methods
@@ -353,6 +356,7 @@ class GameScreen(Screen):
         self.startQueue = True
         self.stop = False
         self.cleanUp = False
+        self.typePos = None
 
     def fade(self, dt):
         if self.color.a == 1:
@@ -450,6 +454,9 @@ class GameScreen(Screen):
         this breaks up typed string into a box and packages each letter
         for shipping to the screen :)
         """
+        typing.play()
+        if self.typePos is not None:
+            typing.seek(self.typePos)
         if string[:4] not in ('>>> ', '\n>_ ', '\n>>>'):
             if self.textinput.text == '' and self.isReady:
                 string = '>>> ' + string
@@ -491,6 +498,8 @@ class GameScreen(Screen):
             self.textinput.text += self.box[self.c]
             self.c += 1
         if self.c == len(self.box):
+            self.typePos = typing.get_pos()
+            typing.stop()
             self.c = 0
             self.isReady = True
             self.box = []
@@ -1010,6 +1019,9 @@ class UsrInput(TextInput):
         else:
             self.playerInfo.hint.text = 'That was a yes or no question!!'
 
+class BattleScreen(FadeScreen):
+    pass
+
 class DungeonGame(App):
     """
     this is the actual instance of the app, doesn't do much
@@ -1026,11 +1038,15 @@ class DungeonGame(App):
         sm.add_widget(TitleScreen(name = 'title'))
         sm.add_widget(ChooseClass(name = 'chooseclass'))
         sm.add_widget(GameScreen(name = 'gamescreen'))
+        sm.add_widget(BattleScreen(name = 'battlescreen'))
         return sm
 
 if __name__ == '__main__':
     player = None
     data = JsonStore('data.json')
     audio = SoundLoader()
+    typing = audio.load('../audio/typingSound.wav')
+    typing.loop = True
+    typing.volume = .5
     app = DungeonGame()
     app.run()
