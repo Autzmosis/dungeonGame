@@ -12,7 +12,6 @@ enter, etc). For the positioning of the GUI, see dungeongame.kv
 """
 
 import kivy
-
 kivy.require('1.9.0')
 
 #set up window
@@ -20,8 +19,8 @@ from kivy.config import Config
 Config.set('graphics','fullscreen', 0)
 Config.set('graphics','height', 480)
 Config.set('graphics','width', 640)
-Config.set('graphics','show_cursor', 1)
 Config.set('graphics','resizable', 0)
+Config.set('input', 'mouse', 'none')
 
 #import necessary modules
 from kivy.app import App
@@ -786,6 +785,7 @@ class UsrInput(TextInput):
                     if self.mode == 'playerInfo':
                         self.playerInfo.fade()
                         self.selectPlayerInfo()
+                        check = True
                 self.mode = 'inventory'
                 self.selectItem(self.inventory, string = 'begin')
                 if check:
@@ -814,6 +814,7 @@ class UsrInput(TextInput):
                     if self.mode == 'playerInfo':
                         self.playerInfo.fade()
                         self.selectPlayerInfo()
+                        check = True
                 self.mode = 'atkList'
                 self.selectItem(self.atkList, string = 'begin')
                 if check:
@@ -836,6 +837,7 @@ class UsrInput(TextInput):
                     if self.mode == 'playerInfo':
                         self.playerInfo.fade()
                         self.selectPlayerInfo()
+                        check = True
                 self.mode = 'avaEquip'
                 self.box.fade()
                 self.equipment.fade()
