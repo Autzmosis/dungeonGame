@@ -43,7 +43,8 @@ from kivy.core.audio import SoundLoader
 from rogue import Rogue
 from mage import Mage
 from warrior import Warrior
-from arena import *
+from arena import Arena
+from textRecognition import TextRecognition
 
 LabelBase.register(name='Pixel',
                    fn_regular='../fonts/slkscr.ttf',
@@ -137,64 +138,44 @@ class TitleScreen(FadeScreen):
         super(TitleScreen, self).__init__(**kwargs)
         self.c = 0 #This is here to ask the user for confirmation
 
-    def __on_enter__(self):
+    def responce(self, kwargs):
         """
         this function is called when player presses enter, it validates the
         text and does something, depending on what was typed.
         """
-        
+        strings = kwargs['string']
         if not self.c:
-            for x in range(0, len(self.usr.text) + 1):
-                if self.usr.text[x:x+8].lower() == 'fuck you':
-                    self.hint.text = 'fuck you too, then'
-                    break
-                elif self.usr.text[x:x+16].lower() == 'this game sucks':
-                    self.hint.text = 'then buy our dlc'
-                    break
-                elif self.usr.text[x:x+7].lower() == 'richard':
-                    self.hint.text = 'You talking \'bout the OG nigga?'
-                    break
-                elif self.usr.text[x:x+3].lower() == 'bob':
-                    self.hint.text = 'if you\'re actually named this, your parents failed you.'
-                    break
-                elif self.usr.text[x:x+5].lower() == 'ahmed':
-                    self.hint.text = 'professional voice acting @MrAye_'
-                    break
-                elif self.usr.text[x:x+8].lower() == 'new game':
-                    if data.count():
-                        self.hint.text = 'Looks, like you\'ve done this before. Are you sure you want to restart?'
-                        self.c = 1
-                    else:
-                        self.hint.text = 'Your story is about to begin.'
-                        self.self.fadeOut('chooseclass')
-                    break
-                elif self.usr.text[x:x+8].lower() == 'continue':
-                    if not data.count():
-                        self.hint.text = 'You must begin before you can continue!\nType \'new game\' and press enter.'
-                    else:
-                        self.hint.text = 'Welcome back!'
-                        self.fadeOut('gamescreen')
-                    break
-                elif x == len(self.usr.text):
-                    self.hint.text = 'Please type either \'new game\' or \'continue\'.'
-                    break
+            if ('new' and 'game') in strings:
+                if data.count():
+                    self.hint.text = 'Looks, like you\'ve done this before. Are you sure you want to restart?'
+                    self.c = 1
+                else:
+                    self.hint.text = 'Your story is about to begin.'
+                    self.self.fadeOut('chooseclass')
+            elif 'continue' in strings:
+                if not data.count():
+                    self.hint.text = 'You must begin before you can continue!\nType \'new game\' and press enter.'
+                else:
+                    self.hint.text = 'Welcome back!'
+                    self.fadeOut('gamescreen')
+            else:
+                self.hint.text = 'Please type either \'new game\' or \'continue\'.'
         else:
-            self.confirmRestart()
+            self.confirmRestart(strings)
         self.refocus()
 
-    def confirmRestart(self):
-        if self.usr.text in ('yes', 'yeah', 'ye', 'y', 'sure'):
-            self.c = 0
-            self.hint.text = 'Your story is about to begin.'
-            self.fadeOut('chooseclass')
-            return True
-        elif self.usr.text in ('no', 'nah', 'nope', 'n'):
-            self.c = 0
-            self.hint.text = 'Type \'new game\' or \'continue\' and press enter.'
-            return
-        else:
-            self.hint.text = 'You mind answering my yes or no question?!'
-            return
+    def confirmRestart(self, strings):
+        self.c = 0
+        for string in strings:
+            if string in ('yes', 'yeah', 'ye', 'y', 'sure', 'ya', 'yup'):
+                self.hint.text = 'Your story is about to begin.'
+                self.fadeOut('chooseclass')
+                return
+            elif string in ('no', 'nah', 'nope', 'n'):
+                self.hint.text = 'Type \'new game\' or \'continue\' and press enter.'
+                return
+        self.c = 1
+        self.hint.text = 'You mind answering my yes or no question?!'
 
     def on_pre_enter(self):
         self.refocus()
@@ -218,38 +199,34 @@ class ChooseClass(FadeScreen):
         self.c = 0 #used so i can ask player their name
         self.info = {}
 
-    def __on_enter__(self, image=()):
+    def responce(self, kwargs):
         """
         this function is used for text recognition features
         """
+        strings = kwargs['string']
+        image = kwargs['image']
         if self.c == 0:
             self.c = 1
-            for x in range(0, len(self.usr.text) + 1):
-                if self.usr.text[x:x+5].lower() == 'rogue':
-                    self.info['class'] = 'rogue'
-                    self.info['image'] = image[0].source
-                    self.hint.text = 'By the way, what might your name be?'
-                    break
-                elif self.usr.text[x:x+7].lower() == 'warrior':
-                    self.info['class'] = 'warrior'
-                    self.info['image'] = image[1].source
-                    self.hint.text = 'By the way, what might your name be?'
-                    break
-                elif self.usr.text[x:x+4].lower() == 'mage':
-                    self.info['class'] = 'mage'
-                    self.info['image'] = image[2].source
-                    self.hint.text = 'By the way, what might your name be?'
-                    break
-                elif x == len(self.usr.text):
-                    self.c = 0
-                    self.hint.text = 'Please choose one of the classes above.'
+            self.hint.text = 'By the way, what might your name be?'
+            if 'rogue' in strings:
+                self.info['class'] = 'rogue'
+                self.info['image'] = image[0].source
+            elif 'warrior' in strings:
+                self.info['class'] = 'warrior'
+                self.info['image'] = image[1].source
+            elif 'mage' in strings:
+                self.info['class'] = 'mage'
+                self.info['image'] = image[2].source
+            else:
+                self.c = 0
+                self.hint.text = 'Please choose one of the classes above.'
         else:
-            self.getName()
+            self.getName(strings)
         self.refocus()
 
-    def getName(self):
-        if self.usr.text != '':
-            self.info['name'] = self.usr.text
+    def getName(self, strings):
+        if strings:
+            self.info['name'] = strings[0]
             self.hint.text = 'Cool, let\'s get going then.'
             self.setupPlayer()
             self.fadeOut('gamescreen')
@@ -298,6 +275,7 @@ class GameScreen(FadeScreen):
         self.startQueue = True
         self.stop = False
         self.cleanUp = False
+        app.textRec.modes.append('gamescreen')
 
     def on_enter(self):
         global player
@@ -323,22 +301,24 @@ class GameScreen(FadeScreen):
             player = Warrior(self)
         player.updateSelf()
 
-    def __on_enter__(self, *largs, **kwargs):
+    def responce(self, strings):
         """
         this method validates text and sends to prompt
         just for testing out crap
         """
         self.usr.readonly = True
-        if self.usr.text.lower() == 'exit':
+        if 'exit' in strings:
             app.get_running_app().stop()
-        elif self.usr.text.lower() == 'back to start':
+        elif ('back' and 'to' and 'start') in strings:
             self.textinput.text = ''
+            self.usr.text = ''
+            app.textRec.modes.remove('gamescreen')
             self.fadeOut('title')
-        elif self.usr.text.lower() == 'battle':
+        elif 'battle' in strings:
             self.refocus()
             arena = main(player, self)
             arena.start()
-        elif self.usr.text.lower():
+        elif strings:
             self.textinput.text += '\n>_ ' + self.usr.text
             sleep(.25)
             thread = Thread(None, self.prompt, 'thread',
@@ -349,6 +329,7 @@ class GameScreen(FadeScreen):
         else:
             self.refocus()
             return False
+        self.usr.readonly = False
         
     def welcome(self, dt):
         """
@@ -482,8 +463,9 @@ class GameScreen(FadeScreen):
             name = player.info['name']
             Class = player.info['class']
             element = player.stats['elem'][0]
+            exp = str(player.stats['exp'])
             self.usr.playerInfo.pic.source = pic
-            self.usr.playerInfo.info.text = '%s\n%s\nElement: %s' %(name, Class, element)
+            self.usr.playerInfo.info.text = '%s\nClass: %s\nElement: %s\nExp: %s' %(name, Class, element, exp)
             self.usr.playerInfo.special.text = special + '\nDescription'
             self.usr.playerInfo.upStats.adapter.update(statName)
 
@@ -500,7 +482,7 @@ class FadePart(object):
             self.opacity = 1
 
     def fade(self):
-        if self.opacity:
+        if not self.opacity:
             self.In.start(self)
         else:
             self.out.start(self)
@@ -532,7 +514,7 @@ class PlayerInfo(BoxLayout, FadePart):
         super(PlayerInfo, self).__init__(**kwargs)
 
     def fade(self):
-        if self.opacity:
+        if not self.opacity:
             self.out.start(self.whole)
         else:
             self.In.start(self.whole)
@@ -785,9 +767,10 @@ class UsrInput(TextInput):
                 self.mode = ''
                 self.text = ''
         elif keyStr == 's' and self.mode == 'playerInfo' and self.ctrl:
-            if self.memoryStat != {}:
+            if not self.memoryStat:
+                app.textRec.modes.append('upStat')
+                self.playerInfo.upStatUsr.focus = True
                 self.playerInfo.hint.text = 'Do you want to keep these changes?'
-                self.playerInfo.upStatUsr.bind(on_text_validate = self.confirmUpgradeStat)
             else:
                 self.playerInfo.hint.text = 'Changes have not been done.'
         elif keyStr == 'enter' and self.mode != '':
@@ -885,32 +868,45 @@ class UsrInput(TextInput):
         x = self.current[self.playerInfo.upStats]
         statView = self.playerInfo.upStats.adapter.get_view(x)
         stat = self.translateDict[statView.text]
-        player.upgradeStat(stat)
-        try:
-            self.memoryStat[stat] += 1
-        except KeyError:
-            self.memoryStat[stat] = 1
-        self.screen.updatePlayerInfo()
-
-    def confirmUpgradeStat(self, *args):
-        answer = self.playerInfo.upStatUsr.text
-        self.playerInfo.upStatUsr.text = ''
-        if answer in ('yes', 'yeah', 'ye', 'y', 'sure'):
-            self.screen.updateSmallStats()
-            self.count = 1
-            self.playerInfo.hint.text = 'Stats have been upgraded.'
-            self.playerInfo.upStatUsr.unbind(on_text_validate = self.confirmUpgradeStat)
-        elif answer in ('no', 'nah', 'nope', 'n'):
-            for s in self.memoryStat:
-                player.upStats[s][0] -= self.memoryStat[s]
-                player.upgradeStat(s, True)
+        requiredExp = player.generateNextExpForStat(stat)
+        if player.stats['exp'] >= requiredExp:
+            player.stats['exp'] -= requiredExp
+            player.upgradeStat(stat)
+            try:
+                self.memoryStat[stat] += 1
+            except KeyError:
+                self.memoryStat[stat] = 1
             self.screen.updatePlayerInfo()
-            self.memoryStat.clear()
-            self.playerInfo.hint.text = 'Upgrade has been reversed.'
-            self.playerInfo.upStatUsr.unbind(on_text_validate = self.confirmUpgradeStat)
-            self.selectPlayerInfo()
         else:
+            self.playerInfo.hint.text = 'You don\'t have enough exp for that!'
+            self.selectPlayerInfo()
+
+    def confirmUpgradeStat(self, strings):
+        self.playerInfo.upStatUsr.text = ''
+        for answer in strings:
+            if answer in ('yes', 'yeah', 'ye', 'y', 'sure', 'ya', 'yup'):
+                self.screen.updateSmallStats()
+                self.count = 1
+                self.playerInfo.hint.text = 'Stats have been upgraded.'
+                self.memoryStat.clear()
+                app.textRec.modes.remove('upStat')
+                self.focus = True
+                break
+            elif answer in ('no', 'nah', 'nope', 'n'):
+                for s in self.memoryStat:
+                    player.upStats[s][0] -= self.memoryStat[s]
+                    player.upgradeStat(s, True)
+                self.screen.updatePlayerInfo()
+                self.memoryStat.clear()
+                self.playerInfo.hint.text = 'Upgrade has been reversed.'
+                app.textRec.modes.remove('upStat')
+                self.playerInfo.upStatUsr.unbind(on_text_validate = self.confirmUpgradeStat)
+                self.selectPlayerInfo()
+                self.focus = True
+                break
+        if not strings:
             self.playerInfo.hint.text = 'That was a yes or no question!!'
+            self.playerInfo.upStatUsr.focus = True
 
 class BattleScreen(FadeScreen):
     pass
@@ -923,6 +919,7 @@ class DungeonGame(App):
 
     def __init__(self, **kwargs):
         super(DungeonGame, self).__init__(**kwargs)
+        self.textRec = TextRecognition()
         
     def build(self):
         self.title = 'Dungeons and Towns'
