@@ -231,6 +231,97 @@
 		font_name: 'Pixel'
 		focus: True
 
+<Inventory>
+	size_hint_x: None
+	width: 180
+	size_hint_y: None
+	height: 290
+	inventory: inventory
+	orientation: 'vertical'
+	canvas.before:
+		Color:
+			rgba: .5, .5, .5, .5
+		Rectangle:
+			size: self.size
+			pos: self.pos
+	Label:
+		size_hint_y: None
+		height: 20
+		text: '>> [b]Inventory[/b] <<'
+		markup: True
+		halign: 'center'
+		font_name: 'Pixel'
+		font_size: 15
+	Container:
+		id: inventory
+		cols: 1
+
+<AtkList>
+	size_hint_x: None
+	width: 180
+	size_hint_y: None
+	height: 118
+	atkList: atkList
+	orientation: 'vertical'
+	canvas.before:
+		Color:
+			rgba: .5, .5, .5, .5
+		Rectangle:
+			size: self.size
+			pos: self.pos
+	Label:
+		size_hint_y: None
+		height: 20
+		text: '>> [b]Attack List[/b] <<'
+		markup: True
+		halign: 'center'
+		font_name: 'Pixel'
+		font_size: 15
+	Container:
+		id: atkList
+		cols: 1
+
+<EnemyList>
+	size_hint_x: None
+	width: 180
+	size_hint_y: None
+	height: 118
+	enemyList: enemyList
+	orientation: 'vertical'
+	canvas.before:
+		Color:
+			rgba: .5, .5, .5, .5
+		Rectangle:
+			size: self.size
+			pos: self.pos
+	Label:
+		size_hint_y: None
+		height: 20
+		text: '>> [b]Enemy List[/b] <<'
+		markup: True
+		halign: 'center'
+		font_name: 'Pixel'
+		font_size: 15
+	Container:
+		id: enemyList
+		cols: 1
+
+<FadeLabel>
+	size_hint: None, None
+	height: 200
+	width: 200
+	text: 'None'
+	text_size: self.size
+	pos: 440, 280
+	halign: 'center'
+	valign: 'top'
+	canvas.before:
+		Color:
+			rgba: .5, .5, .5, .5
+		Rectangle:
+			size: self.size
+			pos: self.pos
+
 <GameScreen>:
 	objective: objective
 	playerLabel: playerLabel
@@ -244,7 +335,7 @@
 	pos_hint: {'center_x': .5, 'center_y': .5}
 	AsyncImage:
 		source: '../images/flippybackground.png'
-		pos: 0, 0
+		pos: 1, 1
 	BoxLayout:
 		orientation: 'horizontal'
 		size: root.size
@@ -299,54 +390,24 @@
 					Rectangle:
 						size: self.size
 						pos: self.pos
-			InvAtkBox:
-				size_hint_y: .85
-				orientation: 'vertical'
-				id: box
+			Inventory:
+				id: invBox
+				opacity: 1
+			BoxLayout:
+				size_hint_x: None
+				width: 178
+				size_hint_y: None
+				height: 1
+				pos_hint: {'center_x': .5}
 				canvas.before:
 					Color:
-						rgba: .5, .5, .5, .5
+						rgba: 1, 1, 1, 1
 					Rectangle:
 						size: self.size
 						pos: self.pos
-				Label:
-					size_hint_y: None
-					height: 20
-					text: '>> [b]Inventory[/b] <<'
-					padding: 0, 20
-					markup: True
-					halign: 'center'
-					font_name: 'Pixel'
-					font_size: 15
-				Container:
-					id: inventory
-					cols: 1
-				BoxLayout:
-					size_hint_x: None
-					width: 178
-					size_hint_y: None
-					height: 1
-					pos_hint: {'center_x': .5}
-					canvas.before:
-						Color:
-							rgba: 1, 1, 1, 1
-						Rectangle:
-							size: self.size
-							pos: self.pos
-				Label:
-					size_hint_y: None
-					height: 20
-					text: '>> [b]Attack List[/b] <<'
-					padding: 0, 20
-					markup: True
-					halign: 'center'
-					font_name: 'Pixel'
-					font_size: 15
-				Container:
-					id: atkList
-					cols: 1
-					size_hint_y: None
-					height: 98
+			AtkList:
+				id: atkBox
+				opacity: 1
 			BoxLayout:
 				size_hint_x: None
 				width: 178
@@ -458,12 +519,13 @@
 				UsrInput:
 					screen: root
 					textinput: textinput
-					inventory: inventory
-					atkList: atkList
+					invBox: invBox
+					atkBox: atkBox
+					inventory: invBox.inventory
+					atkList: atkBox.atkList
 					descrip: descrip
 					equipment: equipment
 					playerInfo: playerInfo
-					box: box
 					id: usr
 					multiline: False
 					size_hint_x: None
@@ -489,20 +551,6 @@
 						pos: self.pos
 	FadeLabel:
 		id: descrip
-		size_hint: None, None
-		height: 200
-		width: 200
-		text: 'None'
-		text_size: self.size
-		pos: 440, 280
-		halign: 'center'
-		valign: 'top'
-		canvas.before:
-			Color:
-				rgba: .5, .5, .5, .5
-			Rectangle:
-				size: self.size
-				pos: self.pos
 	Equipment:
 		equipTop: equipTop
 		equipBot: equipBot
@@ -778,3 +826,115 @@
 			cursor_blink: True
 			cursor_color: 1, 1, 1, 1
 			on_text_validate: app.textRec.inputHandler(screen = root, string = self.text)
+<BattleScreen>
+	size_hint_y: None
+	size_hint_x: None
+	height: 480
+	width: 640
+	pos: 1, 1
+	usr: usr
+	textinput: textinput
+	pressEnter: pressEnter
+	playerLabel: playerLabel
+	image: image
+	AsyncImage:
+		source: '../images/flippybackground.png'
+		pos: 1, 1
+	TextInput:
+		id: textinput
+		multiline: True
+		text_size: 25
+		size_hint_y: None
+		height: 50
+		foreground_color: 1, 1, 1, 1
+		font_name: 'Pixel'
+		background_color: .5, .5, .5, .5
+		readonly: True
+		size_hint_x: None
+		width: 360
+		pos_hint: {'center_x': .5, 'top': 1}
+		opacity: 1
+	BattleSmallStats:
+		orientation: 'vertical'
+		size_hint_y: None
+		height: 100
+		size_hint_x: None
+		width: 125
+		pos: 1, 190
+		id: smallStats
+		canvas.before:
+			Color:
+				rgba: .5, .5, .5, .5
+			Rectangle:
+				size: self.size
+				pos: self.pos
+		AsyncImage:
+			id: image
+			source: '../images/rogue.png' 
+			size_hint_y: .4
+		Label:
+			id: playerLabel
+			text: 'name\nhp\nsp'
+			markup: True
+			halign: 'center'
+			font_name: 'Pixel'
+			font_size: 13
+			size_hint_y: .6
+	UsrInput:
+		screen: root
+		textinput: textinput
+		invBox: invBox
+		atkBox: atkBox
+		enemBox: enemBox
+		inventory: invBox.inventory
+		atkList: atkBox.atkList
+		enemyList: enemBox.enemyList
+		descrip: descrip
+		smallStats: smallStats
+		id: usr
+		multiline: False
+		size_hint_x: None
+		width: 200
+		size_hint_y: None
+		height: 25
+		foreground_color: 1, 1, 1, 1
+		font_name: 'Pixel'
+		background_color: .5, .5, .5, .5
+		cursor_blink: True
+		cursor_color: 1, 1, 1, 1
+		on_text_validate: app.textRec.inputHandler(screen = root, string = self.text)
+		focus: True
+		pos_hint: {'center_x': .5, 'y': 0}
+	Inventory:
+		id: invBox
+		pos: -180, 95
+	AtkList:
+		id: atkBox
+		pos: -180, 181
+	EnemyList:
+		id: enemBox
+		pos: -180, 181
+	FadeLabel:
+		id: descrip
+		fadeinput: textinput
+		pos_hint: {'center_x': .5, 'top': 1}
+		width: 360
+		height: 75
+	MixedLabel:
+		id: pressEnter
+		pos: 230, 460
+		size_hint_x: None
+		size_hint_y: None
+		width: 180
+		height: 20
+		text: '[b]Press Enter[/b]'
+		markup: True
+		canvas.before:
+			Color:
+				rgba: .5, .5, .5, .5
+			Rectangle:
+				size: self.size
+				pos: self.pos
+	AsyncImage:
+		source: '../images/goblin.gif'
+		pos_hint: {'center_x': .5, 'center_y': .5}

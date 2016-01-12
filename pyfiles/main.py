@@ -43,7 +43,7 @@ from kivy.core.audio import SoundLoader
 from rogue import Rogue
 from mage import Mage
 from warrior import Warrior
-from arena import Arena
+from arena import *
 from textRecognition import TextRecognition
 
 LabelBase.register(name='Pixel',
@@ -58,8 +58,8 @@ class FadeScreen(Screen):
         self.inAndOut = Animation(opacity = 1, duration = 2.5) + Animation(
                 opacity = 0,
                 duration = 2.5)
-        self.In = Animation(opacity = 1, duration = 3.)
-        self.Out = Animation(opacity = 0, duration = 3.)
+        self.In = Animation(opacity = 1, duration = 2.)
+        self.Out = Animation(opacity = 0, duration = 2.)
         self.trigSplashFade = Clock.create_trigger(self.splashFade)
         self.refocus = Clock.create_trigger(self.refocus_text)
         self.trigFadeIn = Clock.create_trigger(self.fadeIn)
@@ -275,7 +275,6 @@ class GameScreen(FadeScreen):
         self.startQueue = True
         self.stop = False
         self.cleanUp = False
-        app.textRec.modes.append('gamescreen')
 
     def on_enter(self):
         global player
@@ -301,12 +300,13 @@ class GameScreen(FadeScreen):
             player = Warrior(self)
         player.updateSelf()
 
-    def responce(self, strings):
+    def responce(self, kwargs):
         """
         this method validates text and sends to prompt
         just for testing out crap
         """
         self.usr.readonly = True
+        strings = kwargs['string']
         if 'exit' in strings:
             app.get_running_app().stop()
         elif ('back' and 'to' and 'start') in strings:
@@ -316,8 +316,7 @@ class GameScreen(FadeScreen):
             self.fadeOut('title')
         elif 'battle' in strings:
             self.refocus()
-            arena = main(player, self)
-            arena.start()
+            self.fadeOut('battlescreen')
         elif strings:
             self.textinput.text += '\n>_ ' + self.usr.text
             sleep(.25)
@@ -328,7 +327,6 @@ class GameScreen(FadeScreen):
             self.refocus()
         else:
             self.refocus()
-            return False
         self.usr.readonly = False
         
     def welcome(self, dt):
@@ -475,29 +473,84 @@ class GameScreen(FadeScreen):
 class FadePart(object):
 
     def __init__(self, **kwargs):
-        self.In = Animation(opacity = 1, duration = .5)
-        self.out = Animation(opacity = 0, duration = .5)
+        self.fadeIn = Animation(opacity = 1, duration = .25)
+        self.fadeOut = Animation(opacity = 0, duration = .25)
         self.opacity = 0
-        if isinstance(self, InvAtkBox):
-            self.opacity = 1
 
     def fade(self):
         if not self.opacity:
-            self.In.start(self)
+            self.fadeIn.start(self)
         else:
-            self.out.start(self)
+            self.fadeOut.start(self)
+
+class SlidePart(object):
+
+    def __init__(self, **kwargs):
+        self.desiredPosition = 1
+        self.originalPosition = -180
+        if isinstance(self, BattleSmallStats):
+            self.desiredPosition = 180
+            self.originalPosition = 1
+        if isinstance(self, MixedLabel):
+            self.desiredPosition = 410
+            self.originalPosition = 460
+            self.slideIn = Animation(y = self.desiredPosition, duration = .25)
+            self.slideOut = Animation(y = self.originalPosition, duration = .25)
+        else:
+            self.slideIn = Animation(x = self.desiredPosition, duration = .25)
+            self.slideOut = Animation(x = self.originalPosition, duration = .25)
+    
+    def slide(self):
+        if self.x == self.originalPosition or self.y == self.originalPosition:
+            self.slideIn.start(self)
+        else:
+            self.slideOut.start(self)
+
+class MixedPart(FadePart, SlidePart):
+
+    def __init__(self, **kwargs):
+        for base in MixedPart.__bases__:
+            base.__init__(self)
+
+    def fadeSlide(self):
+        self.fade()
+        self.slide()
 
 class FadeLabel(Label, FadePart):
     
+    fadeinput = ObjectProperty(None)
+
     def __init__(self, **kwargs):
         super(FadeLabel, self).__init__(**kwargs)
+
+    def fade(self):
+        if not self.opacity and self.fadeinput:
+            self.fadeOut.start(self.fadeinput)
+        elif self.fadeinput:
+            self.fadeIn.start(self.fadeinput)
+        super(FadeLabel, self).fade()
 
 class FadeBox(BoxLayout, FadePart):
 
     def __init__(self, **kwargs):
         super(FadeBox, self).__init__(**kwargs)
 
-class PlayerInfo(BoxLayout, FadePart):
+class SlideBox(BoxLayout, SlidePart):
+
+    def __init__(self, **kwargs):
+        super(SlideBox, self).__init__(**kwargs)
+
+class MixedBox(BoxLayout, MixedPart):
+
+    def __init__(self, **kwargs):
+        super(MixedBox, self).__init__(**kwargs)
+
+class MixedLabel(Label, MixedPart):
+
+    def __init__(self, **kwargs):
+        super(MixedLabel, self).__init__(**kwargs)
+
+class PlayerInfo(FadeBox):
 
     info = ObjectProperty(None)
     upStats = ObjectProperty(None)
@@ -515,9 +568,9 @@ class PlayerInfo(BoxLayout, FadePart):
 
     def fade(self):
         if not self.opacity:
-            self.out.start(self.whole)
+            self.fadeOut.start(self.whole)
         else:
-            self.In.start(self.whole)
+            self.fadeIn.start(self.whole)
         super(PlayerInfo, self).fade()
 
 class Equipment(FadeBox):
@@ -528,10 +581,31 @@ class Equipment(FadeBox):
     def __init__(self, **kwargs):
         super(Equipment, self).__init__(**kwargs)
 
-class InvAtkBox(FadeBox):
+class Inventory(MixedBox):
+
+    inventory = ObjectProperty(None)
 
     def __init__(self, **kwargs):
-        super(InvAtkBox, self).__init__(**kwargs)
+        super(Inventory, self).__init__(**kwargs)
+
+class AtkList(MixedBox):
+
+    atkList = ObjectProperty(None)
+
+    def __init__(self, **kwargs):
+        super(AtkList, self).__init__(**kwargs)
+
+class EnemyList(MixedBox):
+
+    enemyList = ObjectProperty(None)
+
+    def __init__(self, **kwargs):
+        super(EnemyList, self).__init__(**kwargs)
+
+class BattleSmallStats(SlideBox):
+
+    def __init(self, **kwargs):
+        super(BattleSmallStats, self).__init__(**kwargs)
 
 class Container(GridLayout):
     
@@ -565,16 +639,21 @@ class UsrInput(TextInput):
     textinput = ObjectProperty(None)
     inventory = ObjectProperty(None)
     atkList = ObjectProperty(None)
+    enemyList = ObjectProperty(None)
+    invBox = ObjectProperty(None)
+    atkBox = ObjectProperty(None)
+    enemBox = ObjectProperty(None)
     descrip = ObjectProperty(None)
     equipment = ObjectProperty(None)
     playerInfo = ObjectProperty(None)
     screen = ObjectProperty(None)
-    box = ObjectProperty(None)
+    smallStats = ObjectProperty(None)
 
     def __init__(self, **kwargs):
         super(UsrInput, self).__init__(**kwargs)
         self.permission = False
         self.mode = ''
+        self.battleMode = False
         self.tF = True
         self.ctrl = False
         self.current = {}
@@ -592,6 +671,10 @@ class UsrInput(TextInput):
                 'Speed': 'spe'
                 }
 
+    def fadeInvAtk(self):
+        self.invBox.fade()
+        self.atkBox.fade()
+
     def checkIfNum(self, *args):
         if self.pressedNum:
             self.text = ''
@@ -603,7 +686,7 @@ class UsrInput(TextInput):
         self.ctrl = (keyStr == 'ctrl') or ('ctrl' in modifiers)
         if not self.ctrl and self.mode == 'playerInfo':
             self.playerInfo.upStatUsr.focus = True
-            if len(keyStr) == 1:
+            if len(keyStr):
                 self.playerInfo.upStatUsr.text += keyStr
             self.playerInfo.upStatUsr.keyboard_on_key_down(window, keycode, text, modifiers)
             self.focus = True
@@ -614,6 +697,8 @@ class UsrInput(TextInput):
                 self.selectItem(self.inventory, string = keyStr)
             elif self.mode == 'atkList':
                 self.selectItem(self.atkList, string = keyStr)
+            elif self.mode == 'enemy':
+                self.selectItem(self.enemyList, string = keyStr)
             elif self.mode == 'playerInfo':
                 if self.ctrl and keyStr == 'up':
                     self.upgradeStat()
@@ -645,7 +730,7 @@ class UsrInput(TextInput):
                     maxy = self.textinput.minimum_height - self.textinput.height
                     self.textinput.scroll_y = max(0, min(maxy, self.textinput.scroll_y + self.textinput.line_height))
                 self.focus = True
-        elif keyStr in ('0', '1', '2', '3', '4', '5') and self.permission:
+        elif keyStr in ('0', '1', '2', '3', '4', '5') and self.battleMode:
             if keyStr == '0':
                 self.pressedNum = True
                 player.checkEm('run', self.tF)
@@ -656,90 +741,138 @@ class UsrInput(TextInput):
             self.ctrl = False
             if self.mode != 'inventory':
                 check = True
-                if self.mode in ('avaEquip', 'curEquip','atkList', 'playerInfo'):
+                if self.mode in ('avaEquip', 'curEquip', 'enemy', 'atkList', 'playerInfo'):
                     if self.mode == 'atkList':
                         self.selectItem(self.atkList)
+                        if self.battleMode:
+                            self.atkBox.fadeSlide()
                     elif self.mode == 'avaEquip':
                         self.equipment.fade()
                         self.selectItem(self.equipment.equipTop)
+                        self.fadeInvAtk()
                     elif self.mode == 'curEquip':
                         self.equipment.fade()
                         self.selectItem(self.equipment.equipBot)
+                        self.fadeInvAtk()
                     check = False
                     if self.mode == 'playerInfo':
                         self.playerInfo.fade()
                         self.selectPlayerInfo()
                         check = True
-                self.mode = 'inventory'
+                    if self.mode == 'enemy':
+                        self.enemBox.fadeSlide()
+                        self.selectItem(self.enemyList)
+                        check = True
                 self.selectItem(self.inventory, string = 'begin')
                 if check:
                     self.descrip.fade()
+                    if self.mode != 'enemy' and self.battleMode:
+                        self.smallStats.slide()
+                self.mode = 'inventory'
             else:
                 self.descrip.fade()
+                if self.battleMode:
+                    self.smallStats.slide()
                 self.selectItem(self.inventory)
                 self.mode = ''
                 self.text = ''
+            if self.battleMode:
+                self.invBox.fadeSlide()
         elif keyStr == 'a' and self.ctrl:
             self.ctrl = False
             if self.mode != 'atkList':
                 check = True
-                if self.mode in ('avaEquip', 'curEquip','inventory', 'playerInfo'):
+                if self.mode in ('avaEquip', 'curEquip', 'enemy', 'inventory', 'playerInfo'):
                     if self.mode == 'inventory':
                         self.selectItem(self.inventory)
+                        if self.battleMode:
+                            self.invBox.fadeSlide()
                     elif self.mode == 'avaEquip':
                         self.equipment.fade()
                         self.selectItem(self.equipment.equipTop)
-                        self.box.fade()
+                        self.fadeInvAtk()
                     elif self.mode == 'curEquip':
                         self.equipment.fade()
                         self.selectItem(self.equipment.equipBot)
-                        self.box.fade()
+                        self.fadeInvAtk()
                     check = False
                     if self.mode == 'playerInfo':
                         self.playerInfo.fade()
                         self.selectPlayerInfo()
                         check = True
-                self.mode = 'atkList'
+                    if self.mode == 'enemy':
+                        self.enemBox.fadeSlide()
+                        self.selectItem(self.enemyList)
+                        check = True
                 self.selectItem(self.atkList, string = 'begin')
                 if check:
                     self.descrip.fade()
+                    if self.mode != 'enemy' and self.battleMode:
+                        self.smallStats.slide()
+                self.mode = 'atkList'
             else:
                 self.descrip.fade()
                 self.selectItem(self.atkList)
+                if self.battleMode:
+                    self.smallStats.slide()
                 self.mode = ''
                 self.text = ''
+            if self.battleMode:
+                self.atkBox.fadeSlide()
         elif keyStr == 'e' and self.ctrl:
             self.ctrl = False
-            if self.mode not in ('avaEquip', 'curEquip'):
+            if self.mode not in ('avaEquip', 'curEquip', 'enemy'):
                 check = True
                 if self.mode in ('atkList', 'inventory', 'playerInfo'):
                     if self.mode == 'inventory':
                         self.selectItem(self.inventory)
+                        if self.battleMode:
+                            self.invBox.fadeSlide()
+                        else:
+                            self.fadeInvAtk()
                     elif self.mode == 'atkList':
                         self.selectItem(self.atkList)
+                        if self.battleMode:
+                            self.atkBox.fadeSlide()
+                        else:
+                            self.fadeInvAtk()
                     check = False
                     if self.mode == 'playerInfo':
                         self.playerInfo.fade()
                         self.selectPlayerInfo()
                         check = True
-                self.mode = 'avaEquip'
-                self.box.fade()
-                self.equipment.fade()
-                self.selectItem(self.equipment.equipTop, string = 'begin')
-                if check:
-                    self.descrip.fade()
+                if self.battleMode:
+                    self.mode = 'enemy'
+                    self.enemBox.fadeSlide()
+                    self.selectItem(self.enemyList, string = 'begin')
+                    if not check:
+                        self.descrip.fade()
+                    else:
+                        self.smallStats.slide()
+                else:
+                    self.mode = 'avaEquip'
+                    self.fadeInvAtk()
+                    self.equipment.fade()
+                    self.selectItem(self.equipment.equipTop, string = 'begin')
+                    if check:
+                        self.descrip.fade()
                 self.ctrl = False
             else:
-                self.descrip.fade()
                 if self.mode == 'avaEquip':
                     self.selectItem(self.equipment.equipTop)
                 elif self.mode == 'curEquip':
                     self.selectItem(self.equipment.equipBot)
-                self.equipment.fade()
-                self.box.fade()
+                if self.battleMode:
+                    self.enemBox.fadeSlide()
+                    self.smallStats.slide()
+                    self.selectItem(self.enemyList)
+                else:
+                    self.equipment.fade()
+                    self.fadeInvAtk()
+                    self.descrip.fade()
                 self.mode = ''
                 self.text = ''
-        elif keyStr == 'u' and self.ctrl:
+        elif keyStr == 'u' and self.ctrl and not self.battleMode:
             self.ctrl = False
             if self.mode != 'playerInfo':
                 check = False
@@ -766,36 +899,43 @@ class UsrInput(TextInput):
                 self.selectPlayerInfo()
                 self.mode = ''
                 self.text = ''
-        elif keyStr == 's' and self.mode == 'playerInfo' and self.ctrl:
+        elif keyStr == 's' and self.mode == 'playerInfo' and self.ctrl and not self.battleMode:
             if not self.memoryStat:
                 app.textRec.modes.append('upStat')
                 self.playerInfo.upStatUsr.focus = True
                 self.playerInfo.hint.text = 'Do you want to keep these changes?'
             else:
                 self.playerInfo.hint.text = 'Changes have not been done.'
-        elif keyStr == 'enter' and self.mode != '':
+        elif keyStr == 'enter' and self.mode:
             if self.mode == 'inventory':
                 self.selectItem(self.inventory)
-                self.mode = ''
                 self.descrip.fade()
-            elif self.mode == 'atkList' and self.permission:
+                if self.battleMode:
+                    self.invBox.fadeSlide()
+                    self.smallStats.slide()
+            elif self.mode == 'atkList' and self.battleMode:
                 self.selectItem(self.atkList)
-                self.mode = ''
                 self.descrip.fade()
-            elif self.mode in ('avaEquip', 'curEquip'):
+                if self.battleMode:
+                    self.atkBox.fadeSlide()
+                    self.smallStats.slide()
+            elif self.mode in ('avaEquip', 'curEquip', 'enemy'):
                 if self.mode == 'avaEquip':
                     self.selectItem(self.equipment.equipTop)
                 elif self.mode == 'curEquip':
                     self.selectItem(self.equipment.equipBot)
-                self.mode = ''
-                self.equipment.fade()
-                self.descrip.fade()
+                if self.battleMode:
+                    self.selectItem(self.enemyList)
+                    self.enemBox.fadeSlide()
+                    self.smallStats.slide()
+                else:
+                    self.equipment.fade()
+                    self.descrip.fade()
+            self.mode = ''
             super(UsrInput, self).keyboard_on_key_down(window, keycode, text, modifiers)
         elif keyStr not in ('lctrl', 'rctrl', 'ctrl'):
             self.ctrl = False
-            if keyStr in ('0', '1', '2', '3', '4', '5'):
-                print keyStr
-            else:
+            if keyStr not in ('0', '1', '2', '3', '4', '5'):
                 super(UsrInput, self).keyboard_on_key_down(window, keycode, text, modifiers)
 
     def selectItem(self, *containers, **kwargs):
@@ -908,8 +1048,48 @@ class UsrInput(TextInput):
             self.playerInfo.hint.text = 'That was a yes or no question!!'
             self.playerInfo.upStatUsr.focus = True
 
-class BattleScreen(FadeScreen):
-    pass
+class BattleScreen(GameScreen):
+    
+    usr = ObjectProperty(None)
+    textinput = ObjectProperty(None)
+    pressEnter = ObjectProperty(None)
+
+    def __init__(self, **kwargs):
+        super(BattleScreen, self).__init__(**kwargs)
+
+    def on_enter(self):
+        global player
+        player.gui = self
+        self.manager.get_screen('gamescreen').opacity = 0
+        self.usr.battleMode = True
+        self.usr.mode = ''
+        self.image.source = player.info['image']
+        self.updateSmallStats
+        self.refocus()
+        self.trigFadeIn()
+        self.updateAtkList()
+        self.updateInventory()
+        self.arena = None
+        self.startArena()
+
+    def startArena(self): #later this will take all enmies and allies who will fight
+        self.arena = main(player, self)
+        self.arena.start()
+
+    def goCheckEm(self, string):
+        try:
+            text = '%s %s' %(string[0], string[1])
+        except IndexError:
+            text = string[0]
+        player.checkEm(text, self.usr.tF)
+
+    def updateEnemyList(self):
+        enemies = []
+        for x in player.enemyNames:
+            enemies.append(x)
+        if enemies == []:
+            enemies.append('None')
+        self.usr.enemyList.adapter.update(enemies)
 
 class DungeonGame(App):
     """

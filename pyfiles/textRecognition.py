@@ -16,14 +16,16 @@ class TextRecognition(object):
         self.function = None
 
     def inputHandler(self, **kwargs):
+        kwargs['screen'].refocus()
         string = kwargs['string']
         inputs = string.lower().split()
         kwargs['string'] = inputs
-        if 'screen' in kwargs:
-            self.function = kwargs['screen'].responce
-        if 'gamescreen' in self.modes:
+        screenName = kwargs['screen'].name
+        screenName = kwargs['screen'].name
+        self.function = kwargs['screen'].responce
+        if 'gamescreen' == screenName:
             self.gameScreenInputHandler(kwargs)
-        elif 'battlescreen' in self.modes:
+        elif 'battlescreen' == screenName:
             self.battleScreenInputHandler(kwargs)
         else:
             self.function(kwargs)
@@ -39,4 +41,11 @@ class TextRecognition(object):
             self.function(kwargs)
 
     def battleScreenInputHandler(self, kwargs):
-        pass
+        if kwargs['screen'].pressEnter.y == 410:
+            kwargs['screen'].arena.enterPressed = True
+            kwargs['screen'].pressEnter.slideOut.start(kwargs['screen'].pressEnter)
+            kwargs['screen'].pressEnter.fadeOut.start(kwargs['screen'].pressEnter)
+            kwargs['screen'].textinput.text = ''
+        else:
+            if kwargs['string']:
+                kwargs['screen'].goCheckEm(kwargs['string'])

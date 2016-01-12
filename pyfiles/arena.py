@@ -23,8 +23,8 @@ from dungeonOneEnemies import *
 
 class Arena(object):
 
-    def __init__(self, gameScreen, char = [], enemy = []):
-        self.gui = gameScreen
+    def __init__(self, screen, char = [], enemy = []):
+        self.gui = screen
         self.char = char
         self.enemy = enemy
         self.charNames, self.enemyNames, self.order = [[],[],[]]
@@ -45,6 +45,7 @@ class Arena(object):
         self.cleanUp = False
 	self.string = ''
         self.queue = []
+        self.startQueue = True
         for x in self.allChar:
             x.battleStats['eva'] = 100
             x.battleStats['acc'] = 100
@@ -56,41 +57,44 @@ class Arena(object):
         for e in self.enemy:
             self.enemyNames.append(e.info['name'])
         self.gui.usr.permission = True
-	self.gui.usr.unbind(on_text_validate = self.gui.__on_enter__)
-        self.gui.usr.bind(on_text_validate = self.player.askQuestion)
 
     def start(self, *args):
         if self.didWin():
             self.distributeReward()
-            self.gui.usr.unbind(on_text_validate = self.player.askQuestion)
-	    self.gui.usr.bind(on_text_validate = self.gui.__on_enter__)
             self.gui.usr.permission = False
         elif self.player.stats['hp'] == 0:
             self.report('You lose')
-            self.gui.usr.unbind(on_text_validate = self.player.askQuestion)
             self.gui.usr.permission = False
         elif self.ran:
             self.report('You coward')
-            self.gui.usr.unbind(on_text_validate = self.player.askQuestion)
             self.gui.usr.permission = False
-        elif self.pressEnter:
-            self.gui.usr.bind(on_text_validate = self.start)
-            self.report('\n')
-            self.report('Press Enter <<<')
-            self.pressEnter = False
-            self.cleanUp = True
-            self.gui.cleanUp = True
         else:
-            if self.cleanUp:
-                self.gui.usr.unbind(on_text_validate = self.start)
-                self.cleanUp = False
-            self.pressEnter = True
             self.player.askQuestion(
                     'What do you want to do?',
                     enemyNames = self.enemyNames,
                     charNames = self.charNames,
                     arenaInstance = self
                     )
+
+    def report(self, string):
+        self.queue.append(string)
+        if self.startQueue:
+            self.enterPressed = True
+            Clock.schedule_interval(self.reportQueue, 1/60)
+            self.startQueue = False
+
+    def reportQueue(self, dt):
+        if self.enterPressed:
+            self.gui.prompt(self.queue[0])
+            print len(self.queue[0])
+            self.queue.remove(self.queue[0])
+            self.enterPressed = False
+            if not self.queue:
+                self.startQueue = True
+                return False
+            else:
+                self.gui.pressEnter.slideIn.start(self.gui.pressEnter)
+                self.gui.pressEnter.fadeIn.start(self.gui.pressEnter)
 
     def attackFirst(self, List):
         speed = []
@@ -289,14 +293,6 @@ class Arena(object):
                 })
             x.inventory.append(reward[2])
 
-    def report(self, string):
-        self.queue.append(string)
-        Clock.schedule_once(self.reportQueue, .1)
-
-    def reportQueue(self, dt):
-        self.gui.prompt(self.queue[0])
-        self.queue.remove(self.queue[0])
-
     def didWin(self):
         if self.enemyNames == []:
             return True
@@ -376,7 +372,6 @@ class Arena(object):
             if targetInfo[0].stats['hp'] == 0:
                 return False
             elif targetInfo[10][2] != None and c != 0:
-                self.report('\n')
                 self.report(targetInfo[10][2])
             elif c != 0:
                 self.report('Hit %d time(s)' %(c))
@@ -476,7 +471,6 @@ class Arena(object):
         try: #make it so peeps in multihit don't report their atk string again
             targetInfo[10][3]
         except IndexError:
-            self.report('\n')
             self.report(targetInfo[3])
         self.spHandle(character, targetInfo[16] * -1)
         if targetInfo[8][0]: #wait for hit

@@ -239,43 +239,41 @@ class Character(object):
                 return 1
 
     def askQuestion(self, question, enemyNames = [], charNames = [], arenaInstance = None):
-        if self.c == 0:
-            if enemyNames != []:
-		self.question = question
-                self.enemyNames = enemyNames
-                self.charNames = charNames
-                self.arenaInstance = arenaInstance
-		Clock.schedule_once(self.askQuestion, .5)
-		return
-            if self.dc == 0:
-                if not self.invalid:
-                    self.gui.keepinItCool()
-                if 'silent' not in self.status:
-                    self.statModifier({'sp': self.spRegen()})
-                self.arenaInstance.report('Remaining enemies:')
-                for x in self.enemyNames:
-                    self.arenaInstance.report(x)
-                self.arenaInstance.report('\n')
-	    if self.question == '':
-            	self.arenaInstance.report(question)
-	    else:
-		self.arenaInstance.report(self.question)
-		self.question = ''
-            self.c = 1
-            if self.dc == 1:
-                self.c = 2
-            self.gui.usr.permission = True
-        elif self.c == 1 and self.gui.usr.text != '':
-            text = self.gui.usr.text.lower()
-            self.gui.usr.text = ''
+        #if self.c == 0:
+        self.gui.checkForPressedEnter = False
+        if enemyNames != []:
+	    self.question = question
+            self.enemyNames = enemyNames
+            self.charNames = charNames
+            self.arenaInstance = arenaInstance
+	    Clock.schedule_once(self.askQuestion, .5)
+	    return
+        if self.dc == 0:
+            if not self.invalid:
+                self.gui.keepinItCool()
+            if 'silent' not in self.status:
+                self.statModifier({'sp': self.spRegen()})
+            self.gui.updateEnemyList()
+	if self.question == '':
+            self.arenaInstance.report(question)
+	else:
+	    self.arenaInstance.report(self.question)
+	    self.question = ''
+        self.c = 1
+        if self.dc == 1:
             self.c = 2
-            self.checkEm(text, True)
-        elif self.c == 2 and self.gui.usr.text != '':
-            text = self.gui.usr.text.lower()
-            self.gui.usr.text = ''
-            self.c = 0
-            self.checkEm(text, False)
-        self.gui.trigger()
+        self.gui.usr.permission = True
+        #elif self.c == 1 and self.gui.usr.text != '':
+        #    text = self.gui.usr.text.lower()
+        #    self.gui.usr.text = ''
+        #    self.c = 2
+        #    self.checkEm(text, True)
+        #elif self.c == 2 and self.gui.usr.text != '':
+        #    text = self.gui.usr.text.lower()
+        #    self.gui.usr.text = ''
+        #    self.c = 0
+        #    self.checkEm(text, False)
+        self.gui.refocus()
 
     def checkEm(self, text, tF):
         self.gui.usr.permission = False
@@ -292,7 +290,6 @@ class Character(object):
             invc = (0, 1)
         if text  == 'run':
             self.arenaInstance.playerTarget = text
-            self.gui.textinput.text += '\n>_ %s' %(text)
             self.c = 0
             self.dc = 0
             self.arenaInstance.decide()
@@ -301,7 +298,6 @@ class Character(object):
                 if array == self.atkList:
                     self.atk = array[text]
                     if self.spHandle(self.atk):
-                        self.gui.textinput.text += '\n>_ %s' %(str(array[text]))
                         self.gui.usr.tF = False
                         self.c = 0
                         self.dc = 1
@@ -323,7 +319,6 @@ class Character(object):
                         self.askQuestion(invQuestion)
                 else:
                     self.arenaInstance.playerTarget = self.atkDict[self.atk](array[text])
-                    self.gui.textinput.text += '\n>_ %s' %(str(array[text]))
                     self.gui.usr.tF = True
                     self.c = 0
                     self.dc = 0
@@ -338,7 +333,6 @@ class Character(object):
                 if text in array:
                     self.atk = text
                     if self.spHandle(self.atk):
-                        self.gui.textinput.text += '\n>_ %s' %(text)
                         self.gui.usr.tF = False
                         self.c = 0
                         self.dc = 1
@@ -366,7 +360,6 @@ class Character(object):
             else:
                 if text in array:
                     self.arenaInstance.playerTarget = self.atkDict[self.atk](text)
-                    self.gui.textinput.text += '\n>_ %s' %(text)
                     self.gui.usr.tF = True
                     self.c = 0
                     self.dc = 0
