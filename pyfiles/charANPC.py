@@ -24,14 +24,11 @@ class Character(object):
         self.curEquip = []
         self.avaEquip = []
         self.battleStats = {'eva': 100, 'acc': 100}
-        self.c = 0
-        self.dc = 0
         self.atk = None
         self.enemyNames = None
         self.charNames = None
         self.responce = None
         self.arenaInstance = None
-        self.invalid = False
 	self.question = ''
         self.makeSelf()
 
@@ -130,7 +127,9 @@ class Character(object):
             return False 
 
     def checkSpecial(self, targetInfo):
-        if self.special[0] == 'random':
+        if targetInfo == 'run':
+            return 'run'
+        elif self.special[0] == 'random':
             rand = random() / self.luck()
             if rand < .1:
                 return self.special[1](targetInfo)
@@ -239,59 +238,36 @@ class Character(object):
                 return 1
 
     def askQuestion(self, question, enemyNames = [], charNames = [], arenaInstance = None):
-        #if self.c == 0:
-        self.gui.checkForPressedEnter = False
-        if enemyNames != []:
+        if enemyNames:
 	    self.question = question
             self.enemyNames = enemyNames
+            self.gui.updateEnemyList()
             self.charNames = charNames
             self.arenaInstance = arenaInstance
 	    Clock.schedule_once(self.askQuestion, .5)
 	    return
-        if self.dc == 0:
-            if not self.invalid:
-                self.gui.keepinItCool()
-            if 'silent' not in self.status:
-                self.statModifier({'sp': self.spRegen()})
-            self.gui.updateEnemyList()
 	if self.question == '':
             self.arenaInstance.report(question)
 	else:
 	    self.arenaInstance.report(self.question)
 	    self.question = ''
-        self.c = 1
-        if self.dc == 1:
-            self.c = 2
         self.gui.usr.permission = True
-        #elif self.c == 1 and self.gui.usr.text != '':
-        #    text = self.gui.usr.text.lower()
-        #    self.gui.usr.text = ''
-        #    self.c = 2
-        #    self.checkEm(text, True)
-        #elif self.c == 2 and self.gui.usr.text != '':
-        #    text = self.gui.usr.text.lower()
-        #    self.gui.usr.text = ''
-        #    self.c = 0
-        #    self.checkEm(text, False)
         self.gui.refocus()
 
     def checkEm(self, text, tF):
         self.gui.usr.permission = False
         if tF:
             array = self.atkList
-            invalid = 'Invalid attack, try again.'
+            invalid = 'Invalid attack, try again.\n'
             question = 'Who do you want to attack?'
             invQuestion = 'What do you want to do?'
-            invc = (0, 0)
         else:
             array = self.enemyNames
-            invalid = 'Unknown enemy, try again.'
+            invalid = 'Unknown enemy, try again.\n'
             invQuestion = 'Who do you want to attack?'
-            invc = (0, 1)
-        if text  == 'run':
+        if text  == 'run' and tF:
             self.arenaInstance.playerTarget = text
-            self.c = 0
-            self.dc = 0
+            self.arenaInstance.report('\n')
             self.arenaInstance.decide()
         elif text in range(0,5):
             if text in range(0, len(array)):
@@ -299,34 +275,26 @@ class Character(object):
                     self.atk = array[text]
                     if self.spHandle(self.atk):
                         self.gui.usr.tF = False
-                        self.c = 0
-                        self.dc = 1
                         if len(self.enemyNames) == 1 or self.atk in self.setTarget:
                             try:
                                 self.arenaInstance.playerTarget = self.atkDict[self.atk](self.enemyNames[0])
                             except TypeError:
                                 self.arenaInstance.playerTarget = self.atkDict[self.atk]()
                             self.gui.usr.tF = True
-                            self.c = 0
-                            self.dc = 0
+                            self.arenaInstance.report('\n')
                             self.arenaInstance.decide()
                         else:
                             self.askQuestion(question)
                     else:
                         self.arenaInstance.report('You don\'t have enough sp to do that')
-                        self.c, self.d = invc
-                        self.invalid = True
                         self.askQuestion(invQuestion)
                 else:
                     self.arenaInstance.playerTarget = self.atkDict[self.atk](array[text])
                     self.gui.usr.tF = True
-                    self.c = 0
-                    self.dc = 0
+                    self.arenaInstance.report('\n')
                     self.arenaInstance.decide()
             else:
                 self.arenaInstance.report(invalid)
-                self.c, self.d = invc
-                self.invalid = True
                 self.askQuestion(invQuestion)
         else:
             if array == self.atkList:
@@ -334,40 +302,30 @@ class Character(object):
                     self.atk = text
                     if self.spHandle(self.atk):
                         self.gui.usr.tF = False
-                        self.c = 0
-                        self.dc = 1
                         if len(self.enemyNames) == 1 or self.atk in self.setTarget:
                             try:
                                 self.arenaInstance.playerTarget = self.atkDict[self.atk](self.enemyNames[0])
                             except TypeError:
                                 self.arenaInstance.playerTarget = self.atkDict[self.atk]()
                             self.gui.usr.tF = True
-                            self.c = 0
-                            self.dc = 0
+                            self.arenaInstance.report('\n')
                             self.arenaInstance.decide()
                         else:
                             self.askQuestion(question)
                     else:
                         self.arenaInstance.report('You don\'t have enough sp to do that')
-                        self.c, self.d = invc
-                        self.invalid()
                         self.askQuestion(invQuestion)
                 else:
                     self.arenaInstance.report(invalid)
-                    self.c, self.dc = invc
-                    self.invalid = True
                     self.askQuestion(invQuestion)
             else:
                 if text in array:
                     self.arenaInstance.playerTarget = self.atkDict[self.atk](text)
                     self.gui.usr.tF = True
-                    self.c = 0
-                    self.dc = 0
+                    self.arenaInstance.report('\n')
                     self.arenaInstance.decide()
                 else:
                     self.arenaInstance.report(invalid)
-                    self.c, self.dc = invc
-                    self.invalid = True
                     self.askQuestion(invQuestion)
 
 class ANPC(Character):

@@ -61,9 +61,10 @@ class Rogue(Character):
         '''
         This is the rogue's special ability
         '''
-        targetInfo[3] += '\n-->%s\'s dual blitz activated!' %(self.info['name'])
-        targetInfo[10] = [1, 2, 'here is the second!']
-        targetInfo[16] = 0
+	if targetInfo[1]:
+        	targetInfo[3] += '\n-->%s\'s dual blitz activated!' %(self.info['name'])
+        	targetInfo[10] = [1, 2, 'here is the second!']
+        	targetInfo[16] = 0
         return targetInfo
 
     def smokescreen(self, target):
@@ -92,7 +93,7 @@ class Rogue(Character):
         baseAcc = 90
         string = self.info['name'] + ' used backstab!'
         mod = {'def': .7}
-        modString = target + ' defense lowered.'
+        modString = '%s\'s defense lowered.' % target
         magAtk = False
         skipToFront = [0]
         waitForHit = [0]

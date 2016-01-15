@@ -336,6 +336,9 @@
 	AsyncImage:
 		source: '../images/flippybackground.png'
 		pos: 1, 1
+	EnemyList:
+		id: enemBox
+		pos: 180, 280
 	BoxLayout:
 		orientation: 'horizontal'
 		size: root.size
@@ -521,6 +524,8 @@
 					textinput: textinput
 					invBox: invBox
 					atkBox: atkBox
+					enemBox: enemBox
+					enemyList: enemBox.enemyList
 					inventory: invBox.inventory
 					atkList: atkBox.atkList
 					descrip: descrip
@@ -826,115 +831,3 @@
 			cursor_blink: True
 			cursor_color: 1, 1, 1, 1
 			on_text_validate: app.textRec.inputHandler(screen = root, string = self.text)
-<BattleScreen>
-	size_hint_y: None
-	size_hint_x: None
-	height: 480
-	width: 640
-	pos: 1, 1
-	usr: usr
-	textinput: textinput
-	pressEnter: pressEnter
-	playerLabel: playerLabel
-	image: image
-	AsyncImage:
-		source: '../images/flippybackground.png'
-		pos: 1, 1
-	TextInput:
-		id: textinput
-		multiline: True
-		text_size: 25
-		size_hint_y: None
-		height: 50
-		foreground_color: 1, 1, 1, 1
-		font_name: 'Pixel'
-		background_color: .5, .5, .5, .5
-		readonly: True
-		size_hint_x: None
-		width: 360
-		pos_hint: {'center_x': .5, 'top': 1}
-		opacity: 1
-	BattleSmallStats:
-		orientation: 'vertical'
-		size_hint_y: None
-		height: 100
-		size_hint_x: None
-		width: 125
-		pos: 1, 190
-		id: smallStats
-		canvas.before:
-			Color:
-				rgba: .5, .5, .5, .5
-			Rectangle:
-				size: self.size
-				pos: self.pos
-		AsyncImage:
-			id: image
-			source: '../images/rogue.png' 
-			size_hint_y: .4
-		Label:
-			id: playerLabel
-			text: 'name\nhp\nsp'
-			markup: True
-			halign: 'center'
-			font_name: 'Pixel'
-			font_size: 13
-			size_hint_y: .6
-	UsrInput:
-		screen: root
-		textinput: textinput
-		invBox: invBox
-		atkBox: atkBox
-		enemBox: enemBox
-		inventory: invBox.inventory
-		atkList: atkBox.atkList
-		enemyList: enemBox.enemyList
-		descrip: descrip
-		smallStats: smallStats
-		id: usr
-		multiline: False
-		size_hint_x: None
-		width: 200
-		size_hint_y: None
-		height: 25
-		foreground_color: 1, 1, 1, 1
-		font_name: 'Pixel'
-		background_color: .5, .5, .5, .5
-		cursor_blink: True
-		cursor_color: 1, 1, 1, 1
-		on_text_validate: app.textRec.inputHandler(screen = root, string = self.text)
-		focus: True
-		pos_hint: {'center_x': .5, 'y': 0}
-	Inventory:
-		id: invBox
-		pos: -180, 95
-	AtkList:
-		id: atkBox
-		pos: -180, 181
-	EnemyList:
-		id: enemBox
-		pos: -180, 181
-	FadeLabel:
-		id: descrip
-		fadeinput: textinput
-		pos_hint: {'center_x': .5, 'top': 1}
-		width: 360
-		height: 75
-	MixedLabel:
-		id: pressEnter
-		pos: 230, 460
-		size_hint_x: None
-		size_hint_y: None
-		width: 180
-		height: 20
-		text: '[b]Press Enter[/b]'
-		markup: True
-		canvas.before:
-			Color:
-				rgba: .5, .5, .5, .5
-			Rectangle:
-				size: self.size
-				pos: self.pos
-	AsyncImage:
-		source: '../images/goblin.gif'
-		pos_hint: {'center_x': .5, 'center_y': .5}

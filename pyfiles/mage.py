@@ -63,8 +63,9 @@ class Mage(Character):
         This is the mage's special ability
         random
         '''
-        targetInfo[3] += '\n-->ciphon is activated!'
-        targetInfo[13] = [1, 'sp', .5]
+        if targetInfo[0] != self.info['name']:
+            targetInfo[3] += '\n-->ciphon is activated!'
+            targetInfo[13] = [1, 'sp', .5]
         return targetInfo
 
     def magicBlast(self, target):
@@ -95,7 +96,7 @@ class Mage(Character):
                 100,
                 self.info['name'] + ' summoned a pug!\n--> Pug used Look Ugly',
                 {'def': .7},
-                'defense lowered.',
+                '%s\'s defense lowered.' % target,
                 False,
                 [0],
                 [0],
@@ -114,7 +115,7 @@ class Mage(Character):
                 85,
                 '%s summoned Da Monkey!\n--> Da Monkey come into da village and throw barrels at %s' %(self.info['name'], target),
                 {'spe': .7},
-                'speed lowered.',
+                '%s\'s speed lowered.' % target,
                 False,
                 [0],
                 [0],

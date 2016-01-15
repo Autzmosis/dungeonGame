@@ -64,9 +64,10 @@ class Warrior(Character):
         '''
         This is the warriors special ability
         '''
-        targetInfo[3] += '\n-->%s just went berserk!' %(self.info['name'])
-        self.statModifier({'atk': 1.5, 'def': .5})
-        self.berserk = True
+	if targetInfo[1]:
+        	targetInfo[3] += '\n-->%s just went berserk!' %(self.info['name'])
+        	self.statModifier({'atk': 1.5, 'def': .5})
+        	self.berserk = True
         return targetInfo
 
     def shieldBash(self, target):

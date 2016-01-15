@@ -26,7 +26,9 @@ class Arena(object):
     def __init__(self, screen, char = [], enemy = []):
         self.gui = screen
         self.char = char
+        self.charLength = len(char)
         self.enemy = enemy
+        self.enemyLength = len(enemy) - 1 #giving enemies advantage by minusing 1
         self.charNames, self.enemyNames, self.order = [[],[],[]]
         self.allChar = self.char + self.enemy
         self.player = char[0]
@@ -46,6 +48,8 @@ class Arena(object):
 	self.string = ''
         self.queue = []
         self.startQueue = True
+        self.modQueue = {}
+        self.isDead = False
         for x in self.allChar:
             x.battleStats['eva'] = 100
             x.battleStats['acc'] = 100
@@ -60,15 +64,30 @@ class Arena(object):
 
     def start(self, *args):
         if self.didWin():
+            if not self.pressEnter:
+                self.report('self.endArena')
+                return
             self.distributeReward()
-            self.gui.usr.permission = False
-        elif self.player.stats['hp'] == 0:
+        elif self.isDead:
+            if not self.pressEnter:
+                self.report('self.endArena')
+                return
             self.report('You lose')
-            self.gui.usr.permission = False
         elif self.ran:
+            if not self.pressEnter:
+                self.report('self.endArena')
+                return
             self.report('You coward')
+        if self.pressEnter:
+            self.report('Press Enter <<<')
+            self.gui.pressEnter = True
+            self.pressEnter = False
             self.gui.usr.permission = False
         else:
+            self.modQueue.clear()
+            self.pressEnter = True
+            self.gui.usr.permission = True
+            self.gui.keepinItCool()
             self.player.askQuestion(
                     'What do you want to do?',
                     enemyNames = self.enemyNames,
@@ -79,32 +98,33 @@ class Arena(object):
     def report(self, string):
         self.queue.append(string)
         if self.startQueue:
-            self.enterPressed = True
-            Clock.schedule_interval(self.reportQueue, 1/60)
+            Clock.schedule_interval(self.reportQueue, .2)
             self.startQueue = False
 
     def reportQueue(self, dt):
-        if self.enterPressed:
-            self.gui.prompt(self.queue[0])
-            print len(self.queue[0])
-            self.queue.remove(self.queue[0])
-            self.enterPressed = False
-            if not self.queue:
-                self.startQueue = True
-                return False
-            else:
-                self.gui.pressEnter.slideIn.start(self.gui.pressEnter)
-                self.gui.pressEnter.fadeIn.start(self.gui.pressEnter)
+        mod = []
+        if self.queue[0] in self.modQueue:
+            character = self.modQueue[self.queue[0]][0]
+            modDict = self.modQueue[self.queue[0]][1]
+            mod = [character, modDict]
+        self.gui.prompt(self.queue[0], mod = mod)
+        self.queue.remove(self.queue[0])
+        if not self.queue:
+            self.startQueue = True
+            return False
 
     def attackFirst(self, List):
         speed = []
         order = []
+        luckDic = {}
+        for l in List:
+            luckDic[l] = l.luck()
         for x in List:
-            speed.append(str(x.luck() * x.stats['spe']) + x.info['name'])
+            speed.append(str(luckDic[x] * x.stats['spe']) + x.info['name'])
         speed.sort()
         for y in speed:
             for z in List:
-                if y == str(z.luck() * z.stats['spe']) + z.info['name']:
+                if y == str(luckDic[x] * z.stats['spe']) + z.info['name']:
                     order.append(z)
         order.reverse()
         return order
@@ -133,6 +153,10 @@ class Arena(object):
         for y in self.enemy:
             e += y.luck()
             espe += y.stats['spe']
+        c /= self.charLength
+        cspe /= self.charLength
+        e /= self.enemyLength
+        espe /= self.enemyLength
         c *= 1.0
         cspe *= 1.0
         chance = (c/e) * (cspe/espe)
@@ -220,12 +244,13 @@ class Arena(object):
         adRatio = (char1.stats[attack] * 1.0) / (char2.stats[defense] * 2.0)
         if rpsString != '':
             self.report(rpsString)
-        return int(round((((adRatio * mod) + baseAtk) * adRatio))) * -1
+        return int(round((((adRatio * mod) + baseAtk) * adRatio * luck))) * -1
 
     def gold(self):
         gold = 0
         for x in self.enemy:
             gold += x.stats['gol']
+        gold / self.enemyLength
         luckList = []
         for z in self.char:
             luckList.append(z.luck())
@@ -246,6 +271,12 @@ class Arena(object):
             emd += x.stats['md']
             ema += x.stats['ma']
             ehp += x.stats['hp']
+        exp /= self.enemyLength
+        edef /= self.enemyLength
+        eatk /= self.enemyLength
+        ehp /= self.enemyLength
+        emd /= self.enemyLength
+        ema /= self.enemyLength
         luckList = []
         cdef = 0
         catk = 0
@@ -259,6 +290,11 @@ class Arena(object):
             cmd += y.stats['md']
             cma += y.stats['ma']
             chp += y.stats['hp']
+        cdef /= self.charLength
+        catk /= self.charLength
+        chp /= self.charLength
+        cmd /= self.charLength
+        cma /= self.charLength
         luck = randint(min(luckList), max(luckList))
         daRatio = (edef * 1.0) / (catk * 1.0)
         adRatio = (eatk * 1.0) / (cdef * 1.0)
@@ -330,36 +366,63 @@ class Arena(object):
                     character.status.remove(x)
                     del self.statusDict[name + x]
 
-    def checkIfDead(self, character):
-        if character.isDead():
+    def checkIfDead(self, character, tF = False):
+        if character.isDead() or tF:
             name = character.info['name']
             self.allChar.remove(character)
             if name in self.charNames:
                 self.charNames.remove(name)
                 if name == self.player.info['name']:
-                    self.report('You died')
+                    mod = {'hp': -1 * self.player.stats['hp']}
+                    message = 'You died\n'
+                    self.modQueue[message] = [character, mod]
+                    self.report(message)
+                    self.isDead = True
                     return True
             else:
                 self.enemyNames.remove(name)
                 if self.didWin():
                     self.report('You Win')
                     return True
-            self.report('%s died' %(character.info['name']))
+            self.report('%s died\n' %(name))
         return False
+
+    def addToModQueue(self, target, mod, message):
+        if target.info['name'] == self.player.info['name']:
+            self.modQueue[message] = [target, mod]
+            return True
+        else:
+            return False
 
     def sendMod(self, character,  targetInfo):
         target = targetInfo[0]
+        message = ''
+        queuedMods = self.modQueue.values()
+        checkPlayerHealth = 0
+        dead = False
+        for q in queuedMods:
+            if q[0].info['name'] == self.player.info['name'] and 'hp' in q[1]:
+                checkPlayerHealth += q[1]['hp']
         if targetInfo[1] != 0:
             damage = self.damage(character, targetInfo)
-            if targetInfo[13][0]:
-                character.statModifier({targetInfo[13][1]: int(round(targetInfo[13][2] * damage * -1))})
             targetInfo[4]['hp'] = damage
-            self.report('%d damage done' %(damage))
+            if targetInfo[13][0]:
+                absorb = int(round(targetInfo[13][2] * damage * -1))
+                abmessage = '%s regained %d %s!' %(character.info['name'], absorb, targetInfo[13][1])
+                if not self.addToModQueue(character, {targetInfo[13][1]: absorb}, abmessage):
+                    character.statModifier({targetInfo[13][1]: absorb})
+                self.report(abmessage)
+            message = '%s did %d damage\n' %(character.info['name'], damage)
+            self.report(message)
+            if target.info['name'] == self.player.info['name'] and (damage * -1) > (self.player.stats['hp'] + checkPlayerHealth):
+                self.isDead = True
+                dead = self.checkIfDead(target, tF = True)
         if targetInfo[4] != {}:
-            target.statModifier(targetInfo[4])
+            if not self.addToModQueue(target, targetInfo[4], message):
+                target.statModifier(targetInfo[4])
         if targetInfo[5] != '' and target.stats['hp'] != 0:
-            self.report(targetInfo[5])
-        if self.checkIfDead(target):
+            self.report(targetInfo[5] + '\n')
+        if self.checkIfDead(target) or dead:
             return True
         return False
 
@@ -399,6 +462,7 @@ class Arena(object):
         return False
 
     def decide(self):
+        self.targetDictionary.clear()
         for x in self.allChar:
             if x in self.nextDic:
                 self.targetDictionary[x] = self.nextDic[x]
@@ -415,15 +479,18 @@ class Arena(object):
         priorityOne = []
         priorityZero = []
         noPriority = []
+        self.order.clear()
         if self.playerTarget == 'run' and self.run():
             self.ran = True
-            self.report('Run successfull!')
+            self.report('Run successfull!\n')
             self.start()
             return
         elif self.playerTarget == 'run':
             self.ran = False
-            self.report('Run failed!')
+            self.report('Run failed!\n')
         for x in self.targetDictionary:
+            if x.info['name'] == self.player.info['name'] and self.playerTarget == 'run':
+                continue
             if self.targetDictionary[x][7][0]:
                 if self.targetDictionary[x][7][1]:
                     priorityOne.append(x)
@@ -438,6 +505,7 @@ class Arena(object):
             for y in newOrder:
                 if x == y:
                     self.order[y] = self.targetDictionary[x]
+        self.order
         self.atkControl()
 
     def atkControl(self):
@@ -513,7 +581,7 @@ class Arena(object):
             elif self.sendMod(character, targetInfo):
                 return True
         else: #target dodged
-            self.report('%s dodged!' %(target.info['name']))
+            self.report('%s dodged!\n' %(target.info['name']))
         return False
 
 def main(player, gameScreen): #this is here to test this class
