@@ -350,12 +350,12 @@ class GameScreen(FadeScreen):
         for shipping to the screen :)
         """
         mod = None
-	if 'mod' in kwargs:
-	    mod = kwargs['mod']
-        if not typing.get_pos():
-            typing.play()
-        else:
-            typing.volume = .5
+	#if 'mod' in kwargs:
+	#    mod = kwargs['mod']
+        #if not typing.get_pos():
+        #    typing.play()
+        #else:
+        #    typing.volume = .5
         if string[:4] not in ('>>> ', '\n>_ ', '\n>>>') and string != 'self.endArena':
             if self.textinput.text == '' and self.isReady:
                 string = '>>> ' + string
@@ -403,9 +403,9 @@ class GameScreen(FadeScreen):
             self.textinput.text += self.box[self.c]
             self.c += 1
         if self.c == len(self.box):
-            typing.volume = 0
+        #    typing.volume = 0
             if not self.queue:
-                typing.stop()
+                #typing.stop()
             self.c = 0
             self.isReady = True
             self.box = []
@@ -1064,9 +1064,9 @@ class DungeonGame(App):
 if __name__ == '__main__':
     player = None
     data = JsonStore('data.json')
-    audio = SoundLoader()
-    typing = audio.load('../audio/song.wav')
-    typing.loop = True
-    typing.play()
+    #audio = SoundLoader()
+    #typing = audio.load('../audio/typingSound.wav')
+    #typing.loop = True
+    #typing.play()
     app = DungeonGame()
     app.run()
