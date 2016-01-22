@@ -9,12 +9,12 @@ coded by タダノデーモン(tadanodaemon)
 This program conatins the Mage class
 """
 
-from charANPC import Character
 from random import *
 
-class Mage(Character):
+class Mage(object):
 
-    def __init__(self, gui):
+    def __init__(self, atk):
+	self.regAtk = atk
         self.special = ['random', self.ciphon, 'Ciphon']
         self.stats = {
                 'hp': 1,
@@ -56,7 +56,6 @@ class Mage(Character):
                 'summon': self.summon,
                 'cure': self.cure
                 }
-        super(Mage, self).__init__(gui)
 
     def ciphon(self, targetInfo):
         '''
@@ -79,7 +78,7 @@ class Mage(Character):
         waitForHit = [0]
         waitForNextTurn = [0]
         multHit = [0]
-        multTarget = [None]
+        multTarget = None
         targetLoseTurn = [0]
         absorb = [0]
         status = [0]
@@ -102,7 +101,7 @@ class Mage(Character):
                 [0],
                 [0],
                 [0],
-                [None],
+                None,
                 [0],
                 [0],
                 [0],
@@ -121,7 +120,7 @@ class Mage(Character):
                 [0],
                 [0],
                 [0],
-                [None],
+                None,
                 [0],
                 [0],
                 [0],
@@ -140,7 +139,7 @@ class Mage(Character):
                 [0],
                 [0],
                 [0],
-                [None],
+                None,
                 [0],
                 [0],
                 [0],
@@ -162,7 +161,7 @@ class Mage(Character):
         waitForHit = [0]
         waitForNextTurn = [0]
         multHit = [0]
-        multTarget = [None]
+        multTarget = None
         targetLoseTurn = [0]
         absorb = [0]
         status = [0]

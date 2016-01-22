@@ -7,65 +7,23 @@ by EncodedPixel
 coded by タダノデーモン(tadanodaemon)
 
 This program contains the Character class for all fighting/active
-classes and contains the Active Non-Player Character class for any teammates
-and enemies for the game
+classes, the Player class for the usr, and the Active Non-Player 
+Character(ANPC) class for any nonplayer characters
 """
 
 from random import *
 from kivy.clock import Clock
 from threading import Thread
+from rogue import Rogue
+from warrior import Warrior
+from mage import Mage
 
 class Character(object):
 
-    def __init__(self, gui):
-        self.gui = gui
+    def __init__(self):
         self.inventory = []
         self.status = []
-        self.curEquip = []
-        self.avaEquip = []
         self.battleStats = {'eva': 100, 'acc': 100}
-        self.atk = None
-        self.enemyNames = None
-        self.charNames = None
-        self.responce = None
-        self.arenaInstance = None
-	self.question = ''
-        self.makeSelf()
-
-        #will hold all items in game
-        #self.items = {
-        #        'potion': [
-        #            quantity,
-        #            effect,
-        #            descrip,
-        #            sell price,
-        #            buy price
-        #            ],
-        #        }
-
-    def makeSelf(self):
-        for x in self.upStats:
-            self.upgradeStat(x, True)
-        self.stats['hp'] = self.stats['fullHP']
-        self.stats['sp'] = self.stats['fullSP']
-        
-    def updateSelf(self):
-        self.stats = self.gui.data.get('player')['stats']
-        self.atkList = self.gui.data.get('player')['atkList']
-        self.inventory = self.gui.data.get('player')['inventory']
-        self.curEquip = self.gui.data.get('player')['curEquip']
-        self.avaEquip = self.gui.data.get('player')['avaEquip']
-        self.info = self.gui.data.get('player')['info']
-
-    def updateBase(self):
-        self.gui.data.put('player',
-                stats = self.stats,
-                atkList = self.atkList,
-                inventory = self.inventory,
-		curEquip = self.curEquip,
-		avaEquip = self.avaEquip,
-                info = self.info
-                )
 
     def upgradeStat(self, stat, stop = False):
         if not stop:
@@ -74,10 +32,6 @@ class Character(object):
         self.stats[stat] = int(round((a * (x**2)) + (b * x) + c))
         self.stats['hp'] = self.stats['fullHP']
         self.stats['sp'] = self.stats['fullSP']
-
-    def generateNextExpForStat(self, stat):
-        x = self.upStats[stat][0]
-        return int(round((-.7 * (x**3)) + (108.3 * (x**2)) + (1403.85 * x) - 999.47))
 
     def spHandle(self, atk):
         try:
@@ -117,7 +71,7 @@ class Character(object):
             self.stats['sp'] = self.stats['fullSP']
         elif self.stats['hp'] < 0:
             self.stats['hp'] = 0
-        if self.info['name'] == self.gui.data.get('player')['info']['name']:
+        if self.gui:
             self.gui.updateSmallStats()
 
     def isDead(self):
@@ -196,7 +150,7 @@ class Character(object):
         absorbtion
 
         status: list that contains a bool expressing whether or not the attack has a status effect,
-        a string exxpressing what type of status effect, and a factor of severness of effect
+        a string expressing what type of status effect, and a factor of severness of effect
 
         element: element of atk
 
@@ -204,7 +158,7 @@ class Character(object):
 
         ORDER IS EXTREMELY IMPORTANT
         '''
-        if self.info['name'] == self.gui.data.get('player')['info']['name']:
+        if self.gui:
             if self.info['class'] == 'warrior':
                 if self.berserk:
                     self.statModifier({'atk': 2.0/3, 'def': 2.0})
@@ -219,7 +173,7 @@ class Character(object):
         waitForHit = [0]
         waitForNextTurn = [0]
         multHit = [0]
-        multTarget = [None]
+        multTarget = None
         targetLoseTurn = [0]
         absorb = [0]
         status = [0]
@@ -230,12 +184,92 @@ class Character(object):
                 targetLoseTurn, absorb, status, element, sp]
 
     def luck(self):
-        x = randint(1, 60)
+        x = randint(1, 150)
         for y in range(1, self.stats['lck'] + 1):
             if y == x:
                 return 2
             else:
                 return 1
+
+class Player(Character):
+
+    def __init__(self, gui):
+        super(Player, self).__init__()
+        self.gui = gui
+        self.curEquip = []
+        self.avaEquip = []
+        self.atk = None
+        self.enemyNames = None
+        self.charNames = None
+        self.responce = None
+        self.arenaInstance = None
+	self.question = ''
+        self.Race = Race()
+        self.Class = None
+        self.stats = {
+                'hp': 1,
+                'sp': 1,
+                'fullHP': 1,
+                'fullSP': 1,
+                'atk': 1,
+                'def': 1,
+                'ma': 1,
+                'md': 1,
+                'spe': 1,
+                'lck': 1,
+                'exp': 0,
+                'gol': 0,
+                'elem': ['none']
+                }
+
+    def makeSelf(self):
+        for x in self.upStats:
+            self.upgradeStat(x, True)
+        self.stats['hp'] = self.stats['fullHP']
+        self.stats['sp'] = self.stats['fullSP']
+
+    def changeRC(self, Race = '', Class = ''):
+        if Race:
+            pass
+        if Class:
+            if Class == 'warrior':
+                self.Class = Warrior(self.regAtk)
+            elif Class == 'rogue':
+                self.Class = Rogue(self.regAtk)
+            elif Class == 'mage':
+                self.Class = Mage(self.regAtk)
+            self.special = self.Class.special
+            self.upStats = self.Class.upStats
+            self.atkList = self.Class.atkList
+            self.setTarget = self.Class.setTarget
+            self.atkDict = self.Class.atkDict
+            self.Class.info = self.info
+            self.makeSelf()
+        
+    def updateSelf(self):
+        self.stats = self.gui.data.get('player')['stats']
+        self.atkList = self.gui.data.get('player')['atkList']
+        self.inventory = self.gui.data.get('player')['inventory']
+        self.curEquip = self.gui.data.get('player')['curEquip']
+        self.avaEquip = self.gui.data.get('player')['avaEquip']
+        self.info = self.gui.data.get('player')['info']
+
+    def updateBase(self):
+        self.gui.data.put('player',
+                stats = self.stats,
+                atkList = self.atkList,
+                inventory = self.inventory,
+		curEquip = self.curEquip,
+		avaEquip = self.avaEquip,
+                info = self.info
+                )
+
+    def updateEquip(self):
+        pass
+
+    def generateNextExpForStat(self, stat):
+        x = self.upStats[stat][0]
+        return int(round((-.7 * (x**3)) + (108.3 * (x**2)) + (1403.85 * x) - 999.47))
 
     def askQuestion(self, question, enemyNames = [], charNames = [], arenaInstance = None):
         if enemyNames:
@@ -244,7 +278,11 @@ class Character(object):
             self.gui.updateEnemyList()
             self.charNames = charNames
             self.arenaInstance = arenaInstance
-	    Clock.schedule_once(self.askQuestion, .5)
+            if (self.arenaInstance.playerTarget != None and len(self.arenaInstance.playerTarget[9]) > 1 
+                    and self.arenaInstance.playerTarget[9][2]):
+                self.arenaInstance.decide()
+            else:
+	        Clock.schedule_once(self.askQuestion, .5)
 	    return
 	if self.question == '':
             self.arenaInstance.report(question)
@@ -328,11 +366,11 @@ class Character(object):
                     self.arenaInstance.report(invalid)
                     self.askQuestion(invQuestion)
 
-class ANPC(Character):
+class ANPC(Character): #, Race, Class):
 
-    def __init__(self, gui):
-        self.status = []
-        self.gui = gui
+    def __init__(self):
+        super(ANPC, self).__init__()
+        self.gui = None
         self.special = ['notrandom']
         self.stats = {
                 'hp': 10,
@@ -349,11 +387,11 @@ class ANPC(Character):
                 'gol': 10,
                 'elem': ['none']
                 }
-        self.battleStats = {'eva': 100, 'acc': 100}
         self.atkDict = {
                 'regular attack': self.regAtk
                 }
         self.atkList = ['regular attack']
+        self.inventory = ['herbs']
 
     def computerFunction(self, charNames, enemyNames):
         self.statModifier({'sp': self.spRegen()})
@@ -365,3 +403,6 @@ class ANPC(Character):
             rand = randint(0, len(charNames) - 1)
             randAtk = randint(0, len(self.atkList) - 1)
             return self.atkDict[self.atkList[randAtk]](charNames[rand])
+
+class Race(object):
+    pass

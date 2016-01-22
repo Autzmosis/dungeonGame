@@ -13,33 +13,30 @@ from charANPC import *
 
 class enemyOne(ANPC):
 
-    def __init__(self, gui):
-        super(enemyOne, self).__init__(gui)
+    def __init__(self):
+        super(enemyOne, self).__init__()
         self.aliance = 'enemy'
         self.info = {'name': 'bat'}
-        self.inventory = ['potion']
 
     def someAttack(self):
         pass
     
 class enemyTwo(ANPC):
 
-    def __init__(self, gui):
-        super(enemyTwo, self).__init__(gui)
+    def __init__(self):
+        super(enemyTwo, self).__init__()
         self.aliance = 'enemy'
         self.info = {'name': 'rat'}
-        self.inventory = ['potion']
 
     def someAttack(self):
         pass
     
 class enemyThree(ANPC):
 
-    def __init__(self, gui):
-        super(enemyThree, self).__init__(gui)
+    def __init__(self):
+        super(enemyThree, self).__init__()
         self.aliance = 'enemy'
         self.info = {'name': 'goblin'}
-        self.inventory = ['potion']
 
     def someAttack(self):
         pass

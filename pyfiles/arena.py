@@ -14,6 +14,8 @@ Right now, I will make it so that I can use it in the terminal
 
 from random import *
 from kivy.clock import Clock
+from items import Item
+from collections import OrderedDict
 
 #modules for dev use
 from rogue import *
@@ -33,7 +35,7 @@ class Arena(object):
         self.allChar = self.char + self.enemy
         self.player = char[0]
         self.ran = False
-        self.order = {}
+        self.order = OrderedDict([])
         self.playerTarget = None
         self.triedToRun = None
         self.targetDictionary = {}
@@ -120,11 +122,11 @@ class Arena(object):
         for l in List:
             luckDic[l] = l.luck()
         for x in List:
-            speed.append(str(luckDic[x] * x.stats['spe']) + x.info['name'])
+            speed.append([luckDic[x] * x.stats['spe'], x ])
         speed.sort()
         for y in speed:
             for z in List:
-                if y == str(luckDic[x] * z.stats['spe']) + z.info['name']:
+                if y[1] == z:
                     order.append(z)
         order.reverse()
         return order
@@ -242,7 +244,7 @@ class Arena(object):
         if luck == 2:
             self.report('That\'s gonna leave a mark!')
         adRatio = (char1.stats[attack] * 1.0) / (char2.stats[defense] * 2.0)
-        if rpsString != '':
+        if rpsString:
             self.report(rpsString)
         return int(round((((adRatio * mod) + baseAtk) * adRatio * luck))) * -1
 
@@ -310,14 +312,14 @@ class Arena(object):
         for x in self.enemy:
             dropItem += x.inventory
         i = randint(0, len(dropItem) - 1)
-        item = dropItem[i]
+        item = Item(dropItem[i])
         reward = [self.gold(), self.exp(), item]
         return reward
 
     def distributeReward(self): #need to do this after battle after temporary stat changes have been reversed
         numOfChar = len(self.char)
         reward = [self.Reward[0]/numOfChar, self.Reward[1]/numOfChar, self.Reward[2]]
-        self.report('Recieved:\n-->%d gold\n-->%d exp\n-->%s' %(reward[0], reward[1], reward[2]))
+        self.report('Recieved:\n-->%d gold\n-->%d exp\n-->%s' %(reward[0], reward[1], reward[2].name))
         hp = 0
         for x in self.char:
             hp = x.stats['hp']
@@ -379,12 +381,13 @@ class Arena(object):
                     self.report(message)
                     self.isDead = True
                     return True
+                self.report('%s died\n' %(name))
             else:
                 self.enemyNames.remove(name)
+                self.report('%s died\n' %(name))
                 if self.didWin():
                     self.report('You Win')
                     return True
-            self.report('%s died\n' %(name))
         return False
 
     def addToModQueue(self, target, mod, message):
@@ -418,6 +421,8 @@ class Arena(object):
                 self.isDead = True
                 dead = self.checkIfDead(target, tF = True)
         if targetInfo[4] != {}:
+            if targetInfo[14][0]:
+                self.changeStatus(targetInfo)
             if not self.addToModQueue(target, targetInfo[4], message):
                 target.statModifier(targetInfo[4])
         if targetInfo[5] != '' and target.stats['hp'] != 0:
@@ -446,18 +451,20 @@ class Arena(object):
     def multTarget(self, character, targetInfo):
         #user will type all for everyone, allies for teammates
         #and enemies for enemies
+        targets = []
         if targetInfo[11] == 0:
-            targets = self.allChar
+            targets.extend(self.allChar)
         elif targetInfo[11] == 1:
-            targets = self.enemy
+            targets.extend(self.enemy)
         elif targetInfo[11] == 2:
-            targets = self.char
+            targets.extend(self.char)
         targetInfo[11] = None
         if targets == self.allChar:
             targets.remove(character)
         for x in targets:
             targetInfo[0] = x
-            if self.atkHandler(character, targetInfo):
+            targetInfo[11] = 'true'
+            if self.atkHandle(character, targetInfo):
                 return True
         return False
 
@@ -471,7 +478,6 @@ class Arena(object):
                     self.targetDictionary[x] = x.checkSpecial(self.playerTarget)
                 else:
                     self.targetDictionary[x] = x.computerFunction(self.charNames, self.enemyNames)
-        self.nextDic.clear()
         self.skipToFront()
 
     def skipToFront(self):
@@ -491,7 +497,7 @@ class Arena(object):
         for x in self.targetDictionary:
             if x.info['name'] == self.player.info['name'] and self.playerTarget == 'run':
                 continue
-            if self.targetDictionary[x][7][0]:
+            elif self.targetDictionary[x][7][0]:
                 if self.targetDictionary[x][7][1]:
                     priorityOne.append(x)
                 else:
@@ -501,20 +507,17 @@ class Arena(object):
         priorityZero = self.attackFirst(priorityZero)
         noPriority = self.attackFirst(noPriority)
         newOrder = priorityOne + priorityZero + noPriority
-        for x in self.targetDictionary:
-            for y in newOrder:
-                if x == y:
-                    self.order[y] = self.targetDictionary[x]
-        self.order
+        for y in newOrder:
+            self.order.update({y: self.targetDictionary[y]})
         self.atkControl()
 
     def atkControl(self):
         target = None
         for x in self.order:
-            if x in self.loseTurn and x not in self.nextDic:
+            if x in self.loseTurn and x not in self.nextDic and x.stats['hp']:
                 #this is where you print a string saying that x lost turn
                 self.report(self.loseTurn[x])
-            elif x.stats['hp'] != 0:
+            elif x.stats['hp']:
                 targetInfo = self.order[x]
                 for y in self.allChar:
                     if y.info['name'] == targetInfo[0]:
@@ -536,10 +539,14 @@ class Arena(object):
             self.report('%s is incapable of moving due to ice.' %(character.info['name']))
             return False
         target = targetInfo[0]
+        if len(targetInfo[9]) > 1 and not targetInfo[9][0] and targetInfo[9][2]:
+            targetInfo[9][2] -= 1
+            del self.nextDic[character]
         try: #make it so peeps in multihit don't report their atk string again
             targetInfo[10][3]
         except IndexError:
-            self.report(targetInfo[3])
+            if targetInfo[11] in (None, 'true'):
+                self.report(targetInfo[3])
         self.spHandle(character, targetInfo[16] * -1)
         if targetInfo[8][0]: #wait for hit
             targetInfo[8][0] = False #turn indicater off
@@ -548,45 +555,53 @@ class Arena(object):
         elif targetInfo[9][0]: #wait for certain amount of turns
             if targetInfo[9][2] != 1:
                 targetInfo[9][2] -= 1
+                targetInfo[16] = 0
                 self.report(targetInfo[9][3])
-                targetInfo[3] = targetInfo[9][3]
+                if targetInfo[3] != targetInfo[9][3]:
+                    targetInfo[3] = targetInfo[9][3]
             else:
                 targetInfo[9][0] = False #turn indicater off
                 targetInfo[3] = targetInfo[9][4]
             self.nextDic[character] = targetInfo
-        elif targetInfo[12][0]: #lose turn
-            self.loseTurn[target] = targetInfo[12][1]
         elif targetInfo[10][0]: #multHit
             if self.multHit(character, targetInfo):
                 return True
         elif targetInfo[11] in range(0,3): #mult target
             if self.multTarget(character, targetInfo):
                 return True
-        elif len(targetInfo[8]) == 4:
+        elif len(targetInfo[8]) == 4: #might be useless
             if not targetInfo[8][2]:
                 return False
-        elif self.hit(character, targetInfo[2], target) or target == character: #target hit
+        elif (self.hit(character, targetInfo[2], target)
+                and (target not in self.nextDic or self.nextDic[target][9][1])) or target == character: #target hit
             if target in self.wait:
                 if self.wait[target][8][1]: #allows hit
                     if self.sendMod(x, targetInfo):
                         return True
+                    if targetInfo[12][0]: #lose turn
+                        self.loseTurn[target] = targetInfo[12][1]
                     if target.stats['hp'] != 0:
-                        if self.atkHandle(target, self.wait[target]):
+                        if target in self.loseTurn:
+                            self.report(self.loseTurn[target])
+                        elif self.atkHandle(target, self.wait[target]):
                             return True
                         del self.wait[target]
                 else:
                     if self.atkHandle(target, self.wait[target]):
                         return True
                     del self.wait[target]
-            elif self.sendMod(character, targetInfo):
-                return True
-        else: #target dodged
-            self.report('%s dodged!\n' %(target.info['name']))
+            else:
+                if targetInfo[12][0]: #lose turn
+                    self.loseTurn[target] = targetInfo[12][1]
+                if self.sendMod(character, targetInfo):
+                    return True
+        else: #character missed
+            self.report('%s missed!\n' %(character.info['name']))
         return False
 
 def main(player, gameScreen): #this is here to test this class
-    enemy1 = enemyOne(gameScreen)
-    enemy2 = enemyTwo(gameScreen)
-    enemy3 = enemyThree(gameScreen)
+    enemy1 = enemyOne()
+    enemy2 = enemyTwo()
+    enemy3 = enemyThree()
     arena = Arena(gameScreen, char = [player], enemy = [enemy1, enemy2, enemy3])
     return arena

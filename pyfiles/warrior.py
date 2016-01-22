@@ -9,12 +9,12 @@ coded by タダノデーモン(tadanodaemon)
 This program contains the Warrior class, for the game
 """
 
-from charANPC import Character
 from random import *
 
-class Warrior(Character):
+class Warrior(object):
 
-    def __init__(self, gui):
+    def __init__(self, atk):
+	self.regAtk = atk
         self.special= ['random', self.berserk, 'Berserk']
         self.berserk = False
         self.stats = {
@@ -58,16 +58,17 @@ class Warrior(Character):
                 'parry': self.parry,
                 'warcry': self.warcry
                 }
-        super(Warrior, self).__init__(gui)
 
     def berserk(self, targetInfo):
         '''
         This is the warriors special ability
         '''
-	if targetInfo[1]:
-        	targetInfo[3] += '\n-->%s just went berserk!' %(self.info['name'])
-        	self.statModifier({'atk': 1.5, 'def': .5})
-        	self.berserk = True
+	#if targetInfo[1]:
+        #	targetInfo[3] += '\n-->%s just went berserk!' %(self.info['name'])
+		#Im going to have to queue direct stat modifications to self, so that it occurs when
+		#the atk string is shown to the usr
+        	#self.statModifier({'atk': 1.5, 'def': .5})
+        #	self.berserk = True
         return targetInfo
 
     def shieldBash(self, target):
@@ -84,7 +85,7 @@ class Warrior(Character):
         waitForHit = [0]
         waitForNextTurn = [0]
         multHit = [0]
-        multTarget = [None]
+        multTarget = None
         targetLoseTurn = [0]
         absorb = [0]
         status = [0]
@@ -109,7 +110,7 @@ class Warrior(Character):
         waitForHit = [1, 0, 0, '%s parried the attack!' %(self.info['name'])]
         waitForNextTurn = [0]
         multHit = [0]
-        multTarget = [None]
+        multTarget = None
         targetLoseTurn = [0]
         absorb = [0]
         status = [0]
@@ -134,7 +135,7 @@ class Warrior(Character):
         waitForHit = [0]
         waitForNextTurn = [0]
         multHit = [0]
-        multTarget = [None]
+        multTarget = None
         targetLoseTurn = [0]
         absorb = [0]
         status = [0]

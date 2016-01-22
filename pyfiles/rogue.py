@@ -9,12 +9,12 @@ coded by タダノデーモン(tadanodaemon)
 This program contains the Rogue class
 """
 
-from charANPC import Character
 from random import *
 
-class Rogue(Character):
+class Rogue(object):
     
-    def __init__(self, gui):
+    def __init__(self, atk):
+	self.regAtk = atk
         self.special = ['random', self.dualBlitz, 'Dual Blitz']
         self.stats = {
             'hp': 1,
@@ -55,7 +55,6 @@ class Rogue(Character):
                 'backstab': self.backstab,
                 'shade thrust': self.shadeThrust
                 }
-        super(Rogue, self).__init__(gui)
 
     def dualBlitz(self, targetInfo):
         '''
@@ -78,7 +77,7 @@ class Rogue(Character):
         waitForHit = [0]
         waitForNextTurn = [0]
         multHit = [0]
-        multTarget = [None]
+        multTarget = None
         targetLoseTurn = [0]
         absorb = [0]
         status = [0]
@@ -99,7 +98,7 @@ class Rogue(Character):
         waitForHit = [0]
         waitForNextTurn = [0]
         multHit = [0]
-        multTarget = [None]
+        multTarget = None
         targetLoseTurn = [0]
         absorb = [0]
         status = [0]
@@ -120,7 +119,7 @@ class Rogue(Character):
         waitForHit = [0]
         waitForNextTurn = [0]
         multHit = [0]
-        multTarget = [None]
+        multTarget = None
         targetLoseTurn = [0]
         absorb = [0]
         status = [0]

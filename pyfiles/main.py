@@ -40,9 +40,7 @@ from kivy.animation import Animation
 from kivy.graphics import *
 from kivy.storage.jsonstore import JsonStore
 from kivy.core.audio import SoundLoader
-from rogue import Rogue
-from mage import Mage
-from warrior import Warrior
+from charANPC import Player
 from arena import *
 from textRecognition import TextRecognition
 
@@ -238,12 +236,8 @@ class ChooseClass(FadeScreen):
 
     def setupPlayer(self):
         global player
-        if self.info['class'] == 'rogue':
-            player = Rogue(self.manager.get_screen('gamescreen'))
-        elif self.info['class'] == 'warrior':
-            player = Warrior(self.manager.get_screen('gamescreen'))
-        elif self.info['class'] == 'mage':
-            player = Mage(self.manager.get_screen('gamescreen'))
+	player = Player(self.manager.get_screen('gamescreen'))
+	player.changeRC(Class = self.info['class'])
         player.info = self.info
         player.updateBase()
 
@@ -294,13 +288,9 @@ class GameScreen(FadeScreen):
 
     def setupPlayer(self):
         global player
-        if data.get('player')['info']['class'] == 'rogue':
-            player = Rogue(self)
-        elif data.get('player')['info']['class'] == 'mage':
-            player = Mage(self)
-        elif data.get('player')['info']['class'] == 'warrior':
-            player = Warrior(self)
+	player = Player(self)
         player.updateSelf()
+	player.changeRC(Class = data.get('player')['info']['class'])
 
     def responce(self, kwargs):
         """
@@ -349,9 +339,10 @@ class GameScreen(FadeScreen):
         this breaks up typed string into a box and packages each letter
         for shipping to the screen :)
         """
+        self.usr.readonly = True
         mod = None
-	#if 'mod' in kwargs:
-	#    mod = kwargs['mod']
+	if 'mod' in kwargs:
+	    mod = kwargs['mod']
         #if not typing.get_pos():
         #    typing.play()
         #else:
@@ -404,22 +395,23 @@ class GameScreen(FadeScreen):
             self.c += 1
         if self.c == len(self.box):
         #    typing.volume = 0
-            if not self.queue:
+            #if not self.queue:
                 #typing.stop()
             self.c = 0
             self.isReady = True
             self.box = []
-	    if self.modQueue:
-		if self.modQueue[0]:
-			character = self.modQueue[0][0]
-			mod = self.modQueue[0][1]
-	    		character.statModifier(mod)
+	    if self.modQueue and self.modQueue[0]:
+		character = self.modQueue[0][0]
+		mod = self.modQueue[0][1]
+	    	character.statModifier(mod)
 	    	self.modQueue.remove(self.modQueue[0])
+            self.usr.readonly = False
             return False
 
     def keepinItCool(self):
         self.textinput.text = ''
         self.cleanUp = True
+        self.usr.readonly = False
         if not self.usr.battleMode:
             app.textRec.modes.remove('battle')
 
@@ -434,6 +426,7 @@ class GameScreen(FadeScreen):
         self.keepinItCool()
         player.stats['hp'] = player.stats['fullHP']
         self.updateSmallStats()
+        self.updateInventory()
 
     def goCheckEm(self, string):
         try:
@@ -469,10 +462,11 @@ class GameScreen(FadeScreen):
 
     def updateInventory(self):
         inv = []
-        for x in player.inventory:
-            inv.append(x)
-        if inv == []:
-            inv.append('None')
+        if not player.inventory:
+            inv.append('none')
+        else:
+            for x in player.inventory:
+                inv.append(x.name)
         self.usr.inventory.adapter.update(inv)
 
     def updateEquipment(self):
@@ -701,6 +695,7 @@ class UsrInput(TextInput):
         self.current = {}
         self.pressedNum = False
         self.memoryStat = {}
+        self.stopInput = False
         self.translateDict = {
                 'Health': 'fullHP',
                 'Skill Points': 'fullSP',
@@ -717,6 +712,9 @@ class UsrInput(TextInput):
         self.atkBox.fade()
 
     def keyboard_on_key_down(self, window, keycode, text, modifiers):
+        if self.readonly:
+            self.text = ''
+            return
         global player
         keyNum, keyStr = keycode
         self.ctrl = (keyStr == 'ctrl') or ('ctrl' in modifiers)
@@ -792,10 +790,10 @@ class UsrInput(TextInput):
                         self.playerInfo.fade()
                         self.selectPlayerInfo()
                         check = True
-                self.selectItem(self.inventory, string = 'begin')
                 if check:
                     self.descrip.fade()
                 self.mode = 'inventory'
+                self.selectItem(self.inventory, string = 'begin')
             else:
                 self.descrip.fade()
                 self.selectItem(self.inventory)
@@ -824,10 +822,10 @@ class UsrInput(TextInput):
                         self.playerInfo.fade()
                         self.selectPlayerInfo()
                         check = True
-                self.selectItem(self.atkList, string = 'begin')
                 if check:
                     self.descrip.fade()
                 self.mode = 'atkList'
+                self.selectItem(self.atkList, string = 'begin')
             else:
                 self.descrip.fade()
                 self.selectItem(self.atkList)
@@ -934,10 +932,7 @@ class UsrInput(TextInput):
                 super(UsrInput, self).keyboard_on_key_down(window, keycode, text, modifiers)
 
     def selectItem(self, *containers, **kwargs):
-        try:
-            string = kwargs['string']
-        except KeyError:
-            string = ''
+        string = kwargs.pop('string', '')
         for container in containers:
             if container not in self.current:
                 self.current[container] = 0
@@ -957,8 +952,9 @@ class UsrInput(TextInput):
                     current += 1
                     move = False
             self.current[container] = current
+            view = container.adapter.get_view(current)
+            self.updateDescription(view.text)
             if move:
-                view = container.adapter.get_view(current)
                 container.adapter.handle_selection(view)
                 if current == 0:
                     self.scroll(1, container)
@@ -972,7 +968,6 @@ class UsrInput(TextInput):
                         self.text = view.text
                     else:
                         self.currentStat = self.playerInfo.upStats.adapter.get_view(current)
-                    self.updateDescription()
 
     def selectPlayerInfo(self, string = ''):
         self.selectItem(
@@ -986,18 +981,20 @@ class UsrInput(TextInput):
         scrlview = container.list_view.container.parent
         scrlview.scroll_y = pos
 
-    def updateDescription(self):
+    def updateDescription(self, text):
+        global player
         if self.text in ('None', '-----'):
             self.descrip.text = 'None'
-        else:
-            if self.mode == 'inventory':
-                pass
-            elif self.mode == 'atkList':
-                pass
-            elif self.mode == 'avaEquip':
-                pass
-            elif self.mode == 'curEquip':
-                pass
+        elif self.mode != 'playerInfo':
+            if self.mode == 'atkList':
+                self.descrip.text = 'None'
+                #for x in player.atkList:
+                #    if text == x:
+                #        self.descrip.text = player.atkList[text]
+            else:
+                for x in player.inventory:
+                    if text == x.name:
+                        self.descrip.text = x.descrip
 
     def upgradeStat(self):
         x = self.current[self.playerInfo.upStats]
