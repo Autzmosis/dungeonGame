@@ -21,7 +21,7 @@ from collections import OrderedDict
 from rogue import *
 from mage import *
 from warrior import *
-from dungeonOneEnemies import *
+from charANPC import *
 
 class Arena(object):
 
@@ -30,7 +30,7 @@ class Arena(object):
         self.char = char
         self.charLength = len(char)
         self.enemy = enemy
-        self.enemyLength = len(enemy) - 1 #giving enemies advantage by minusing 1
+        self.enemyLength = len(enemy)
         self.charNames, self.enemyNames, self.order = [[],[],[]]
         self.allChar = self.char + self.enemy
         self.player = char[0]
@@ -50,7 +50,6 @@ class Arena(object):
 	self.string = ''
         self.queue = []
         self.startQueue = True
-        self.modQueue = {}
         self.isDead = False
         for x in self.allChar:
             x.battleStats['eva'] = 100
@@ -86,7 +85,8 @@ class Arena(object):
             self.pressEnter = False
             self.gui.usr.permission = False
         else:
-            self.modQueue.clear()
+            while self.gui.snapshot:
+                self.gui.snapshot.remove(self.gui.snapshot[0])
             self.pressEnter = True
             self.gui.usr.permission = True
             self.gui.keepinItCool()
@@ -104,12 +104,7 @@ class Arena(object):
             self.startQueue = False
 
     def reportQueue(self, dt):
-        mod = []
-        if self.queue[0] in self.modQueue:
-            character = self.modQueue[self.queue[0]][0]
-            modDict = self.modQueue[self.queue[0]][1]
-            mod = [character, modDict]
-        self.gui.prompt(self.queue[0], mod = mod)
+        self.gui.prompt(self.queue[0])
         self.queue.remove(self.queue[0])
         if not self.queue:
             self.startQueue = True
@@ -167,8 +162,13 @@ class Arena(object):
         if chance < 1:
             return False
 
-    def spHandle(self, character, sp):
+    def spHandle(self, character, sp, message):
         character.statModifier({'sp': sp})
+        if character.info['name'] == self.player.info['name']:
+            self.gui.snapshot.append((self.player.stats['hp'], self.player.stats['sp']))
+            self.report('self.snapshot' + message)
+        else:
+            self.report(message)
 
     def elementalRPS(self, atkElement, defElement):
         rps = 1
@@ -312,14 +312,13 @@ class Arena(object):
         for x in self.enemy:
             dropItem += x.inventory
         i = randint(0, len(dropItem) - 1)
-        item = Item(dropItem[i])
-        reward = [self.gold(), self.exp(), item]
+        reward = [self.gold(), self.exp(), dropItem[i]]
         return reward
 
     def distributeReward(self): #need to do this after battle after temporary stat changes have been reversed
         numOfChar = len(self.char)
         reward = [self.Reward[0]/numOfChar, self.Reward[1]/numOfChar, self.Reward[2]]
-        self.report('Recieved:\n-->%d gold\n-->%d exp\n-->%s' %(reward[0], reward[1], reward[2].name))
+        self.report('Recieved:\n-->%d gold\n-->%d exp\n-->%s' %(reward[0], reward[1], reward[2]))
         hp = 0
         for x in self.char:
             hp = x.stats['hp']
@@ -329,7 +328,17 @@ class Arena(object):
                 'gol': reward[0],
                 'exp': reward[1]
                 })
-            x.inventory.append(reward[2])
+            if not x.inventory:
+                item = Item(reward[2])
+                x.inventory.append(item)
+            else:
+                for y in x.inventory:
+                    if y.name == reward[2]:
+                        y.quantity += 1
+                        y.makeDescrip()
+                    else:
+                        item = Item(reward[2])
+                        x.inventory.append(item)
 
     def didWin(self):
         if self.enemyNames == []:
@@ -349,6 +358,7 @@ class Arena(object):
             if status == 'blind':
                 target.statModifier({'acc': .3})
             elif status == 'silent':
+                #snapshot
                 target.statModifier({'sp': .0})
             time = int(round(randint(2, 5) * severity))
             self.statusDict[target.info['name'] + status] = time
@@ -360,6 +370,7 @@ class Arena(object):
                 damage = self.statusDict[name + x]
                 self.report('%s is %sed.' %(name, x))
                 self.report('%s took %d damage' %(name, damage * -1))
+                #snapshot here
                 character.statModifier({'hp': damage})
             elif x in ('frozen', 'blind', 'silent'):
                 self.statusDict[name + x] -= 1
@@ -368,18 +379,15 @@ class Arena(object):
                     character.status.remove(x)
                     del self.statusDict[name + x]
 
-    def checkIfDead(self, character, tF = False):
-        if character.isDead() or tF:
+    def checkIfDead(self, character):
+        if character.isDead():
             name = character.info['name']
             self.allChar.remove(character)
             if name in self.charNames:
                 self.charNames.remove(name)
                 if name == self.player.info['name']:
-                    mod = {'hp': -1 * self.player.stats['hp']}
                     message = 'You died\n'
-                    self.modQueue[message] = [character, mod]
                     self.report(message)
-                    self.isDead = True
                     return True
                 self.report('%s died\n' %(name))
             else:
@@ -390,44 +398,43 @@ class Arena(object):
                     return True
         return False
 
-    def addToModQueue(self, target, mod, message):
-        if target.info['name'] == self.player.info['name']:
-            self.modQueue[message] = [target, mod]
-            return True
-        else:
-            return False
-
     def sendMod(self, character,  targetInfo):
         target = targetInfo[0]
         message = ''
-        queuedMods = self.modQueue.values()
-        checkPlayerHealth = 0
-        dead = False
-        for q in queuedMods:
-            if q[0].info['name'] == self.player.info['name'] and 'hp' in q[1]:
-                checkPlayerHealth += q[1]['hp']
-        if targetInfo[1] != 0:
+        if targetInfo[1]:
             damage = self.damage(character, targetInfo)
             targetInfo[4]['hp'] = damage
+            message = '%s did %d damage\n' %(character.info['name'], damage)
+            target.statModifier(targetInfo[4])
+            if target.info['name'] == self.player.info['name']:
+                self.gui.snapshot.append((self.player.stats['hp'], self.player.stats['sp']))
+                self.report('self.snapshot' + message)
+            else:
+                self.report(message)
             if targetInfo[13][0]:
                 absorb = int(round(targetInfo[13][2] * damage * -1))
                 abmessage = '%s regained %d %s!' %(character.info['name'], absorb, targetInfo[13][1])
-                if not self.addToModQueue(character, {targetInfo[13][1]: absorb}, abmessage):
-                    character.statModifier({targetInfo[13][1]: absorb})
-                self.report(abmessage)
-            message = '%s did %d damage\n' %(character.info['name'], damage)
-            self.report(message)
-            if target.info['name'] == self.player.info['name'] and (damage * -1) > (self.player.stats['hp'] + checkPlayerHealth):
-                self.isDead = True
-                dead = self.checkIfDead(target, tF = True)
-        if targetInfo[4] != {}:
-            if targetInfo[14][0]:
-                self.changeStatus(targetInfo)
-            if not self.addToModQueue(target, targetInfo[4], message):
-                target.statModifier(targetInfo[4])
+                character.statModifier({targetInfo[13][1]: absorb})
+                if character.info['name'] == self.player.info['name'] and targetInfo[13][1] in ('hp', 'sp'):
+                    self.gui.snapshot.append((self.player.stats['hp'], self.player.stats['sp']))
+                    self.report('self.snapshot' + abmessage)
+                else:
+                    self.report(abmessage)
+        if targetInfo[14][0]:
+            self.changeStatus(targetInfo)
         if targetInfo[5] != '' and target.stats['hp'] != 0:
-            self.report(targetInfo[5] + '\n')
-        if self.checkIfDead(target) or dead:
+            message = targetInfo[5] + '\n'
+            if not targetInfo[1]:
+                target.statModifier(targetInfo[4])
+                if (target.info['name'] == self.player.info['name']
+                        and ('hp' in targetInfo[4] or 'sp' in targetInfo[4])):
+                    self.gui.snapshot.append((self.player.stats['hp'], self.player.stats['sp']))
+                    self.report('self.snapshot' + message)
+                else:
+                    self.report(message)
+            else:
+                self.report(message)
+        if self.checkIfDead(target):
             return True
         return False
 
@@ -515,7 +522,6 @@ class Arena(object):
         target = None
         for x in self.order:
             if x in self.loseTurn and x not in self.nextDic and x.stats['hp']:
-                #this is where you print a string saying that x lost turn
                 self.report(self.loseTurn[x])
             elif x.stats['hp']:
                 targetInfo = self.order[x]
@@ -546,8 +552,7 @@ class Arena(object):
             targetInfo[10][3]
         except IndexError:
             if targetInfo[11] in (None, 'true'):
-                self.report(targetInfo[3])
-        self.spHandle(character, targetInfo[16] * -1)
+                self.spHandle(character, targetInfo[16] * -1, targetInfo[3])
         if targetInfo[8][0]: #wait for hit
             targetInfo[8][0] = False #turn indicater off
             targetInfo[3] = targetInfo[8][3]
@@ -600,8 +605,23 @@ class Arena(object):
         return False
 
 def main(player, gameScreen): #this is here to test this class
-    enemy1 = enemyOne()
-    enemy2 = enemyTwo()
-    enemy3 = enemyThree()
-    arena = Arena(gameScreen, char = [player], enemy = [enemy1, enemy2, enemy3])
+    enemy1 = createANPC(
+            Class = Rogue,
+            lvl = {
+                'fullHP': 1,
+                'fullSP': 2,
+                'atk': 2,
+                'def': 1,
+                'ma': 2,
+                'md': 2,
+                'spe': 1,
+                'lck': 2
+                },
+            name = 'Test',
+            gold = 100,
+            exp = 100,
+            inventory = ['herbs',],
+            aliance = 'enemy'
+            )
+    arena = Arena(gameScreen, char = [player], enemy = [enemy1])
     return arena

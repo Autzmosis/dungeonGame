@@ -14,9 +14,6 @@ class Item(object):
         self.name = name
         self.itemDict = {
                 'herbs': [
-                    ('[b]Genetically Enhanced\nHerbs[/b]\n\n'
-                        'The natives method\nof healing (scoff)'
-                        '\nwounds. Heals\nup to 20 hp.'),
                     {
                         'mod': {'hp': 20},
                         'string': ' ate some herbs!',
@@ -28,13 +25,23 @@ class Item(object):
                     'a list of numbers for levelup'
                     ]
                 }
-        self.descrip = self.itemDict[self.name][0]
-        self.effect = self.itemDict[self.name][1]
-        self.sellPrice = self.itemDict[self.name][2]
-        self.buyPrice = self.itemDict[self.name][3]
-        if self.itemDict[self.name][4]:
-            self.upStats = self.itemDict[self.name][5]
+        self.effect = self.itemDict[self.name][0]
+        self.sellPrice = self.itemDict[self.name][1]
+        self.buyPrice = self.itemDict[self.name][2]
+        self.quantity = 1
+        if self.itemDict[self.name][3]:
+            self.upStats = self.itemDict[self.name][4]
             self.lvl = 1
+        self.makeDescrip()
+
+    def makeDescrip(self):
+        if self.name == 'herbs':
+            self.descrip = ('[b]Genetically Enhanced\nHerbs[/b]\n'
+                            'Quantity: %d\n\n'
+                            'The natives method\nof healing (scoff)'
+                            '\nwounds. Heals\nup to 20 hp.'
+                            %(self.quantity)
+                            )
 
     def convertToAttack(self, character, target):
         name = character.info['name']

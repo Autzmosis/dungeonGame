@@ -25,13 +25,18 @@ class Character(object):
         self.status = []
         self.battleStats = {'eva': 100, 'acc': 100}
 
+    def makeSelf(self):
+        for x in self.upStats:
+            self.upgradeStat(x, True)
+
     def upgradeStat(self, stat, stop = False):
         if not stop:
             self.upStats[stat][0] += 1
         x, a, b, c = self.upStats[stat]
         self.stats[stat] = int(round((a * (x**2)) + (b * x) + c))
-        self.stats['hp'] = self.stats['fullHP']
-        self.stats['sp'] = self.stats['fullSP']
+        if stat in ('fullHP', 'fullSP'):
+            self.stats['hp'] = self.stats['fullHP']
+            self.stats['sp'] = self.stats['fullSP']
 
     def spHandle(self, atk):
         try:
@@ -62,17 +67,12 @@ class Character(object):
                     self.stats[stat] += mod
             else:
                 self.battleStats[stat] *= mod
-        if stat in ('hp', 'sp'):
-            self.stats['hp'] = int(self.stats['hp'])
-            self.stats['sp'] = int(self.stats['sp'])
         if self.stats['hp'] > self.stats['fullHP']:
             self.stats['hp'] = self.stats['fullHP']
         if self.stats['sp'] > self.stats['fullSP']:
             self.stats['sp'] = self.stats['fullSP']
         elif self.stats['hp'] < 0:
             self.stats['hp'] = 0
-        if self.gui:
-            self.gui.updateSmallStats()
 
     def isDead(self):
         if self.stats['hp'] == 0:
@@ -199,6 +199,7 @@ class Player(Character):
         self.curEquip = []
         self.avaEquip = []
         self.atk = None
+        self.itemAtk = ''
         self.enemyNames = None
         self.charNames = None
         self.responce = None
@@ -206,6 +207,7 @@ class Player(Character):
 	self.question = ''
         self.Race = Race()
         self.Class = None
+        self.tF = True
         self.stats = {
                 'hp': 1,
                 'sp': 1,
@@ -222,18 +224,13 @@ class Player(Character):
                 'elem': ['none']
                 }
 
-    def makeSelf(self):
-        for x in self.upStats:
-            self.upgradeStat(x, True)
-        self.stats['hp'] = self.stats['fullHP']
-        self.stats['sp'] = self.stats['fullSP']
-
     def changeRC(self, Race = '', Class = ''):
         if Race:
             pass
         if Class:
             if Class == 'warrior':
                 self.Class = Warrior(self.regAtk)
+                self.berserk = self.Class.berserk
             elif Class == 'rogue':
                 self.Class = Rogue(self.regAtk)
             elif Class == 'mage':
@@ -278,6 +275,9 @@ class Player(Character):
             self.gui.updateEnemyList()
             self.charNames = charNames
             self.arenaInstance = arenaInstance
+            self.invNames = []
+            for x in self.inventory:
+                self.invNames.append(x.name)
             if (self.arenaInstance.playerTarget != None and len(self.arenaInstance.playerTarget[9]) > 1 
                     and self.arenaInstance.playerTarget[9][2]):
                 self.arenaInstance.decide()
@@ -289,120 +289,115 @@ class Player(Character):
 	else:
 	    self.arenaInstance.report(self.question)
 	    self.question = ''
+        if 'silent' not in self.status:
+            self.statModifier({'sp': self.spRegen()})
+            self.gui.updateSmallStats()
         self.gui.usr.permission = True
         self.gui.refocus()
 
-    def checkEm(self, text, tF):
+    def checkEm(self, text):
         self.gui.usr.permission = False
-        if tF:
-            array = self.atkList
-            invalid = 'Invalid attack, try again.\n'
-            question = 'Who do you want to attack?'
-            invQuestion = 'What do you want to do?'
-        else:
-            array = self.enemyNames
-            invalid = 'Unknown enemy, try again.\n'
-            invQuestion = 'Who do you want to attack?'
-        if text  == 'run' and tF:
+        if text == 'run':
             self.arenaInstance.playerTarget = text
             self.arenaInstance.report('\n')
             self.arenaInstance.decide()
-        elif text in range(0,5):
-            if text in range(0, len(array)):
-                if array == self.atkList:
-                    self.atk = array[text]
-                    if self.spHandle(self.atk):
-                        self.gui.usr.tF = False
-                        if len(self.enemyNames) == 1 or self.atk in self.setTarget:
-                            try:
-                                self.arenaInstance.playerTarget = self.atkDict[self.atk](self.enemyNames[0])
-                            except TypeError:
-                                self.arenaInstance.playerTarget = self.atkDict[self.atk]()
-                            self.gui.usr.tF = True
-                            self.arenaInstance.report('\n')
-                            self.arenaInstance.decide()
-                        else:
-                            self.askQuestion(question)
+        elif self.tF:
+            if text in self.atkList:
+                self.atk = text
+                if self.spHandle(text):
+                    self.tF = False
+                    if len(self.enemyNames) == 1 or text in self.setTarget:
+                        try:
+                            self.arenaInstance.playerTarget = self.atkDict[text](self.enemyNames[0])
+                        except TypeError:
+                            self.arenaInstance.playerTarget = self.atkDict[text]()
+                        self.tF = True
+                        self.arenaInstance.report('\n')
+                        self.arenaInstance.decide()
                     else:
-                        self.arenaInstance.report('You don\'t have enough sp to do that')
-                        self.askQuestion(invQuestion)
+                        self.askQuestion('Who do you want to attack?')
                 else:
-                    self.arenaInstance.playerTarget = self.atkDict[self.atk](array[text])
-                    self.gui.usr.tF = True
+                    self.arenaInstance.report('You don\'t have enough sp to do that!')
+                    self.askQuestion('Who do you want to attack?')
+            elif text in self.invNames:
+                if len(self.enemyNames) == 1:
+                    for x in self.inventory:
+                        if text == x.name:
+                            self.arenaInstance.playerTarget = x.convertToAttack(self, self.info['name'])
+                            x.quantity -= 1
+                            if not x.quantity:
+                                self.inventory.remove(x)
+                                self.gui.updateInventory()
+                            x.makeDescrip()
+                    self.tF = True
                     self.arenaInstance.report('\n')
                     self.arenaInstance.decide()
+                else:
+                    self.atk = 'inventory'
+                    self.itemAtk = text
+                    self.askQuestion('Who do you want to attack?')
             else:
-                self.arenaInstance.report(invalid)
-                self.askQuestion(invQuestion)
+                self.arenaInstance.report('Invalid battle command, try again.\n')
+                self.askQuestion('What do you want to do?')
+        elif text in self.enemyNames:
+            if self.atk == 'inventory':
+                for x in self.inventory:
+                    if self.itemAtk == x.name:
+                        self.arenaInstance.playerTarget = x.convertToAttack(self, self.info['name'])
+                        x.quantity -= 1
+                        if not x.quantity:
+                            self.inventory.remove(x)
+                            self.gui.updateInventory()
+                        x.makeDescrip()
+            else:
+                self.arenaInstance.playerTarget = self.atkDict[self.atk](text)
+            self.tF = True
+            self.arenaInstance.report('\n')
+            self.arenaInstance.decide()
         else:
-            if array == self.atkList:
-                if text in array:
-                    self.atk = text
-                    if self.spHandle(self.atk):
-                        self.gui.usr.tF = False
-                        if len(self.enemyNames) == 1 or self.atk in self.setTarget:
-                            try:
-                                self.arenaInstance.playerTarget = self.atkDict[self.atk](self.enemyNames[0])
-                            except TypeError:
-                                self.arenaInstance.playerTarget = self.atkDict[self.atk]()
-                            self.gui.usr.tF = True
-                            self.arenaInstance.report('\n')
-                            self.arenaInstance.decide()
-                        else:
-                            self.askQuestion(question)
-                    else:
-                        self.arenaInstance.report('You don\'t have enough sp to do that')
-                        self.askQuestion(invQuestion)
-                else:
-                    self.arenaInstance.report(invalid)
-                    self.askQuestion(invQuestion)
-            else:
-                if text in array:
-                    self.arenaInstance.playerTarget = self.atkDict[self.atk](text)
-                    self.gui.usr.tF = True
-                    self.arenaInstance.report('\n')
-                    self.arenaInstance.decide()
-                else:
-                    self.arenaInstance.report(invalid)
-                    self.askQuestion(invQuestion)
+            self.arenaInstance.report('Unknown enemy, try again.\n')
+            self.askQuestion('Who do you want to attack?')
+        self.gui.usr.permission = True
 
-class ANPC(Character): #, Race, Class):
+def createANPC(**kwargs):
+    #Race = kwargs['race']
+    Class = kwargs['Class']
+    lvl = kwargs['lvl']
+    name = kwargs['name']
+    exp = kwargs['exp']
+    gold = kwargs['gold']
+    inventory = kwargs['inventory']
+    aliance = kwargs['aliance']
 
-    def __init__(self):
-        super(ANPC, self).__init__()
-        self.gui = None
-        self.special = ['notrandom']
-        self.stats = {
-                'hp': 10,
-                'sp': 10,
-                'fullHP': 10,
-                'fullSP': 10,
-                'atk': 7,
-                'def': 7,
-                'ma': 7,
-                'md': 7,
-                'spe': 10,
-                'lck': 10,
-                'exp': 10,
-                'gol': 10,
-                'elem': ['none']
-                }
-        self.atkDict = {
-                'regular attack': self.regAtk
-                }
-        self.atkList = ['regular attack']
-        self.inventory = ['herbs']
+    class ANPC(Character, Race, Class):
 
-    def computerFunction(self, charNames, enemyNames):
-        self.statModifier({'sp': self.spRegen()})
-        if self.aliance == 'player':
-            rand = randint(0, len(enemyNames) - 1)
-            randAtk = randint(0, len(self.atkList) - 1)
-            return self.atkDict[self.atkList[randAtk]](enemyNames[rand])
-        elif self.aliance == 'enemy':
-            rand = randint(0, len(charNames) - 1)
-            randAtk = randint(0, len(self.atkList) - 1)
-            return self.atkDict[self.atkList[randAtk]](charNames[rand])
+        def __init__(self, lvl):
+            for x in self.__class__.__bases__:
+                x.__init__(self)
+            self.gui = None
+            self.info = {'name' : name}
+            self.inventory = inventory
+            self.stats['gol'] = gold
+            self.stats['exp'] = exp
+            self.aliance = aliance
+            for l in lvl:
+                self.upStats[l][0] = lvl[l]
+            self.makeSelf()
+
+        def computerFunction(self, charNames, enemyNames):
+            if 'silent' not in self.status:
+                self.statModifier({'sp': self.spRegen()})
+            if self.aliance == 'player':
+                rand = randint(0, len(enemyNames) - 1)
+                randAtk = randint(0, len(self.atkList) - 1)
+                return self.atkDict[self.atkList[randAtk]](enemyNames[rand])
+            elif self.aliance == 'enemy':
+                rand = randint(0, len(charNames) - 1)
+                randAtk = randint(0, len(self.atkList) - 1)
+                print randAtk
+                return self.atkDict[self.atkList[randAtk]](charNames[rand])
+
+    return ANPC(lvl)
 
 class Race(object):
     pass

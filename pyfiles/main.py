@@ -237,8 +237,8 @@ class ChooseClass(FadeScreen):
     def setupPlayer(self):
         global player
 	player = Player(self.manager.get_screen('gamescreen'))
-	player.changeRC(Class = self.info['class'])
         player.info = self.info
+	player.changeRC(Class = self.info['class'])
         player.updateBase()
 
     def on_pre_enter(self):
@@ -270,7 +270,7 @@ class GameScreen(FadeScreen):
         self.stop = False
         self.cleanUp = False
         self.pressEnter = False
-	self.modQueue = []
+        self.snapshot = []
 
     def on_enter(self):
         global player
@@ -340,9 +340,6 @@ class GameScreen(FadeScreen):
         for shipping to the screen :)
         """
         self.usr.readonly = True
-        mod = None
-	if 'mod' in kwargs:
-	    mod = kwargs['mod']
         #if not typing.get_pos():
         #    typing.play()
         #else:
@@ -358,13 +355,19 @@ class GameScreen(FadeScreen):
             if string == 'self.endArena':
                 self.endArena()
                 return
+            tF = False
+            if 'self.snapshot' in string:
+                tF = True
+                string = string[:5] + string[18:]
             for x in string:
                 self.box.append(x)
+            if tF:
+                self.box.append('self.snapshot')
             self.isReady = False
             self.startQueue = True
             Clock.schedule_interval(self.promptSend, .025)
         else:
-            self.queue.append([string, mod])
+            self.queue.append(string)
             if self.startQueue:
                 self.startQueue = False
                 self.cleanUp = False
@@ -372,10 +375,8 @@ class GameScreen(FadeScreen):
 
     def promptQueue(self, dt):
         if self.isReady:
-            if not self.stop and self.queue != []:
-                if self.queue[0][1]:
-		    self.modQueue.append(self.queue[0][1])
-                self.prompt(self.queue[0][0])
+            if self.queue:
+                self.prompt(self.queue[0])
                 self.queue.remove(self.queue[0])
             elif self.stop:
                 self.stop = False
@@ -391,7 +392,10 @@ class GameScreen(FadeScreen):
         this ships each given letter to the screen
         """
         if len(self.box):
-            self.textinput.text += self.box[self.c]
+            if self.box[self.c] == 'self.snapshot':
+                self.updateSmallStats()
+            else:
+                self.textinput.text += self.box[self.c]
             self.c += 1
         if self.c == len(self.box):
         #    typing.volume = 0
@@ -400,11 +404,6 @@ class GameScreen(FadeScreen):
             self.c = 0
             self.isReady = True
             self.box = []
-	    if self.modQueue and self.modQueue[0]:
-		character = self.modQueue[0][0]
-		mod = self.modQueue[0][1]
-	    	character.statModifier(mod)
-	    	self.modQueue.remove(self.modQueue[0])
             self.usr.readonly = False
             return False
 
@@ -424,16 +423,18 @@ class GameScreen(FadeScreen):
         self.usr.battleMode = False
         self.usr.enemBox.fade()
         self.keepinItCool()
-        player.stats['hp'] = player.stats['fullHP']
+        player.stats['sp'] = player.stats['fullSP']
         self.updateSmallStats()
         self.updateInventory()
+        self.updatePlayerInfo()
+        self.updateEquipment()
 
     def goCheckEm(self, string):
         try:
             text = '%s %s' %(string[0], string[1])
         except IndexError:
             text = string[0]
-        player.checkEm(text, self.usr.tF)
+        player.checkEm(text)
 
     def updateEnemyList(self):
         enemies = []
@@ -444,8 +445,13 @@ class GameScreen(FadeScreen):
         self.usr.enemyList.adapter.update(enemies)
 
     def updateSmallStats(self):
-        newHP = player.stats['hp']
-        newSP = player.stats['sp']
+        if self.snapshot:
+            newHP = self.snapshot[0][0]
+            newSP = self.snapshot[0][1]
+            self.snapshot.remove(self.snapshot[0])
+        else:
+            newHP = player.stats['hp']
+            newSP = player.stats['sp']
         hp = player.stats['fullHP']
         sp = player.stats['fullSP']
         name = player.info['name']
@@ -763,10 +769,19 @@ class UsrInput(TextInput):
                     self.textinput.scroll_y = max(0, min(maxy, self.textinput.scroll_y + self.textinput.line_height))
                 self.focus = True
         elif keyStr in ('0', '1', '2', '3', '4', '5') and self.battleMode and self.permission:
-            if keyStr == '0':
-                player.checkEm('run', self.tF)
-            else:
-                player.checkEm(int(keyStr) - 1, self.tF)
+            try:
+                if keyStr == '0':
+                    player.checkEm('run')
+                elif player.tF:
+                    if self.ctrl:
+                        player.checkEm(player.invNames[int(keyStr) - 1])
+                    else:
+                        player.checkEm(player.atkList[int(keyStr) - 1])
+                else:
+                    player.checkEm(player.enemyNames[int(keyStr) - 1])
+            except IndexError:
+                return
+                #player.arenaInstance.report('Hotkey unavailable.')
         elif keyStr == 'i' and self.ctrl and self.permission:
             self.ctrl = False
             if self.mode != 'inventory':
