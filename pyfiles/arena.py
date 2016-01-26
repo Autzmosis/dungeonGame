@@ -104,6 +104,7 @@ class Arena(object):
             self.startQueue = False
 
     def reportQueue(self, dt):
+        print self.queue
         self.gui.prompt(self.queue[0])
         self.queue.remove(self.queue[0])
         if not self.queue:
@@ -484,7 +485,7 @@ class Arena(object):
                 if x.info['name'] == self.player.info['name']:
                     self.targetDictionary[x] = x.checkSpecial(self.playerTarget)
                 else:
-                    self.targetDictionary[x] = x.computerFunction(self.charNames, self.enemyNames)
+                    self.targetDictionary[x] = x.checkSpecial(x.computerFunction())
         self.skipToFront()
 
     def skipToFront(self):
@@ -609,19 +610,39 @@ def main(player, gameScreen): #this is here to test this class
             Class = Rogue,
             lvl = {
                 'fullHP': 1,
-                'fullSP': 2,
-                'atk': 2,
+                'fullSP': 1,
+                'atk': 1,
                 'def': 1,
-                'ma': 2,
-                'md': 2,
+                'ma': 1,
+                'md': 1,
                 'spe': 1,
-                'lck': 2
+                'lck': 1
                 },
             name = 'Test',
             gold = 100,
             exp = 100,
             inventory = ['herbs',],
-            aliance = 'enemy'
+	    allies = [], #Dont include self
+	    enemies = [player]
+            )
+    enemy2 = createANPC(
+            Class = Mage,
+            lvl = {
+                'fullHP': 1,
+                'fullSP': 1,
+                'atk': 1,
+                'def': 1,
+                'ma': 1,
+                'md': 1,
+                'spe': 1,
+                'lck': 1
+                },
+            name = 'Test1',
+            gold = 100,
+            exp = 100,
+            inventory = ['herbs',],
+	    allies = [], #Dont include self
+	    enemies = [player]
             )
     arena = Arena(gameScreen, char = [player], enemy = [enemy1])
     return arena

@@ -13,8 +13,10 @@ from random import *
 
 class Warrior(object):
 
-    def __init__(self, atk):
-	self.regAtk = atk
+    def __init__(self, atk = None):
+	if atk:
+	    self.regAtk = atk
+	self.lvl = 1
         self.special= ['random', self.berserk, 'Berserk']
         self.berserk = False
         self.stats = {

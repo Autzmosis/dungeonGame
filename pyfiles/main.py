@@ -12,7 +12,7 @@ enter, etc). For the positioning of the GUI, see dungeongame.kv
 """
 
 import kivy
-kivy.require('1.9.0')
+kivy.require('1.9.1')
 
 #set up window
 from kivy.config import Config
@@ -34,7 +34,6 @@ from kivy.core.text import LabelBase
 from kivy.properties import ObjectProperty
 from kivy.clock import Clock
 from threading import Thread
-from time import sleep
 from kivy.uix.screenmanager import ScreenManager, Screen
 from kivy.animation import Animation
 from kivy.graphics import *
@@ -43,6 +42,7 @@ from kivy.core.audio import SoundLoader
 from charANPC import Player
 from arena import *
 from textRecognition import TextRecognition
+from time import time, sleep
 
 LabelBase.register(name='Pixel',
                    fn_regular='../fonts/slkscr.ttf',
@@ -149,7 +149,7 @@ class TitleScreen(FadeScreen):
                     self.c = 1
                 else:
                     self.hint.text = 'Your story is about to begin.'
-                    self.self.fadeOut('chooseclass')
+                    self.fadeOut('chooseclass')
             elif 'continue' in strings:
                 if not data.count():
                     self.hint.text = 'You must begin before you can continue!\nType \'new game\' and press enter.'
@@ -163,10 +163,13 @@ class TitleScreen(FadeScreen):
         self.refocus()
 
     def confirmRestart(self, strings):
+        global data
         self.c = 0
         for string in strings:
             if string in ('yes', 'yeah', 'ye', 'y', 'sure', 'ya', 'yup'):
                 self.hint.text = 'Your story is about to begin.'
+                if data.exists('time'):
+                    data.delete('time')
                 self.fadeOut('chooseclass')
                 return
             elif string in ('no', 'nah', 'nope', 'n'):
@@ -236,15 +239,16 @@ class ChooseClass(FadeScreen):
 
     def setupPlayer(self):
         global player
-	player = Player(self.manager.get_screen('gamescreen'))
+        player = Player(self.manager.get_screen('gamescreen'))
         player.info = self.info
-	player.changeRC(Class = self.info['class'])
+        player.changeRC(Class = self.info['class'])
         player.updateBase()
 
     def on_pre_enter(self):
         self.refocus()
         self.trigFadeIn()
         self.hint.text = 'Type name of class and press enter'
+        app.startWatch()
 
 class GameScreen(FadeScreen):
     """
@@ -261,7 +265,7 @@ class GameScreen(FadeScreen):
 
     def __init__(self, **kwargs):
         super(GameScreen, self).__init__(**kwargs)
-        self.data = data
+        self.data = data #for player access
         self.box = []
         self.c = 0
         self.queue = []
@@ -271,9 +275,13 @@ class GameScreen(FadeScreen):
         self.cleanUp = False
         self.pressEnter = False
         self.snapshot = []
+        self.csave = True
+        self.quitting = False
 
     def on_enter(self):
         global player
+        if not app.beginTime:
+            app.startWatch()
         self.refocus()
         self.trigFadeIn()
         Clock.schedule_once(self.welcome, 2.5)
@@ -301,6 +309,11 @@ class GameScreen(FadeScreen):
         strings = kwargs['string']
         if 'exit' in strings:
             app.get_running_app().stop()
+        elif 'save' in strings:
+            self.save()
+            if 'quit' in strings:
+                self.quitting = True
+                Clock.schedule_once(app.get_running_app().stop, 8)
         elif ('back' and 'to' and 'start') in strings:
             self.textinput.text = ''
             self.usr.text = ''
@@ -323,6 +336,24 @@ class GameScreen(FadeScreen):
         else:
             self.refocus()
         self.usr.readonly = False
+
+    def save(self, *args):
+        if self.csave:
+            time = app.stopWatch()
+            m, s = divmod(int(round(time)), 60)
+            h, m = divmod(m, 60)
+            displayedTime = '%02d:%02d:%02d' %(h, m, s)
+            data.put('time', time = time)
+            player.updateBase()
+            self.prompt('Total Play Time: %s<<<' %(displayedTime))
+            self.prompt('Saving data...')
+            self.csave = False
+            Clock.schedule_once(self.save, 3)
+        else:
+            self.prompt('Data saved successfully!')
+            self.csave = True
+            if self.quitting:
+                self.prompt('Goodbye %s!' %(player.info['name']))
         
     def welcome(self, dt):
         """
@@ -340,10 +371,10 @@ class GameScreen(FadeScreen):
         for shipping to the screen :)
         """
         self.usr.readonly = True
-        #if not typing.get_pos():
-        #    typing.play()
-        #else:
-        #    typing.volume = .5
+        if not typing.get_pos():
+            typing.play()
+        else:
+            typing.volume = .5
         if string[:4] not in ('>>> ', '\n>_ ', '\n>>>') and string != 'self.endArena':
             if self.textinput.text == '' and self.isReady:
                 string = '>>> ' + string
@@ -354,18 +385,25 @@ class GameScreen(FadeScreen):
         if self.isReady:
             if string == 'self.endArena':
                 self.endArena()
+                typing.stop()
                 return
             tF = False
             if 'self.snapshot' in string:
                 tF = True
                 string = string[:5] + string[18:]
+            if string[:4] == '>>> ':
+                self.textinput.text += '>>> '
+                string = string[4:]
+            elif string[:5] == '\n>>> ':
+                self.textinput.text += '\n>>> '
+                string = string[5:]
             for x in string:
                 self.box.append(x)
             if tF:
                 self.box.append('self.snapshot')
             self.isReady = False
             self.startQueue = True
-            Clock.schedule_interval(self.promptSend, .025)
+            Clock.schedule_interval(self.promptSend, .04)
         else:
             self.queue.append(string)
             if self.startQueue:
@@ -385,6 +423,7 @@ class GameScreen(FadeScreen):
         elif self.cleanUp:
             self.cleanUp = False
             self.startQueue = True
+            typing.stop()
             return False
             
     def promptSend(self, dt):
@@ -398,9 +437,7 @@ class GameScreen(FadeScreen):
                 self.textinput.text += self.box[self.c]
             self.c += 1
         if self.c == len(self.box):
-        #    typing.volume = 0
-            #if not self.queue:
-                #typing.stop()
+            typing.volume = 0
             self.c = 0
             self.isReady = True
             self.box = []
@@ -780,8 +817,8 @@ class UsrInput(TextInput):
                 else:
                     player.checkEm(player.enemyNames[int(keyStr) - 1])
             except IndexError:
+                player.arenaInstance.report('Hotkey unavailable.')
                 return
-                #player.arenaInstance.report('Hotkey unavailable.')
         elif keyStr == 'i' and self.ctrl and self.permission:
             self.ctrl = False
             if self.mode != 'inventory':
@@ -1063,6 +1100,17 @@ class DungeonGame(App):
     def __init__(self, **kwargs):
         super(DungeonGame, self).__init__(**kwargs)
         self.textRec = TextRecognition()
+        self.beginTime = 0
+
+    def startWatch(self):
+        self.beginTime = time()
+
+    def stopWatch(self):
+        global data
+        totalTime = time() - self.beginTime
+        if data.exists('time'):
+            totalTime += data.get('time')['time']
+        return totalTime
         
     def build(self):
         self.title = 'Dungeons and Towns'
@@ -1076,9 +1124,8 @@ class DungeonGame(App):
 if __name__ == '__main__':
     player = None
     data = JsonStore('data.json')
-    #audio = SoundLoader()
-    #typing = audio.load('../audio/typingSound.wav')
-    #typing.loop = True
-    #typing.play()
+    audio = SoundLoader()
+    typing = audio.load('../audio/typingSound.wav')
+    typing.loop = True
     app = DungeonGame()
     app.run()

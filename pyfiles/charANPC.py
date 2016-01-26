@@ -17,6 +17,7 @@ from threading import Thread
 from rogue import Rogue
 from warrior import Warrior
 from mage import Mage
+from items import Item
 
 class Character(object):
 
@@ -28,6 +29,7 @@ class Character(object):
     def makeSelf(self):
         for x in self.upStats:
             self.upgradeStat(x, True)
+        print self.stats
 
     def upgradeStat(self, stat, stop = False):
         if not stop:
@@ -187,6 +189,7 @@ class Character(object):
         x = randint(1, 150)
         for y in range(1, self.stats['lck'] + 1):
             if y == x:
+                print 'lucky ', self
                 return 2
             else:
                 return 1
@@ -246,16 +249,21 @@ class Player(Character):
     def updateSelf(self):
         self.stats = self.gui.data.get('player')['stats']
         self.atkList = self.gui.data.get('player')['atkList']
-        self.inventory = self.gui.data.get('player')['inventory']
+        inventoryNames = self.gui.data.get('player')['inventory']
         self.curEquip = self.gui.data.get('player')['curEquip']
         self.avaEquip = self.gui.data.get('player')['avaEquip']
         self.info = self.gui.data.get('player')['info']
+        for i in inventoryNames:
+            self.inventory.append(Item(i))
 
     def updateBase(self):
+        inventoryNames = []
+        for i in self.inventory:
+            inventoryNames.append(i.name)
         self.gui.data.put('player',
                 stats = self.stats,
                 atkList = self.atkList,
-                inventory = self.inventory,
+                inventory = inventoryNames,
 		curEquip = self.curEquip,
 		avaEquip = self.avaEquip,
                 info = self.info
@@ -308,9 +316,9 @@ class Player(Character):
                     self.tF = False
                     if len(self.enemyNames) == 1 or text in self.setTarget:
                         try:
-                            self.arenaInstance.playerTarget = self.atkDict[text](self.enemyNames[0])
+                            self.arenaInstance.playerTarget = self.checkSpecial(self.atkDict[text](self.enemyNames[0]))
                         except TypeError:
-                            self.arenaInstance.playerTarget = self.atkDict[text]()
+                            self.arenaInstance.playerTarget = self.checkSpecial(self.atkDict[text]())
                         self.tF = True
                         self.arenaInstance.report('\n')
                         self.arenaInstance.decide()
@@ -350,7 +358,7 @@ class Player(Character):
                             self.gui.updateInventory()
                         x.makeDescrip()
             else:
-                self.arenaInstance.playerTarget = self.atkDict[self.atk](text)
+                self.arenaInstance.playerTarget = self.checkSpecial(self.atkDict[self.atk](text))
             self.tF = True
             self.arenaInstance.report('\n')
             self.arenaInstance.decide()
@@ -367,7 +375,8 @@ def createANPC(**kwargs):
     exp = kwargs['exp']
     gold = kwargs['gold']
     inventory = kwargs['inventory']
-    aliance = kwargs['aliance']
+    enemies = kwargs['enemies']
+    allies = kwargs['allies']
 
     class ANPC(Character, Race, Class):
 
@@ -379,23 +388,31 @@ def createANPC(**kwargs):
             self.inventory = inventory
             self.stats['gol'] = gold
             self.stats['exp'] = exp
-            self.aliance = aliance
+            self.enemies = enemies
+            self.enemyNames = []
+            self.allies = allies
+            self.allyNames = []
+            for e in enemies:
+                self.enemyNames.append(e.info['name'])
+            for a in allies:
+                self.allyNames.append(a.info['name'])
             for l in lvl:
                 self.upStats[l][0] = lvl[l]
             self.makeSelf()
 
-        def computerFunction(self, charNames, enemyNames):
+        def computerFunction(self):
+            print self.stats['sp']
             if 'silent' not in self.status:
                 self.statModifier({'sp': self.spRegen()})
-            if self.aliance == 'player':
-                rand = randint(0, len(enemyNames) - 1)
-                randAtk = randint(0, len(self.atkList) - 1)
-                return self.atkDict[self.atkList[randAtk]](enemyNames[rand])
-            elif self.aliance == 'enemy':
-                rand = randint(0, len(charNames) - 1)
-                randAtk = randint(0, len(self.atkList) - 1)
-                print randAtk
-                return self.atkDict[self.atkList[randAtk]](charNames[rand])
+            return self.random(self.enemyNames)
+
+        def random(self, array):
+            rand = randint(0, len(array) - 1)
+            randAtk = randint(0, len(self.atkList) - 1)
+            try:
+                return self.checkSpecial(self.atkDict[self.atkList[randAtk]](array[rand]))
+            except TypeError:
+                return self.checkSpecial(self.atkDict[self.atkList[randAtk]]())
 
     return ANPC(lvl)
 

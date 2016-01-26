@@ -16,6 +16,7 @@ class Rogue(object):
     def __init__(self, atk = None):
 	if atk:
 	    self.regAtk = atk
+        self.lvl = 1
         self.special = ['random', self.dualBlitz, 'Dual Blitz']
         self.stats = {
             'hp': 1,

@@ -5,7 +5,8 @@
 Yet to be named dungeon game
 coded by タダノデーモン(tadanodaemon)
 
-This file holds the item class and all defined items
+This file holds the item class  and equipment class
+and all defined items
 '''
 
 class Item(object):
@@ -14,6 +15,9 @@ class Item(object):
         self.name = name
         self.itemDict = {
                 'herbs': [
+                    ['[b]Genetically Enhanced\nHerbs[/b]\nQuantity: ',
+                        '\n\nThe natives method\nof healing (scoff)\nwounds. Heals\nup to 20 hp.'
+                        ],
                     {
                         'mod': {'hp': 20},
                         'string': ' ate some herbs!',
@@ -22,26 +26,27 @@ class Item(object):
                     10, #sell price
                     15, #buy price
                     False, #is this equipment
-                    'a list of numbers for levelup'
+                    'a list of numbers for levelup' #will only be used in equipment
                     ]
                 }
-        self.effect = self.itemDict[self.name][0]
-        self.sellPrice = self.itemDict[self.name][1]
-        self.buyPrice = self.itemDict[self.name][2]
+        self.descripComponents = self.itemDict[self.name][0]
+        self.effect = self.itemDict[self.name][1]
+        self.sellPrice = self.itemDict[self.name][2]
+        self.buyPrice = self.itemDict[self.name][3]
         self.quantity = 1
-        if self.itemDict[self.name][3]:
-            self.upStats = self.itemDict[self.name][4]
+        if self.itemDict[self.name][4]:
+            self.upStats = self.itemDict[self.name][5]
+            self.upExp = self.itemDict[self.name][6]
+            self.exp = [self.itemDict[self.name][7], self.itemDict[self.name][8]]
             self.lvl = 1
         self.makeDescrip()
 
     def makeDescrip(self):
-        if self.name == 'herbs':
-            self.descrip = ('[b]Genetically Enhanced\nHerbs[/b]\n'
-                            'Quantity: %d\n\n'
-                            'The natives method\nof healing (scoff)'
-                            '\nwounds. Heals\nup to 20 hp.'
-                            %(self.quantity)
-                            )
+        first, last = self.descripComponents
+        self.descrip = first + str(self.quantity) + last
+
+    def transmutate(self, newName):
+        self.__init__(newName)
 
     def convertToAttack(self, character, target):
         name = character.info['name']
@@ -64,6 +69,14 @@ class Item(object):
         return [target, baseAtk, baseAcc, string,  mod, modString, magAtk,
                 skipToFront, waitForHit, waitForNextTurn, multHit, multTarget,
                 targetLoseTurn, absorb, status, element, sp]
+
+class Equipment(Item):
+
+    def enableEffect(self, character):
+        pass
+
+    def disableEffect(self, character):
+        pass
 
     def levelUp(self):
         pass

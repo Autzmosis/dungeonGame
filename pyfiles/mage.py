@@ -13,8 +13,10 @@ from random import *
 
 class Mage(object):
 
-    def __init__(self, atk):
-	self.regAtk = atk
+    def __init__(self, atk = None):
+	if atk:
+	    self.regAtk = atk
+	self.lvl = 1
         self.special = ['random', self.ciphon, 'Ciphon']
         self.stats = {
                 'hp': 1,
