@@ -17,7 +17,7 @@ from threading import Thread
 from rogue import Rogue
 from warrior import Warrior
 from mage import Mage
-from items import Item
+from items import makeItem
 
 class Character(object):
 
@@ -29,7 +29,6 @@ class Character(object):
     def makeSelf(self):
         for x in self.upStats:
             self.upgradeStat(x, True)
-        print self.stats
 
     def upgradeStat(self, stat, stop = False):
         if not stop:
@@ -208,7 +207,7 @@ class Player(Character):
         self.responce = None
         self.arenaInstance = None
 	self.question = ''
-        self.Race = Race()
+        self.Species = Species()
         self.Class = None
         self.tF = True
         self.stats = {
@@ -226,47 +225,94 @@ class Player(Character):
                 'gol': 0,
                 'elem': ['none']
                 }
+        self.avaClasses = {
+                'warrior': Warrior,
+                'mage': Mage,
+                'rogue': Rogue
+                }
+        self.avaSpecies = {}
 
-    def changeRC(self, Race = '', Class = ''):
-        if Race:
+    def changeRC(self, Species = '', Class = ''):
+        if Species:
             pass
         if Class:
+            self.Class = self.avaClasses[Class](self.regAtk)
             if Class == 'warrior':
-                self.Class = Warrior(self.regAtk)
                 self.berserk = self.Class.berserk
-            elif Class == 'rogue':
-                self.Class = Rogue(self.regAtk)
-            elif Class == 'mage':
-                self.Class = Mage(self.regAtk)
             self.special = self.Class.special
-            self.upStats = self.Class.upStats
+            try:
+                self.Class.info = self.info
+            except AttributeError:
+                pass
+            try:
+                if self.upStats:
+                    for u in self.upStats:
+                        self.upStats[u] = (self.upStats[u][0] + self.Class.upStats[u][1:])
+            except AttributeError:
+                self.upStats = self.Class.upStats
             self.atkList = self.Class.atkList
             self.setTarget = self.Class.setTarget
             self.atkDict = self.Class.atkDict
-            self.Class.info = self.info
             self.makeSelf()
         
     def updateSelf(self):
-        self.stats = self.gui.data.get('player')['stats']
+        statsUp = self.gui.data.get('player')['stats']
+        for s in statsUp:
+            self.stats[s] = statsUp[s][0]
+            if s in self.upStats:
+                self.upStats[s][0] = statsUp[s][1]
         self.atkList = self.gui.data.get('player')['atkList']
-        inventoryNames = self.gui.data.get('player')['inventory']
         self.curEquip = self.gui.data.get('player')['curEquip']
         self.avaEquip = self.gui.data.get('player')['avaEquip']
         self.info = self.gui.data.get('player')['info']
+        self.Class.info = self.info
+        inventoryNames = self.gui.data.get('player')['inventory']
+        #weaponNames = self.gui.data.get('player')['weapon']
+        #armourNames = self.gui.data.get('player')['armour']
+        #equipmentNames = self.gui.data.get('player')['equipment']
         for i in inventoryNames:
-            self.inventory.append(Item(i))
+            item = makeItem(i)
+            item.quantity = inventoryNames[i]
+            item.makeDescrip()
+            self.inventory.append(item)
+        #for w in weaponNames:
+        #    self.weapon.append(makeItem(w))
+        #for a in armourNames:
+        #    self.armour.append(makeItem(a))
+        #for e in equipmentNames:
+            #item = makeItem(e)
+            #item.quantity = equipmentNames[e]
+            #self.equipment.append(item)
 
     def updateBase(self):
-        inventoryNames = []
+        statsUp = {}
+        for s in self.stats:
+            if s in self.upStats:
+                statsUp[s] = [self.stats[s], self.upStats[s][0]]
+            else:
+                statsUp[s] = [self.stats[s], None]
+        inventoryNames = {}
+        #weaponNames = {}
+        #armourNames = {}
+        #eqipmentNames = {}
         for i in self.inventory:
-            inventoryNames.append(i.name)
+            inventoryNames[i.name] = i.quantity
+        #for w in self.weapon:
+        #    weaponNames.append(w.name)
+        #for a in armour:
+        #    armourNames.append(a.name)
+        #for e in equipment:
+        #    equipmentNames[e.name] = e.quantity
         self.gui.data.put('player',
-                stats = self.stats,
+                stats = statsUp,
                 atkList = self.atkList,
-                inventory = inventoryNames,
 		curEquip = self.curEquip,
 		avaEquip = self.avaEquip,
-                info = self.info
+                info = self.info,
+                inventory = inventoryNames,
+                #weapon = weaponNames,
+                #armour = armourNames,
+                #equipment = eqipmentNames
                 )
 
     def updateEquip(self):
@@ -368,7 +414,7 @@ class Player(Character):
         self.gui.usr.permission = True
 
 def createANPC(**kwargs):
-    #Race = kwargs['race']
+    #Species = kwargs['species']
     Class = kwargs['Class']
     lvl = kwargs['lvl']
     name = kwargs['name']
@@ -378,7 +424,7 @@ def createANPC(**kwargs):
     enemies = kwargs['enemies']
     allies = kwargs['allies']
 
-    class ANPC(Character, Race, Class):
+    class ANPC(Character, Species, Class):
 
         def __init__(self, lvl):
             for x in self.__class__.__bases__:
@@ -401,7 +447,6 @@ def createANPC(**kwargs):
             self.makeSelf()
 
         def computerFunction(self):
-            print self.stats['sp']
             if 'silent' not in self.status:
                 self.statModifier({'sp': self.spRegen()})
             return self.random(self.enemyNames)
@@ -416,5 +461,5 @@ def createANPC(**kwargs):
 
     return ANPC(lvl)
 
-class Race(object):
+class Species(object):
     pass

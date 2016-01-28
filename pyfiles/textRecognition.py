@@ -33,6 +33,9 @@ class TextRecognition(object):
             kwargs['screen'].usr.confirmUpgradeStat(kwargs['string'])
         elif 'battle' in self.modes:
             if kwargs['screen'].pressEnter:
+		if kwargs['screen'].usr.permission:
+		    kwargs['screen'].usr.permission = False
+		    print 'Oh no bro'
                 kwargs['screen'].pressEnter = False
                 kwargs['screen'].arena.start()
             elif kwargs['string']:

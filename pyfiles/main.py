@@ -43,6 +43,7 @@ from charANPC import Player
 from arena import *
 from textRecognition import TextRecognition
 from time import time, sleep
+from random import random, randint
 
 LabelBase.register(name='Pixel',
                    fn_regular='../fonts/slkscr.ttf',
@@ -102,7 +103,8 @@ class FadeScreen(Screen):
 
     def refocus_text(self, dt):
         self.usr.focus = True
-        self.usr.text = ''
+        if not isinstance(self, GameScreen) or not self.usr.mode:
+            self.usr.text = ''
         self.usr.readonly = False
 
 class SplashScreen(FadeScreen):
@@ -168,8 +170,8 @@ class TitleScreen(FadeScreen):
         for string in strings:
             if string in ('yes', 'yeah', 'ye', 'y', 'sure', 'ya', 'yup'):
                 self.hint.text = 'Your story is about to begin.'
-                if data.exists('time'):
-                    data.delete('time')
+                if data.exists('game'):
+                    data.delete('game')
                 self.fadeOut('chooseclass')
                 return
             elif string in ('no', 'nah', 'nope', 'n'):
@@ -282,11 +284,14 @@ class GameScreen(FadeScreen):
         global player
         if not app.beginTime:
             app.startWatch()
+        self.textinput.text = ''
         self.refocus()
         self.trigFadeIn()
         Clock.schedule_once(self.welcome, 2.5)
         if player is None:
             self.setupPlayer()
+        if player.info['name'] in ('dev', 'paul'): #dev and paul get handicap
+            player.stats['exp'] += 512
         self.image.source = player.info['image']
         self.updateSmallStats()
         self.updateAtkList()
@@ -297,8 +302,11 @@ class GameScreen(FadeScreen):
     def setupPlayer(self):
         global player
 	player = Player(self)
-        player.updateSelf()
 	player.changeRC(Class = data.get('player')['info']['class'])
+        player.updateSelf()
+
+    def fadeToTitle(self, dt = 0):
+        self.fadeOut('title')
 
     def responce(self, kwargs):
         """
@@ -313,11 +321,10 @@ class GameScreen(FadeScreen):
             self.save()
             if 'quit' in strings:
                 self.quitting = True
-                Clock.schedule_once(app.get_running_app().stop, 8)
+                Clock.schedule_once(self.fadeToTitle, 6)
         elif ('back' and 'to' and 'start') in strings:
             self.textinput.text = ''
             self.usr.text = ''
-            app.textRec.modes.remove('gamescreen')
             self.fadeOut('title')
         elif 'battle' in strings:
             self.refocus()
@@ -343,7 +350,7 @@ class GameScreen(FadeScreen):
             m, s = divmod(int(round(time)), 60)
             h, m = divmod(m, 60)
             displayedTime = '%02d:%02d:%02d' %(h, m, s)
-            data.put('time', time = time)
+            data.put('game', time = time)
             player.updateBase()
             self.prompt('Total Play Time: %s<<<' %(displayedTime))
             self.prompt('Saving data...')
@@ -387,6 +394,8 @@ class GameScreen(FadeScreen):
                 self.endArena()
                 typing.stop()
                 return
+            elif string == '\n>>> Press Enter <<<':
+                self.usr.permission = False
             tF = False
             if 'self.snapshot' in string:
                 tF = True
@@ -473,6 +482,40 @@ class GameScreen(FadeScreen):
             text = string[0]
         player.checkEm(text)
 
+    def veryRandom(self, randup = 0):
+        try:
+            randomList = []
+            c = 0
+            rand = int(round(random() * 100))
+            if randup:
+                while randup > 1:
+                    randup = randup * .5 * random()
+                some = int(random() * 100)
+                randest = int(randup * randint(1, some)) * int(random() * 100)
+                while randest >= 100:
+                    randest /= 2
+                    randest *= (random() * 5)
+                if not (0 < randest < 100):
+                    randest = self.veryRandom(randup = randest)
+                return int(randest)
+            else:
+                while c != rand:
+                    randomList.append(random())
+                    c += 1
+                if randomList == []:
+                    while c < 11:
+                        randomList.append(random())
+                        c += 1
+                for r in randomList:
+                    ranLen = len(randomList) - 1
+                    if ranLen > 1:
+                        rander = randint(1, ranLen)
+                        randomList[rander] = r
+                randit = randomList[randint(1, ranLen - 1)]
+                return int(self.veryRandom(randup = randit))
+        except ValueError:
+            return self.veryRandom()
+        
     def updateEnemyList(self):
         enemies = []
         for x in player.enemyNames:
@@ -730,6 +773,7 @@ class UsrInput(TextInput):
 
     def __init__(self, **kwargs):
         super(UsrInput, self).__init__(**kwargs)
+        self.lastHotKey = []
         self.permission = True
         self.mode = ''
         self.battleMode = False
@@ -754,18 +798,17 @@ class UsrInput(TextInput):
         self.invBox.fade()
         self.atkBox.fade()
 
+    def allowHotKey(self, dt):
+        self.permission = True
+
     def keyboard_on_key_down(self, window, keycode, text, modifiers):
-        if self.readonly:
-            self.text = ''
-            return
         global player
         keyNum, keyStr = keycode
         self.ctrl = (keyStr == 'ctrl') or ('ctrl' in modifiers)
-        if not self.ctrl and self.mode == 'playerInfo':
-            self.playerInfo.upStatUsr.focus = True
-            self.playerInfo.upStatUsr.keyboard_on_key_down(window, keycode, text, modifiers)
-            self.focus = True
-            if keyStr not in ('up', 'down'):
+        if self.readonly:
+            if self.mode and (keyStr in ('up', 'down', 'enter') or self.ctrl):
+                self.readonly = False
+            else:
                 return
         if keyStr in ('up', 'down'):
             if self.mode == 'inventory':
@@ -804,8 +847,10 @@ class UsrInput(TextInput):
                 elif keyStr == 'down':
                     maxy = self.textinput.minimum_height - self.textinput.height
                     self.textinput.scroll_y = max(0, min(maxy, self.textinput.scroll_y + self.textinput.line_height))
+                    self.textinput.focus = False
                 self.focus = True
         elif keyStr in ('0', '1', '2', '3', '4', '5') and self.battleMode and self.permission:
+            self.permission = False
             try:
                 if keyStr == '0':
                     player.checkEm('run')
@@ -816,11 +861,18 @@ class UsrInput(TextInput):
                         player.checkEm(player.atkList[int(keyStr) - 1])
                 else:
                     player.checkEm(player.enemyNames[int(keyStr) - 1])
+                Clock.schedule_once(self.allowHotKey, .25)
             except IndexError:
                 player.arenaInstance.report('Hotkey unavailable.')
                 return
         elif keyStr == 'i' and self.ctrl and self.permission:
-            self.ctrl = False
+            if self.memoryStat:
+                app.textRec.modes.append('upStat')
+                self.playerInfo.upStatUsr.focus = True
+                self.playerInfo.hint.text = 'Do you want to keep these changes?'
+                self.lastHotKey = [window, keycode, text, modifiers]
+                return
+            self.permission = False
             if self.mode != 'inventory':
                 check = True
                 if self.mode in ('enemy', 'avaEquip', 'curEquip', 'atkList', 'playerInfo'):
@@ -851,8 +903,15 @@ class UsrInput(TextInput):
                 self.selectItem(self.inventory)
                 self.mode = ''
                 self.text = ''
+            Clock.schedule_once(self.allowHotKey, .25)
         elif keyStr == 'a' and self.ctrl and self.permission:
-            self.ctrl = False
+            if self.memoryStat:
+                app.textRec.modes.append('upStat')
+                self.playerInfo.upStatUsr.focus = True
+                self.playerInfo.hint.text = 'Do you want to keep these changes?'
+                self.lastHotKey = [window, keycode, text, modifiers]
+                return
+            self.permission = False
             if self.mode != 'atkList':
                 check = True
                 if self.mode in ('enemy', 'avaEquip', 'curEquip', 'inventory', 'playerInfo'):
@@ -883,8 +942,15 @@ class UsrInput(TextInput):
                 self.selectItem(self.atkList)
                 self.mode = ''
                 self.text = ''
+            Clock.schedule_once(self.allowHotKey, .25)
         elif keyStr == 'e' and self.ctrl and self.permission:
-            self.ctrl = False
+            if self.memoryStat:
+                app.textRec.modes.append('upStat')
+                self.playerInfo.upStatUsr.focus = True
+                self.playerInfo.hint.text = 'Do you want to keep these changes?'
+                self.lastHotKey = [window, keycode, text, modifiers]
+                return
+            self.permission = False
             if self.mode not in ('avaEquip', 'curEquip', 'enemy'):
                 check = True
                 if self.mode in ('atkList', 'inventory', 'playerInfo'):
@@ -923,8 +989,15 @@ class UsrInput(TextInput):
                     self.descrip.fade()
                 self.mode = ''
                 self.text = ''
+            Clock.schedule_once(self.allowHotKey, .25)
         elif keyStr == 'u' and self.ctrl and not self.battleMode and self.permission:
-            self.ctrl = False
+            if self.memoryStat:
+                app.textRec.modes.append('upStat')
+                self.playerInfo.upStatUsr.focus = True
+                self.playerInfo.hint.text = 'Do you want to keep these changes?'
+                self.lastHotKey = [window, keycode, text, modifiers]
+                return
+            self.permission = False
             if self.mode != 'playerInfo':
                 check = False
                 if self.mode in ('avaEquip', 'curEquip','inventory', 'atkList'):
@@ -952,9 +1025,11 @@ class UsrInput(TextInput):
                 self.selectPlayerInfo()
                 self.mode = ''
                 self.text = ''
+            Clock.schedule_once(self.allowHotKey, .25)
         elif keyStr == 's' and self.mode == 'playerInfo' and self.ctrl:
             if self.memoryStat:
-                app.textRec.modes.append('upStat')
+                if not 'upStat' in app.textRec.modes:
+                    app.textRec.modes.append('upStat')
                 self.playerInfo.upStatUsr.focus = True
                 self.playerInfo.hint.text = 'Do you want to keep these changes?'
             else:
@@ -978,13 +1053,15 @@ class UsrInput(TextInput):
                     self.descrip.fade()
             self.mode = ''
             super(UsrInput, self).keyboard_on_key_down(window, keycode, text, modifiers)
-        elif keyStr not in ('lctrl', 'rctrl', 'ctrl'):
-            self.ctrl = False
+        elif 'ctrl' not in modifiers and 'lctrl' not in modifiers and 'rctrl' not in modifiers:
             if keyStr not in ('0', '1', '2', '3', '4', '5') or not self.battleMode:
                 super(UsrInput, self).keyboard_on_key_down(window, keycode, text, modifiers)
 
     def selectItem(self, *containers, **kwargs):
         string = kwargs.pop('string', '')
+        self.readonly = True
+        if not string:
+            self.readonly = False
         for container in containers:
             if container not in self.current:
                 self.current[container] = 0
@@ -1090,6 +1167,10 @@ class UsrInput(TextInput):
         if not strings:
             self.playerInfo.hint.text = 'That was a yes or no question!!'
             self.playerInfo.upStatUsr.focus = True
+        elif self.lastHotKey:
+            window, keycode, text, modifiers = self.lastHotKey
+            self.lastHotKey = []
+            self.keyboard_on_key_down(window, keycode, text, modifiers)
 
 class DungeonGame(App):
     """
@@ -1108,10 +1189,10 @@ class DungeonGame(App):
     def stopWatch(self):
         global data
         totalTime = time() - self.beginTime
-        if data.exists('time'):
-            totalTime += data.get('time')['time']
+        if data.exists('game'):
+            totalTime += data.get('game')['time']
         return totalTime
-        
+
     def build(self):
         self.title = 'Dungeons and Towns'
         sm = ScreenManager()

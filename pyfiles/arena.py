@@ -14,14 +14,14 @@ Right now, I will make it so that I can use it in the terminal
 
 from random import *
 from kivy.clock import Clock
-from items import Item
+from items import makeItem
 from collections import OrderedDict
 
 #modules for dev use
 from rogue import *
 from mage import *
 from warrior import *
-from charANPC import *
+from charANPC import createANPC
 
 class Arena(object):
 
@@ -83,7 +83,6 @@ class Arena(object):
             self.report('Press Enter <<<')
             self.gui.pressEnter = True
             self.pressEnter = False
-            self.gui.usr.permission = False
         else:
             while self.gui.snapshot:
                 self.gui.snapshot.remove(self.gui.snapshot[0])
@@ -330,7 +329,7 @@ class Arena(object):
                 'exp': reward[1]
                 })
             if not x.inventory:
-                item = Item(reward[2])
+                item = makeItem(reward[2])
                 x.inventory.append(item)
             else:
                 for y in x.inventory:
