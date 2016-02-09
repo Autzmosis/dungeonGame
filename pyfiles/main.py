@@ -16,7 +16,7 @@ kivy.require('1.9.1')
 
 #set up window
 from kivy.config import Config
-Config.set('graphics','fullscreen', 0)
+Config.set('graphics','fullscreen', 1)
 Config.set('graphics','height', 480)
 Config.set('graphics','width', 640)
 Config.set('graphics','resizable', 0)
@@ -31,7 +31,7 @@ from kivy.uix.listview import ListItemButton, ListView
 from kivy.uix.textinput import TextInput
 from kivy.uix.label import Label
 from kivy.core.text import LabelBase
-from kivy.properties import ObjectProperty
+from kivy.properties import ObjectProperty, ListProperty
 from kivy.clock import Clock
 from threading import Thread
 from kivy.uix.screenmanager import ScreenManager, Screen
@@ -39,7 +39,7 @@ from kivy.animation import Animation
 from kivy.graphics import *
 from kivy.storage.jsonstore import JsonStore
 from kivy.core.audio import SoundLoader
-from charANPC import Player
+from charANPC import makePlayer
 from arena import *
 from textRecognition import TextRecognition
 from time import time, sleep
@@ -138,12 +138,12 @@ class TitleScreen(FadeScreen):
         super(TitleScreen, self).__init__(**kwargs)
         self.c = 0 #This is here to ask the user for confirmation
 
-    def responce(self, kwargs):
+    def responce(self, inputs):
         """
         this function is called when player presses enter, it validates the
         text and does something, depending on what was typed.
         """
-        strings = kwargs['string']
+        strings = inputs
         if not self.c:
             if ('new' and 'game') in strings:
                 if data.count():
@@ -202,24 +202,20 @@ class ChooseClass(FadeScreen):
         self.c = 0 #used so i can ask player their name
         self.info = {}
 
-    def responce(self, kwargs):
+    def responce(self, inputs):
         """
         this function is used for text recognition features
         """
-        strings = kwargs['string']
-        image = kwargs['image']
+        strings = inputs
         if self.c == 0:
             self.c = 1
             self.hint.text = 'By the way, what might your name be?'
             if 'rogue' in strings:
                 self.info['class'] = 'rogue'
-                self.info['image'] = image[0].source
             elif 'warrior' in strings:
                 self.info['class'] = 'warrior'
-                self.info['image'] = image[1].source
             elif 'mage' in strings:
                 self.info['class'] = 'mage'
-                self.info['image'] = image[2].source
             else:
                 self.c = 0
                 self.hint.text = 'Please choose one of the classes above.'
@@ -241,10 +237,18 @@ class ChooseClass(FadeScreen):
 
     def setupPlayer(self):
         global player
-        player = Player(self.manager.get_screen('gamescreen'))
-        player.info = self.info
-        player.changeRC(Class = self.info['class'])
-        player.updateBase()
+        player = makePlayer(
+			gui = self.manager.get_screen('gamescreen'),
+			Class = self.info['class'],
+			name = self.info['name'],
+			expGol = [0, 0],
+			statsUp = {},
+			inventoryNames = [],
+			#equipmentNames = [],
+			#weaponNames = [],
+			#armourNames = []
+			)
+        player.makeSelf()
 
     def on_pre_enter(self):
         self.refocus()
@@ -262,6 +266,9 @@ class GameScreen(FadeScreen):
     textinput = ObjectProperty(None)
     usr = ObjectProperty(None)
     image = ObjectProperty(None)
+    main = ObjectProperty(None)
+    supp = ObjectProperty(None)
+    actionList = ObjectProperty(None)
     objective = ObjectProperty(None)
     playerLabel = ObjectProperty(None)
 
@@ -288,33 +295,54 @@ class GameScreen(FadeScreen):
         self.refocus()
         self.trigFadeIn()
         Clock.schedule_once(self.welcome, 2.5)
+        self.morph()
         if player is None:
             self.setupPlayer()
         if player.info['name'] in ('dev', 'paul'): #dev and paul get handicap
             player.stats['exp'] += 512
-        self.image.source = player.info['image']
-        self.updateSmallStats()
-        self.updateAtkList()
-        self.updateInventory()
-        self.updateEquipment()
-        self.updatePlayerInfo()
+        #self.image.source = player.info['image']
+        #self.updateSmallStats()
+        #self.updateAtkList()
+        #self.updateInventory()
+        #self.updateEquipment()
+        #self.updatePlayerInfo()
 
     def setupPlayer(self):
         global player
-	player = Player(self)
-	player.changeRC(Class = data.get('player')['info']['class'])
-        player.updateSelf()
+	playerInfo = self.data.get('player')
+	gui = self
+	Class = playerInfo['info']['class']
+	name = playerInfo['info']['name']
+	expGol = [playerInfo['stats']['exp'], playerInfo['stats']['gol']]
+        inventoryNames = playerInfo['inventory']
+        #weaponNames = playerInfo['weapon']
+        #armourNames = playerInfo['armour']
+        #equipmentNames = playerInfo['equipment']
+        statsUp = playerInfo['stats']
+        classLvlHist = playerInfo['classLvlHist']
+	player = makePlayer(
+			gui = gui,
+			Class = Class,
+			name = name,
+			expGol = expGol,
+			inventoryNames = inventoryNames,
+			#weaponNames = weaponNames,
+			#armourNames = armourNames,
+			#equipmentNames = equipmentNames,
+			statsUp = statsUp,
+                        classLvlHist = classLvlHist
+			)
 
     def fadeToTitle(self, dt = 0):
         self.fadeOut('title')
 
-    def responce(self, kwargs):
+    def responce(self, inputs):
         """
         this method validates text and sends to prompt
         just for testing out crap
         """
         self.usr.readonly = True
-        strings = kwargs['string']
+        strings = inputs
         if 'exit' in strings:
             app.get_running_app().stop()
         elif 'save' in strings:
@@ -328,7 +356,7 @@ class GameScreen(FadeScreen):
             self.fadeOut('title')
         elif 'battle' in strings:
             self.refocus()
-            app.textRec.modes.append('battle')
+            app.textRec.mode = 'battle'
             self.usr.battleMode = True
             self.usr.enemBox.fade()
             self.startArena()
@@ -406,6 +434,7 @@ class GameScreen(FadeScreen):
             elif string[:5] == '\n>>> ':
                 self.textinput.text += '\n>>> '
                 string = string[5:]
+            print string
             for x in string:
                 self.box.append(x)
             if tF:
@@ -458,11 +487,28 @@ class GameScreen(FadeScreen):
         self.cleanUp = True
         self.usr.readonly = False
         if not self.usr.battleMode:
-            app.textRec.modes.remove('battle')
+            app.textRec.mode = ''
 
     def startArena(self): #later this will take all enmies and allies who will fight
         self.arena = main(player, self)
         self.arena.start()
+
+    def morph(self, dt = 0):
+        if self.objective.opacity:
+            self.objective.fade()
+            Animation(y = -25, duration = .25).start(self.main)
+            Animation(x = 121, duration =.25).start(self.main)
+            Animation(height = 225, duration = .25).start(self.textinput)
+            Animation(width = 520, duration = .25).start(self.main)
+            self.supp.fade()
+        else:
+            self.objective.fade()
+            Animation(y = 1, duration = .25).start(self.main)
+            Animation(x = 1, duration =.25).start(self.main)
+            Animation(height = 200, duration = .25).start(self.textinput)
+            Animation(width = 640, duration = .25).start(self.main)
+            self.supp.fade()
+        Clock.schedule_once(self.morph, 2)
 
     def endArena(self):
         self.usr.permission = True
@@ -587,7 +633,7 @@ class GameScreen(FadeScreen):
         self.usr.playerInfo.cost.adapter.update(costs)
         if not quick:
             pic = player.info['image']
-            special = player.special[2]
+            special = player.special[0]
             name = player.info['name']
             Class = player.info['class']
             element = player.stats['elem'][0]
@@ -618,7 +664,7 @@ class SlidePart(object):
     def __init__(self, **kwargs):
         self.desiredPosition = 1
         self.originalPosition = -180
-        if isinstance(self, MixedLabel):
+        if isinstance(self, FadeTranLabel):
             self.desiredPosition = 410
             self.originalPosition = 460
             self.slideIn = Animation(y = self.desiredPosition, duration = .25)
@@ -633,29 +679,39 @@ class SlidePart(object):
         else:
             self.slideOut.start(self)
 
-class MixedPart(FadePart, SlidePart):
+class TransformPart(object):
 
     def __init__(self, **kwargs):
-        for base in MixedPart.__bases__:
+        self.originalSize = 854
+        self.desiredSize = 427
+        self.shrink = Animation(width = self.desiredSize, duration = .25)
+        self.grow = Animation(width = self.originalSize, duration = .25)
+
+    def transform(self):
+        if self.width != self.desiredSize:
+            self.shrink.start(self)
+        else:
+            self.grow.start(self)
+
+class FadeTranPart(FadePart, TransformPart):
+
+    def __init__(self, **kwargs):
+        for base in FadeTranPart.__bases__:
             base.__init__(self)
 
-    def fadeSlide(self):
+    def fadeTran(self):
         self.fade()
-        self.slide()
+        self.transform()
 
 class FadeLabel(Label, FadePart):
-    
-    fadeinput = ObjectProperty(None)
 
     def __init__(self, **kwargs):
         super(FadeLabel, self).__init__(**kwargs)
 
-    def fade(self):
-        if not self.opacity and self.fadeinput:
-            self.fadeOut.start(self.fadeinput)
-        elif self.fadeinput:
-            self.fadeIn.start(self.fadeinput)
-        super(FadeLabel, self).fade()
+class FadeTranLabel(Label, FadeTranPart):
+
+    def __init__(self, **kwargs):
+        super(FadeTranLabel, self).__init__(**kwargs)
 
 class FadeBox(BoxLayout, FadePart):
 
@@ -667,15 +723,15 @@ class SlideBox(BoxLayout, SlidePart):
     def __init__(self, **kwargs):
         super(SlideBox, self).__init__(**kwargs)
 
-class MixedBox(BoxLayout, MixedPart):
+class TransformBox(BoxLayout, TransformPart):
 
     def __init__(self, **kwargs):
-        super(MixedBox, self).__init__(**kwargs)
+        super(TransformBox, self).__init__(**kwargs)
 
-class MixedLabel(Label, MixedPart):
+class FadeTranBox(BoxLayout, FadeTranPart):
 
     def __init__(self, **kwargs):
-        super(MixedLabel, self).__init__(**kwargs)
+        super(FadeTranBox, self).__init__(**kwargs)
 
 class PlayerInfo(FadeBox):
 
@@ -708,38 +764,40 @@ class Equipment(FadeBox):
     def __init__(self, **kwargs):
         super(Equipment, self).__init__(**kwargs)
 
-class Inventory(MixedBox):
+class Inventory(FadeTranBox):
 
     inventory = ObjectProperty(None)
 
     def __init__(self, **kwargs):
         super(Inventory, self).__init__(**kwargs)
 
-class AtkList(MixedBox):
+class AtkList(FadeTranBox):
 
     atkList = ObjectProperty(None)
 
     def __init__(self, **kwargs):
         super(AtkList, self).__init__(**kwargs)
 
-class EnemyList(MixedBox):
+class EnemyList(FadeTranBox):
 
     enemyList = ObjectProperty(None)
 
     def __init__(self, **kwargs):
         super(EnemyList, self).__init__(**kwargs)
 
-class Container(GridLayout):
-    
+class Container(FadeTranBox):
+
     def __init__(self, **kwargs):
         super(Container, self).__init__(**kwargs)
         self.converter = lambda row_index, rec: {
                 'text': rec['name'],
                 'size_hint_y': None,
-                'height': 15,
-                'deselected_color': [.5,.5,.5,0],
+                'height': 20,
+                'deselected_color': [.5,.5,.5,1],
                 'selected_color': [0,0,1,.2],
-                'font_name': 'Pixel'}
+                'font_name': 'Pixel',
+                'font_size': 15
+                }
         self.adapter = Adapter(
                 data = [],
                 args_converter = self.converter,
@@ -754,7 +812,7 @@ class Adapter(ListAdapter):
     def update(self, lis):
         self.data = []
         for x in lis:
-                self.data.append({'name': x, 'is_selected': False})
+            self.data.append({'name': x, 'is_selected': False})
 
 class UsrInput(TextInput):
 
@@ -867,7 +925,7 @@ class UsrInput(TextInput):
                 return
         elif keyStr == 'i' and self.ctrl and self.permission:
             if self.memoryStat:
-                app.textRec.modes.append('upStat')
+                app.textRec.mode = 'upStat'
                 self.playerInfo.upStatUsr.focus = True
                 self.playerInfo.hint.text = 'Do you want to keep these changes?'
                 self.lastHotKey = [window, keycode, text, modifiers]
@@ -906,7 +964,7 @@ class UsrInput(TextInput):
             Clock.schedule_once(self.allowHotKey, .25)
         elif keyStr == 'a' and self.ctrl and self.permission:
             if self.memoryStat:
-                app.textRec.modes.append('upStat')
+                app.textRec.mode = 'upStat'
                 self.playerInfo.upStatUsr.focus = True
                 self.playerInfo.hint.text = 'Do you want to keep these changes?'
                 self.lastHotKey = [window, keycode, text, modifiers]
@@ -945,7 +1003,7 @@ class UsrInput(TextInput):
             Clock.schedule_once(self.allowHotKey, .25)
         elif keyStr == 'e' and self.ctrl and self.permission:
             if self.memoryStat:
-                app.textRec.modes.append('upStat')
+                app.textRec.mode = 'upStat'
                 self.playerInfo.upStatUsr.focus = True
                 self.playerInfo.hint.text = 'Do you want to keep these changes?'
                 self.lastHotKey = [window, keycode, text, modifiers]
@@ -992,7 +1050,7 @@ class UsrInput(TextInput):
             Clock.schedule_once(self.allowHotKey, .25)
         elif keyStr == 'u' and self.ctrl and not self.battleMode and self.permission:
             if self.memoryStat:
-                app.textRec.modes.append('upStat')
+                app.textRec.mode = 'upStat'
                 self.playerInfo.upStatUsr.focus = True
                 self.playerInfo.hint.text = 'Do you want to keep these changes?'
                 self.lastHotKey = [window, keycode, text, modifiers]
@@ -1028,8 +1086,8 @@ class UsrInput(TextInput):
             Clock.schedule_once(self.allowHotKey, .25)
         elif keyStr == 's' and self.mode == 'playerInfo' and self.ctrl:
             if self.memoryStat:
-                if not 'upStat' in app.textRec.modes:
-                    app.textRec.modes.append('upStat')
+                if 'upStat' != app.textRec.mode:
+                    app.textRec.mode = 'upStat'
                 self.playerInfo.upStatUsr.focus = True
                 self.playerInfo.hint.text = 'Do you want to keep these changes?'
             else:
@@ -1150,7 +1208,7 @@ class UsrInput(TextInput):
                 self.count = 1
                 self.playerInfo.hint.text = 'Stats have been upgraded.'
                 self.memoryStat.clear()
-                app.textRec.modes.remove('upStat')
+                app.textRec.mode = ''
                 self.focus = True
                 break
             elif answer in ('no', 'nah', 'nope', 'n'):
@@ -1160,7 +1218,7 @@ class UsrInput(TextInput):
                 self.screen.updatePlayerInfo()
                 self.memoryStat.clear()
                 self.playerInfo.hint.text = 'Upgrade has been reversed.'
-                app.textRec.modes.remove('upStat')
+                app.textRec.mode = ''
                 self.selectPlayerInfo()
                 self.focus = True
                 break
@@ -1171,6 +1229,9 @@ class UsrInput(TextInput):
             window, keycode, text, modifiers = self.lastHotKey
             self.lastHotKey = []
             self.keyboard_on_key_down(window, keycode, text, modifiers)
+
+class Menu(FadeScreen):
+    pass
 
 class DungeonGame(App):
     """
@@ -1196,10 +1257,11 @@ class DungeonGame(App):
     def build(self):
         self.title = 'Dungeons and Towns'
         sm = ScreenManager()
-        sm.add_widget(SplashScreen(name = 'splash'))
+        #sm.add_widget(SplashScreen(name = 'splash'))
         sm.add_widget(TitleScreen(name = 'title'))
         sm.add_widget(ChooseClass(name = 'chooseclass'))
         sm.add_widget(GameScreen(name = 'gamescreen'))
+        sm.add_widget(Menu(name = 'menu'))
         return sm
 
 if __name__ == '__main__':

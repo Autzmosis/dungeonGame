@@ -18,10 +18,7 @@ from items import makeItem
 from collections import OrderedDict
 
 #modules for dev use
-from rogue import *
-from mage import *
-from warrior import *
-from charANPC import createANPC
+from charANPC import makeANPC
 
 class Arena(object):
 
@@ -482,9 +479,9 @@ class Arena(object):
                 self.targetDictionary[x] = self.nextDic[x]
             else:
                 if x.info['name'] == self.player.info['name']:
-                    self.targetDictionary[x] = x.checkSpecial(self.playerTarget)
+                    self.targetDictionary[x] = self.playerTarget
                 else:
-                    self.targetDictionary[x] = x.checkSpecial(x.computerFunction())
+                    self.targetDictionary[x] = x.computerFunction()
         self.skipToFront()
 
     def skipToFront(self):
@@ -605,8 +602,8 @@ class Arena(object):
         return False
 
 def main(player, gameScreen): #this is here to test this class
-    enemy1 = createANPC(
-            Class = Rogue,
+    enemy1 = makeANPC(
+            Class = 'rogue',
             lvl = {
                 'fullHP': 1,
                 'fullSP': 1,
@@ -624,8 +621,8 @@ def main(player, gameScreen): #this is here to test this class
 	    allies = [], #Dont include self
 	    enemies = [player]
             )
-    enemy2 = createANPC(
-            Class = Mage,
+    enemy2 = makeANPC(
+            Class = 'mage',
             lvl = {
                 'fullHP': 1,
                 'fullSP': 1,

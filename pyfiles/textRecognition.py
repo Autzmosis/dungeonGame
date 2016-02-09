@@ -12,37 +12,136 @@ This program will contain all the class used for Text Recognition
 class TextRecognition(object):
 
     def __init__(self):
-        self.modes = []
-        self.function = None
+        self.mode = ''
+        self.keyWords = {
+                'verbs': (
+                    'look',
+                    'enter',
+                    (
+                        'take',
+                        'pickup',
+                        'pick'
+                        ),
+                    (
+                        'run',
+                        'walk',
+                        'skip',
+                        'jog',
+                        'go',
+                        'move'
+                        ),
+                    'open',
+                    'attack',
+                    'kill',
+                    'ignore',
+                    'talk',
+                    'read',
+                    'follow',
+                    'help',
+                    (
+                        'examine',
+                        'inspect'
+                        ),
+                    'save',
+                    'quit'
+                    ),
+                'directions': (
+                    'north',
+                    'south',
+                    'east',
+                    'west',
+                    'northeast',
+                    'northwest',
+                    'southeast',
+                    'southwest'
+                    ),
+                'directors': (
+                    'at',
+                    'to',
+                    'towards',
+                    'under',
+                    'on top',
+                    'down',
+                    'up',
+                    'around'
+                    ),
+                'question': (
+                    'who',
+                    'what',
+                    'when',
+                    'where',
+                    'why',
+                    'how'
+                    ),
+                'connectors': (
+                    'and',
+                    ),
+                'pointers': (
+                    'the',
+                    'a'
+                    ),
+                'misc': (
+                    'fuck',
+                    'shit',
+                    'damn',
+                    'hell',
+                    'bitch',
+                    'goddamn',
+                    'faggot',
+                    'nigga',
+                    (
+                        'hello',
+                        'hi'
+                        )
+                    )
+                }
 
     def inputHandler(self, **kwargs):
         kwargs['screen'].refocus()
         string = kwargs['string']
         inputs = string.lower().split()
-        kwargs['string'] = inputs
-        screenName = kwargs['screen'].name
-        screenName = kwargs['screen'].name
-        self.function = kwargs['screen'].responce
+        screen = kwargs['screen']
+        screenName = screen.name
+        function = screen.responce
         if 'gamescreen' == screenName:
-            self.gameScreenInputHandler(kwargs)
+            self.gameScreenInputHandler(screen, inputs, function)
         else:
-            self.function(kwargs)
+            function(inputs)
 
-    def gameScreenInputHandler(self, kwargs):
-        if 'upStat' in self.modes:
-            kwargs['screen'].usr.confirmUpgradeStat(kwargs['string'])
-        elif 'battle' in self.modes:
-            if kwargs['screen'].pressEnter:
-		if kwargs['screen'].usr.permission:
-		    kwargs['screen'].usr.permission = False
-		    print 'Oh no bro'
-                kwargs['screen'].pressEnter = False
-                kwargs['screen'].arena.start()
-            elif kwargs['string']:
-                kwargs['screen'].goCheckEm(kwargs['string'])
-        elif 'story' in self.modes:
-            pass
-        elif 'dungeon' in self.modes:
-            pass
+    def gameScreenInputHandler(self, screen, inputs, function):
+        if 'battle' == self.mode:
+            if screen.pressEnter:
+		if screen.usr.permission:
+		    screen.usr.permission = False
+                screen.pressEnter = False
+                screen.arena.start()
+            elif inputs != []:
+                screen.goCheckEm(inputs)
         else:
-            self.function(kwargs)
+            function(inputs)
+
+    def searchKWDB(self, word):
+        for kW in self.keyWords:
+            for v in self.keyWords[kW]:
+                if word == v:
+                    return True
+                elif isinstance(v, tuple) and word in v:
+                    return True
+        return False
+
+    def makeKWSentence(self, inputs):
+        kWSentence = []
+        #isObject = False
+        #lastWord = ''
+        for i in inputs:
+            #if isObject:
+            #    kWSentence.append(i)
+            #    isObject = False
+            #    continue
+            #elif i in self.keyWords['pointers']:
+            #    isObject = True
+            #    continue
+            if self.searchKWDB(i):
+                kWSentence.append(i)
+            #    lastWord = i
+        return kWSentence
