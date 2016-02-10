@@ -93,8 +93,7 @@ class FadeScreen(Screen):
 
     def refocus_text(self, dt):
         self.usr.focus = True
-        if not isinstance(self, GameScreen) or not self.usr.mode:
-            self.usr.text = ''
+        self.usr.text = ''
         self.usr.readonly = False
 
 class SplashScreen(FadeScreen):
@@ -175,14 +174,14 @@ class TitleScreen(FadeScreen):
         self.trigFadeIn()
         self.hint.text = 'Type \'new game\' or \'continue\' and press enter.'
 
-class DungeonGame(App):
+class Void(App):
     """
     this is the actual instance of the app, doesn't do much
     but set up the screens and screenmanager
     """
 
     def __init__(self, **kwargs):
-        super(DungeonGame, self).__init__(**kwargs)
+        super(Void, self).__init__(**kwargs)
         self.textRec = TextRecognition()
         self.beginTime = 0
 
@@ -209,5 +208,5 @@ if __name__ == '__main__':
     audio = SoundLoader()
     typing = audio.load('../audio/typingSound.wav')
     typing.loop = True
-    app = DungeonGame()
+    app = Void()
     app.run()
