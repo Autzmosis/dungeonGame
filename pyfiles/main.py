@@ -197,6 +197,7 @@ class GameScreen(FadeScreen):
         self.textinput.text = ''
         self.refocus()
         self.trigFadeIn()
+        Clock.schedule_once(self.story, 2)
         #self.morph()
         if player is None:
             self.setupPlayer()
@@ -208,6 +209,10 @@ class GameScreen(FadeScreen):
         #self.updateInventory()
         #self.updateEquipment()
         #self.updatePlayerInfo()
+
+    def story(self, dt):
+        self.prompt(app.textRec.sendStory())
+        app.textRec.mode = 'story'
 
     def setupPlayer(self):
         global player

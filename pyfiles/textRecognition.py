@@ -117,6 +117,9 @@ class TextRecognition(object):
                 screen.arena.start()
             elif inputs != []:
                 screen.goCheckEm(inputs)
+        elif 'story' == self.mode:
+            screen.prompt(self.sendStory(self.makeKWSentence(inputs)))
+            screen.usr.readonly = False
         else:
             function(inputs)
 
@@ -145,3 +148,14 @@ class TextRecognition(object):
                 kWSentence.append(i)
             #    lastWord = i
         return kWSentence
+
+    def sendStory(self, inputs = []):
+        if inputs:
+            if 'follow' in inputs:
+                return 'Success'
+            else:
+                return 'Failure'
+        else:
+            string = ('You are in some forest of grass and a group'
+                    ' of sayvians troop past you.')
+            return string
